@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>人狼ルーム一覧</title>
+    <link rel='stylesheet' href='/stylesheets/lobby.css' />
+    <link rel='stylesheet' href='/stylesheets/common.css' />
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div id="container">
+    <%- include("header_login", {title: "ロビー"}) %>
+
+
+    <% if(result.length == 0) {%>
+        現在部屋はありません。<br>
+        <a href="/makeroom">新しく部屋を作成</a>
+    <% } else { %>
+        <table id="rooms">
+        <tr><th>番号</th><th>村名</th><th>PR</th><th>時間(昼/投票/夜/能力)</th><th>定員</th><th>状態</th><th>GM</th></tr>
+        <% for(var room of result) { %>
+            <tr>
+                <td><%= room.vno %></td>
+                <td><a href="./worewolf/<%= room.vno %>"><%= room.name %></a></td>
+                <td><%= room.pr %></td>
+                <td><%= room.time.day %>/<%= room.time.vote %>/<%= room.time.night %>/<%= room.time.ability %></td>
+                <td><%= room.capacity %></td>
+                <td><%= room.state %>
+                <td><%= room.GMid %></td>
+            </tr>
+        <% } %>
+        </table>
+        <a href="/makeroom">新しく部屋を作成</a>
+    <% } %>
+	</div>
+  </body>
+</html>

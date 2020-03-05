@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>人狼ルーム一覧</title>
+    <link rel='stylesheet' href='/stylesheets/lobby.css' />
+    <link rel='stylesheet' href='/stylesheets/common.css' />
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div id="container">
+    <%- include("header_login", {title: "過去ログ"}) %>
+
+    <table id="old">
+    <tr><th>番号</th><th>村名</th></tr>
+    <% for(var room of result) { %>
+        <tr>
+            <td><%= room.vno %></td>
+            <td><a href="./worewolf/<%= room.vno %>"><%= room.name %></a></td>
+        </tr>
+    <% } %>
+    </table>
+
+	</div>
+  </body>
+</html>

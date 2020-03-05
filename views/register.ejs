@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ようこそ</title>
+    <link rel='stylesheet' href='/stylesheets/common.css' />
+    <meta charset="utf-8">
+  </head>
+  <body>
+  	<div id="container">
+    <%- include("header_login", {title: "新規登録"}) %>
+    <form action="./register" method="post" style="text-align: center; margin: 30px auto;">
+    ユーザーID:<input type="text" name="userid"><br>
+    パスワード:<input type="password" name="password"><br>
+    <input type="submit"><br><br>
+
+    ユーザーID:スペースを含まない文字列2文字～8文字(日本語可、先頭数字不可)<br>
+    パスワード:英数字とアンダーバーからなる半角文字列<br>
+    <% var error = error || false %>
+    <% if(error) {%>
+    <div style="background-color:red; color:white;"><%= error %></div>
+    <% } %>
+    </form>
+
+	</div>
+  </body>
+</html>

@@ -1,0 +1,1282 @@
+const moment = require("moment")
+const schema = require("../schema")
+const GameSchema = schema.Game
+
+const Log = require("./log")
+const fs = require("fs")
+const ejs = require("ejs")
+const Cast = require("./cast")
+
+class socketLike{
+	constructor(){
+		this.id = "this is not socket"
+		this.rooms = {} 
+	}
+	emit(){
+		return false
+	}
+	join(){
+		return false
+	}
+	leave(){
+		return false
+	}
+
+}
+
+class PlayerSocket{
+	constructor(socket){
+		this.socket = socket || new socketLike()
+		this.rooms = new Set()
+	}
+
+	emit(type,data){
+		this.socket.emit(type,data)
+	}
+
+	join(name){
+		this.socket.join(name)
+		this.rooms.add(name)
+	}
+
+	leave(name){
+		this.socket.leave(name)
+		this.rooms.delete(name)
+	}
+
+	leaveAll(){
+		for(var room of this.rooms){
+			this.leave(room)
+		}
+	}
+
+	updateSocket(socket){
+		this.socket = socket
+		for(var room of this.rooms){
+			this.join(room)
+		}
+	}
+}
+
+class Player{
+	constructor(data, log){
+		this.no = data.no
+		this.userid = data.userid
+
+		this.cn = data.cn || "kari"
+		this.color = data.color || "red"
+		this.job = null
+		this.isGM = data.isGM || false
+		this.isDamy = data.isDamy || false
+		this.isNPC = data.isNPC || false
+		this.isAlive = true
+		this.voteTarget = null
+		this.ability = {
+			isUsed : false,
+			target : null
+		}
+		this.guarded = false
+
+		this.log = log
+
+		this.socket = new PlayerSocket(data.socket)
+	}
+
+	forClientSummary(){
+		return {
+			no: this.no,
+			cn: this.cn,
+			color: this.color,
+			isAlive: this.isAlive,
+		}
+	}
+
+	forClientDetail(){
+		return {
+			no: this.no,
+			userid: this.userid,
+			cn: this.cn,
+			color: this.color,
+			job: this.job,
+			isGM: this.isGM,
+			isAlive: this.isAlive,
+			vote: this.voteTarget,
+			ability:{
+				isUsed: this.ability.isUsed,
+				target: this.ability.target ? this.ability.target.no : null
+			}
+		}
+	}
+
+	vote(target){
+		this.voteTarget = target.no
+		this.log.add("vote",{
+			no: this.no,
+			player: this.cn,
+			target: target.cn
+		})
+		this.socket.emit("voteSuccess")
+	}
+
+	setTarget(target){
+		this.ability.target = target.no
+		this.ability.isUsed = true
+	}
+
+	kill(reason){
+		this.isAlive = false
+		this.log.add("death",{
+			reason: reason,
+			player: this.cn,
+			no: this.no
+		})
+	}
+
+	isVote(){
+		return this.voteTarget !== null
+	}
+
+	reset(){
+		this.voteTarget = null
+		this.ability.isUsed = false
+		this.ability.target = null
+		this.guarded = false
+	}
+
+
+	fortune(target){
+		this.setTarget(target)
+
+		this.log.add("fortune",{
+			no: this.no,
+			player: this.cn,
+			target: target.cn,
+			result: target.job.fortuneResult
+		})
+		this.socket.emit("useAbilitySuccess")
+	}
+
+	necro(target){
+		this.log.add("necro", {
+			no: this.no,
+			target: target.cn, 
+			result: target.job.necroResult
+		})
+	}
+
+	guard(target){
+		this.setTarget(target)
+		
+		this.log.add("guard",{
+			no: this.no,
+			player: this.cn,
+			target: target.cn,
+		})
+		this.socket.emit("useAbilitySuccess")
+	}
+
+	bite(target){
+		this.setTarget(target)
+
+		this.log.add("bite",{
+			no: this.no,
+			player: this.cn,
+			target: target.cn,
+		})
+	}
+
+	noticeDamy(damy){
+		this.log.add("reiko",{
+			no: this.no,
+			job: damy.job.nameja
+		})
+	}
+}
+
+class PlayerManager{
+
+	constructor(log){
+		this.players = {}
+		this.list = []
+		this.listAll = []
+		this.userid2no = {}
+		this.count = 0
+		this.npcNames = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N"]
+
+		this.log = log
+	}
+
+	add(data){
+
+		var no = this.count
+		data.no = no
+		var p = new Player(data, this.log)
+
+		var userid = data.userid
+
+		this.userid2no[userid] = no
+		this.players[no] = p
+		this.count++
+		this.refreshList()
+
+		this.log.add("addPlayer",{
+			player: p.cn
+		})
+
+		return p
+	}
+
+	leave(userid){
+		var id = this.pick(userid).no
+		var p = this.players[id]
+		p.socket.emit("leaveSuccess")
+
+		this.log.add("leavePlayer",{
+			player: p.cn
+		})		
+		delete this.players[id]
+		delete this.userid2no[userid]
+		this.refreshList()
+	}
+
+	kick(target){
+		if(!(target in this.players)) return false
+
+		var p = this.pick(target)
+		var userid = p.userid
+		if(!p.isDamy && !p.isNPC) {
+			p.socket.emit("leaveSuccess")			
+		}
+
+		
+		this.log.add("kick",{
+			player: p.cn
+		})
+		delete this.players[target]
+		delete this.userid2no[userid]
+		this.refreshList()
+	}
+
+	in(userid){
+		return userid in this.userid2no
+	}
+
+	refreshList(){
+		this.list = Object.values(this.players).filter((p) => p.no < 990)
+		this.listAll  = Object.values(this.players)
+
+	}
+
+	forClientSummary(){
+		return this.listAll.map((p) => p.forClientSummary())
+	}
+
+	forClientDetail(){
+		return this.listAll.map((p) => p.forClientDetail())
+	}
+
+	reset(){
+		for(var player of this){
+			player.reset()
+		}
+	}
+
+	resetVote(){
+		for(var player of this){
+			player.voteTarget = null
+		}	
+	}
+
+	num(){
+		return this.list.length
+	}
+
+	numBySpecies(){
+		var human = this.species("human").length
+		var wolf  = this.species("wolf").length
+		var fox   = this.species("fox").length
+
+		return {
+			human:human,
+			wolf:wolf,
+			fox:fox
+		}	
+	}
+
+	alive(){
+		return this.list.filter((p) => p.isAlive)
+	}
+
+	dead(){
+		return this.list.filter((p) => !p.isAlive)		
+	}
+
+	pick(id){
+		if(typeof id == "string"){
+			if( isNaN(parseInt(id)) ){
+				id = this.userid2no[id]		
+			} else {
+				id = parseInt(id)		
+			}
+		}
+		return this.players[id]
+	}
+
+	GM(){
+		return this.players[999]
+	}
+
+	damy(){
+		return this.players[0]
+	}
+
+	NPC(){
+		return this.alive().filter((p) => p.isNPC)
+	}
+
+	lot(ignore){
+		return this.alive().filter((p) => p.no != ignore ).lot()
+	}
+
+	species(species){
+		return this.alive().filter((p) => p.job.species == species)
+	}
+
+	select(cond, reverse){
+		return this.alive().filter((p) => p.job[cond])
+	}
+
+	exclude(cond){
+		return this.alive().filter((p) => !p.job[cond])
+	}
+
+	compileVote(){
+		var votes = {}
+		var table = `<table class="votesummary"><tbody>`
+
+		for(var player of this.alive()){
+			var target = this.pick(player.voteTarget)
+			var get = this.alive().filter((p) => p.voteTarget == player.no).length
+			votes[player.no] = get
+
+			table += `<tr class="votedetail"><td>${player.cn}</td><td>(${get})</td><td>→</td><td>${target.cn}</td></tr>`
+
+		}
+
+		table += "</tbody></table>"
+
+		var max = Math.max(...Object.values(votes))
+		var maxers = Object.keys(votes).filter((v) => votes[v] == max)
+
+		var exec = maxers.length == 1 ? this.pick(maxers[0]) : null
+
+		return {
+			table: table,
+			exec: exec
+		}
+	}
+
+	setKnow(){
+		var wolf = this.select("canBite").map((p) => p.cn)
+		wolf = "【能力発動】人狼は" + wolf.join("、")
+
+		var share = this.select("canShareTalk").map((p) => p.cn)
+		share= "【能力発動】共有者は" + share.join("、")
+
+		var fox = this.species("fox").map((p) => p.cn)
+		fox = "【能力発動】妖狐は" + fox.join("、")
+
+		var noble = this.select("isUseDecoy").map((p) => p.cn)
+		noble = "【能力発動】貴族は" + noble.join("、")
+
+		for(var player of this){
+			if(player.job.canKnowWolf){
+				player.job.know += wolf
+			}
+			if(player.job.canKnowShare){
+				player.job.know += share
+			}
+			if(player.job.canKnowFox){
+				player.job.know += fox
+			}
+			if(player.job.canKnowNoble){
+				player.job.know += noble
+			}
+		}
+	}
+
+	fellowFox(){
+		if(this.species("fox").length == 0){
+			var imos = this.select("isFellowFox")
+			for(var imo of imos){
+				imo.kill("fellow")
+			}
+		}
+	}
+
+	summonDamy(){
+		this.add({
+			userid:"shonichi",
+			socket: null,
+			cn: "初日犠牲者",
+			color: "orange",
+			isDamy: true			
+		})
+	}
+
+	summonNPC(){
+		var cn = this.npcNames.shift()
+		this.add({
+			userid: "damy-"+cn,
+			socket: null,
+			cn: cn,
+			color: "orange",
+			isNPC: true
+		})
+
+	}
+
+	setGM(gmid){
+		var wolfs = new Player({
+			userid: "damyid",
+			socket: null,
+			no: 998, 
+			cn: "狼たち",
+			color: "wolfs",
+			isGM: true
+		}, this)
+		this.players[998] = wolfs
+
+
+		var gm = new Player({
+			userid: gmid,
+			socket: null,
+			no: 999,
+			isGM: true,
+			cn: "ゲームマスター",
+			color: "gm"
+		}, this)
+		this.players[999] = gm
+
+		this.userid2no[gmid] = 999	
+
+		gm.job = Cast.job("GM")
+	}
+
+	isCompleteVote(){
+		return this.alive().every((p) => p.isVote())
+	}
+
+	savoVote(){
+		return this.alive().filter((p) => !p.isVote())
+	}
+
+	savoAbility(cond){
+		return this.alive().filter((p) => !p.ability.isused && p.job[cond])
+	}
+
+	makeTargets(){
+		var targets = {}
+		for(var player of this.alive()){
+			targets[player.no] = player.cn
+		}
+		return targets
+	}
+
+	makeDeathTargets(){
+		var targets = {}
+		for(var player of this.dead()){
+			targets[player.no] = player.cn
+		}
+		return targets		
+	}
+
+	npcVote(){
+		for(var player of this.NPC()){
+			var r = this.lot(player.no)
+			player.vote(r)			
+		}
+	}
+
+    *[Symbol.iterator]() {
+        yield* this.list;
+    }
+}
+
+
+class Room{
+	constructor(PlayerManager, isShowJobDead){
+		this.players = PlayerManager
+		this.isShowJobDead = isShowJobDead
+	}
+
+	assign(){
+		for(var player of this.players.listAll){
+
+			var socket = player.socket
+
+			socket.join("player-"+player.no)
+
+			if(player.isGM){
+				socket.join("gm")
+			}
+
+			if(!player.isAlive){
+				socket.join("grave")
+				if(this.isShowJobDead){
+					socket.join("all")
+				}
+			} else {
+				socket.leave("grave")
+			}
+
+			if(!player.job) continue
+
+			if(player.job.canShareTalk){
+				socket.join("share")
+			}
+
+			if(player.job.canWolfTalk){
+				socket.join("wolf")
+			}
+
+			if(player.job.canFoxTalk){
+				socket.join("fox")
+			}	
+		}
+	}
+}
+
+class Game{
+	constructor(io, data){
+		this.io = io
+
+		this.vno = data.vno || 1
+		this.name = data.name || "とある村"
+		this.pr = data.pr || "宣伝文が設定されていません"
+		this.casttype = data.casttype || "Y"
+		this.time = data.time || {
+			day: 285,
+			vote: 150,
+			night: 180,
+			ability: 120,
+			nsec: 15
+		}
+		this.capacity = data.capacity || 17
+		this.isShowJobDead = data.isShowJobDead || true
+
+		this.log = new Log(io, this)
+		this.players = new PlayerManager(this.log)
+		this.room = new Room(this.players, this.isShowJobDead)
+
+		this.phase = "prologue"
+		this.phaseLimit = null
+		this.timerFlg = null
+		this.day = 1
+
+		this.win = null
+		this.exec = null
+
+		this.bite = null
+		this.biter = null
+		this.fortuned = []
+
+		this.players.setGM(data.GMid)
+
+		this.log.add("vinfo", this.villageInfo())
+
+		this.players.summonDamy()
+
+	}
+
+	fixInfo(data){
+		console.log(data)
+		for(var key in data){
+			if(this[key] === undefined) continue
+			this[key] = data[key]
+			console.log(key, data[key])
+		}
+
+		GameIO.update(this.vno, data)
+		this.log.add("vinfo", this.villageInfo())
+	}
+
+	npcTalk(){
+		for(var player of this.players.NPC()){
+			var data = {
+				no: player.no,
+				cn: player.cn,
+				color: player.color
+			}
+			if(this.phase == "day"){
+				var talks = ["おはよー","おはよ","朝じゃん","眠たい"]
+				data.type = "discuss"
+				data.message = talks.lot()
+				this.log.add("talk",data)
+			} else if (this.phase == "night"){
+				if(player.job.canWolfTalk){
+					data.type = "wolf"
+					data.message = "アオーン"
+					this.log.add("wolfNeigh")
+				} else if(player.job.canFoxTalk){
+					data.type = "fox"
+					data.message = "占いはいやだ…"				
+				} else if(player.job.canShareTalk){
+					data.type = "share"
+					data.message = "明日誰吊って生きていく？"							
+				} else {
+					data.type =  "tweet"
+					data.message =  "誰が狼だろうなー"				
+				}
+				this.log.add("talk",data)
+			}		
+		}		
+	}
+
+	canTalkNow(player,data){
+
+		if(!player) return false
+
+		switch(data.type){
+
+			case "discuss":
+				return ["prologue", "day"].includes(this.phase)
+				    && player.isAlive
+				    || this.phase == "epilogue"
+
+			case "tweet":
+				return ["discuss","vote","night","ability"].includes(this.phase)
+				    && player.isAlive
+
+			case "share":
+				return ["night", "ability"].includes(this.phase)
+				    && player.job.canShareTalk
+				    && player.isAlive
+
+			case "fox":
+				return ["night", "ability"].includes(this.phase)
+				    && player.job.canFoxTalk
+				    && player.isAlive
+
+			case "wolf":
+				return this.phase == "night"
+				    && player.job.canWolfTalk
+				    && player.isAlive
+
+			case "grave":
+				return !player.isAlive || player.isGM
+
+		}
+		return true
+	}
+
+	canVote(player, data){
+		if(!["day", "vote"].includes(this.phase)) return false
+		if(!player) return false
+		if(!this.players.pick(data.target)) return false
+		if(player.no == data.target) return false
+
+		return true
+	}
+
+	canUseAbility(player, data){
+
+		if(!["night", "ability"].includes(this.phase)) return false
+		if(!player) return false
+
+		var target = this.players.pick(data.target)
+		if(!target) return false
+
+		switch(data.type){
+			case "fortune":
+				if(!player.job.canFortune) return false
+				if(player.ability.isUsed) return false
+				break
+
+			case "guard":
+				if(!player.job.canGuard) return false
+				break
+
+			case "bite":
+				if(!player.job.canBite) return false
+				if(target.job.canBite) return false
+				break				
+		}
+		return true
+	}
+
+	villageInfo(){
+		return {
+			name: this.name,
+			pr: this.pr,
+			no: this.vno,
+			time : this.time,
+			GMid: this.players.GM().userid,
+			capacity: this.capacity,
+			casttype: this.casttype,
+			isShowJobDead: this.isShowJobDead
+		}
+	}
+
+	emitPlayer(socket){
+
+		var summary = this.players.forClientSummary()
+		var detail = this.players.forClientDetail()
+		if(this.phase == "epilogue"){
+			if(socket){
+				socket.emit("player", detail)
+			} else{
+				this.io.emit("player", detail)				
+			}
+		}else{
+			if(socket){
+				socket.emit("player", summary)
+			} else{
+				this.io.emit("player", summary)
+				this.io.to("gm").to("all").emit("player", detail)			
+			}			
+		}
+
+	}
+
+	talk(userid, data){
+
+		var player = this.players.pick(userid)
+
+		data.day = this.day
+		data.cn = player.cn
+		data.color = player.color
+
+		this.log.add("talk",data)
+	}
+
+
+
+	vote(userid, data){
+		var player = this.players.pick(userid)
+		var target = this.players.pick(data.target)
+
+		player.vote(target)
+
+		if(this.players.isCompleteVote()) {
+			this.changePhase("night")
+		}
+	}
+
+	useAbility(userid, data){
+		var player = this.players.pick(userid)
+		var target = this.players.pick(data.target)
+		if(!player || !target) return false
+
+		switch(data.type){
+			case "fortune":
+				player.fortune(target)
+				this.fortuned.push(target.no)
+				break
+
+			case "guard":
+				player.guard(target)
+				break
+
+			case "bite":
+				player.bite(target)
+
+				this.bite = target
+				this.biter = player
+				
+				for(var wolf of this.players.select("canBite")){
+					player.setTarget(target)
+				}
+
+				this.io.to("wolf").emit("useAbilitySuccess")
+				break				
+		}
+	}
+
+	start(){
+
+		GameIO.update(this.vno, {"state":"playing"})
+
+		this.phase = "vote" // これをやらないとログが出ない
+		this.casting()
+
+		this.changePhase("night")
+	}
+
+	casting(){
+		var castlist = Cast.makeJobs(this.casttype, this.players.num())
+		var job,i
+		for(var player of this.players){
+
+			do{
+				i = Math.floor(Math.random()*castlist.length)
+				job = castlist[i]
+			} while(player.isDamy && job.onlyNotDamy)
+
+			player.job = job
+			castlist.splice(i,1)
+
+
+		}
+		this.room.assign()
+		this.players.setKnow()
+
+		var txt = Cast.makeCastTxt(this.casttype, this.players.num())
+		this.log.add("system",{
+			message: `配役は${txt}です。`
+		})
+	}
+
+	checkCast(){
+		var txt = Cast.makeCastTxtAll(this.players.num())
+		this.log.add("system",{
+			message: txt
+		})	
+	}
+
+	endCheck(){
+		var alives = this.players.numBySpecies()
+		var human = alives.human,
+		    wolf = alives.wolf,
+		    fox = alives.fox
+
+		if(wolf == 0){
+			if(fox>=1){
+				this.win = "fox"
+				this.log.add("gameend",{side: "妖狐"})
+			} else {
+				this.win = "human"
+				this.log.add("gameend",{side: "村人"})
+			}
+			this.changePhase("epilogue")
+			return true
+
+		} else if(wolf >= human){
+			if(fox>=1){
+				this.win = "fox"
+				this.log.add("gameend",{side: "妖狐"})
+			} else {
+				this.win = "wolf"
+				this.log.add("gameend",{side: "人狼"})
+			}
+			this.changePhase("epilogue")
+			return true
+		}
+		return false
+	}
+
+	changePhase(phase){
+		switch(phase){
+
+			case "night":
+
+				this.phase = "vote"
+				
+				if(this.day >= 2){
+					for(var player of this.players.savoVote()){
+						var r = this.players.lot(player.no)
+						player.vote(r, true)
+					}
+
+					var voteResult = this.players.compileVote()
+
+					this.log.add("voteSummary",{
+						message: `${this.day}日目 投票結果。` + voteResult.table
+					})
+					
+					if(!voteResult.exec){
+						this.changePhase("revote")
+						return false
+					}
+
+					var exec = voteResult.exec
+					exec.kill("exec")
+					this.exec = exec
+
+					if(exec.job.isStandOff){
+						this.players.lot(exec.no).kill("standoff")
+					}
+
+					this.players.fellowFox()
+				}
+
+				if(this.endCheck()) return false
+
+				//リセット
+				this.players.reset()
+				this.room.assign()
+
+				this.fortuned = []
+				this.bite = null
+				this.biter = null
+
+				this.log.add("changePhase",{phase: "night", day: this.day})
+
+				if(this.day==1){
+					var damy = this.players.damy()
+					this.bite = damy
+					this.log.add("bite",{player: "狼", target: damy.cn})
+
+					var reikos = this.players.select("canKnowDamyJob")
+					for(var reiko of reikos){
+						reiko.noticeDamy(damy)
+					}
+				}
+
+				if(this.day >= 2){
+					for(var player of this.players.select("canNecro")){
+						player.necro(this.exec)
+					}					
+				}
+
+				this.npcTalk()
+
+				this.setTimer("night","ability")
+				break
+
+			case "ability":
+				this.log.add("changePhase",{
+					phase: "ability"
+				})
+				this.setTimer("ability","day")
+				break
+
+			case "day":
+				/*自動噛み処理*/
+				if(this.bite === null){
+					var biter = this.players.select("canBite").lot()
+					var target = this.players.exclude("canBite").lot()
+
+					this.bite = target
+					this.biter = biter
+
+					biter.bite(target)
+				}
+
+				/*自動占い*/
+				for(var player of this.players.savoAbility("canFortune")){
+					var target = this.players.lot(player.no)
+					player.fortune(target, true)
+				}
+
+				/*自動護衛*/
+				if(this.day >= 2){
+					for(var player of this.players.savoAbility("canGuard")){
+						var target = this.players.lot(player.no)
+						player.guard(target, true)
+					}
+
+					/* 護衛集計 */
+					for(var player of this.players.select("canGuard")){
+						var target = this.players.pick(player.ability.target)
+						target.guarded = true
+					}
+				}
+
+				var kills = []
+				var imos = []
+
+
+				var bite = this.bite
+				if(!bite.guarded && !bite.job.isResistBite){
+
+					if(bite.job.isUseDecoy){
+						var slave = this.players.select("isDecoy")
+						if(slave.length){
+							kills = kills.concat(slave)
+						} else {
+							kills.push(bite)
+						}
+					} else {
+						kills.push(bite)
+					}
+
+					if(bite.job.isStandOff){
+						kills.push(this.biter)
+					}
+				}
+
+				for(var f of this.fortuned){
+					var fortuned = this.players.pick(f)
+					if(fortuned.job.ismelt){
+						kills.push(fortuned)
+					}
+				}
+
+				for(var kill of kills){
+					kill.kill("bite")
+				}
+
+				this.players.fellowFox()
+				if(this.endCheck()) return false
+
+				this.room.assign()
+
+				this.log.add("changePhase",{
+					day: this.day+1,
+					phase: "day"
+				})
+
+				this.day++
+
+				this.setTimer("day","vote")
+				break
+
+			case "vote":
+				this.log.add("changePhase",{
+					day: this.day,
+					phase: "vote"
+				})
+
+				this.setTimer("vote","night")
+				this.players.npcVote()
+				break		
+
+			case "revote":
+				this.log.add("changePhase",{
+					phase: "revote"
+				})
+				phase = "vote"
+				this.setTimer("vote", "night")
+
+				this.players.resetVote()
+				this.players.npcVote()
+				break
+
+		}
+
+		this.phase = phase
+		this.emitPersonalData()
+		this.emitChangePhase(phase)
+
+		if(phase == "epilogue"){
+			this.finish()
+		}
+
+		this.npcTalk()
+	}
+
+	finish(){
+		clearTimeout(this.timerFlg)
+		this.phaseLimit = null
+
+		this.emitPlayer()
+		this.io.emit("initialLog", this.log.all())
+
+		GameIO.update(this.vno, {"state":"finish"})
+
+		var logtime = moment().add(10,"minute").format("YYYY/MM/DD HH:mm:ss")
+		this.log.add("system",{
+			message: "この村は" + logtime + "にhtml化されます。"
+		})
+
+		setTimeout(() => {
+			this.close()
+		}, 1000 * 60 * 10)
+	}
+
+	emitChangePhase(phase){
+		this.io.emit("changePhase", {
+			phase: phase,
+			left: this.time[phase],
+			targets: this.players.makeTargets(),
+			day: this.day
+		})
+	}
+
+	emitInitialPhase(socket){
+		var time = null
+		if(this.phaseLimit){
+			time = moment().diff(this.phaseLimit, "seconds") * -1
+		} 
+		socket.emit("changePhase", {
+			phase: this.phase,
+			left: time,
+			targets: this.players.makeTargets(),
+			day: this.day,
+			villageInfo: this.villageInfo()
+		})		
+	}
+
+	emitPersonalData(){
+		for(var player of this.players){
+			player.socket.emit("you", player.forClientDetail())
+		}
+	}
+
+	setTimer(from,to){
+		clearTimeout(this.timerFlg)
+
+		this.timerFlg = setTimeout(() => {
+			this.changePhase(to)
+		}, 1000 * this.time[from])
+
+		this.phaseLimit = moment().add(this.time[from], "seconds").format()
+		this.emitPlayer()
+	}
+
+	emitInitialLog(userid, socket){
+		if(this.phase == "epilogue"){
+			socket.emit("initialLog", this.log.all())
+		}
+		var player = this.players.pick(userid)
+		var logs = this.log.initial(player)
+		socket.emit("initialLog", logs)
+	}
+
+	listen(){
+		this.io.on("connection", (socket) => {
+
+			var session = socket.request.session
+			var userid = session.userid
+			var player = null
+
+			this.emitPlayer(socket)
+			
+			if(this.players.in(userid)){
+				player = this.players.pick(userid)
+
+				socket.emit("enterSuccess", player.forClientDetail())
+
+				player.socket.updateSocket(socket)
+
+				this.room.assign()
+
+				this.emitPlayer()
+			}
+
+			this.emitInitialPhase(socket)
+			this.emitInitialLog(userid,socket)
+
+			socket.on("enter",(data) => {
+
+				if(this.players.in(userid)) return false
+				if(this.players.num() >=  this.capacity) {
+					return false
+				}
+
+				data.userid = userid
+				data.socket = socket
+				player = this.players.add(data)
+
+				socket.emit("enterSuccess", player.forClientDetail())
+				this.emitPlayer()
+			})
+
+			socket.on("leave",(data) => {
+				if(!this.players.in(userid)) return false
+				this.players.leave(userid)
+				this.emitPlayer()
+			})
+
+			socket.on("talk",(data) => {
+				if(!this.canTalkNow(player, data)) return false
+				this.talk(userid, data)
+			})
+
+			socket.on("vote",(data) => {
+				if(!this.canVote(player, data)) return false
+				this.vote(userid, data)
+			})
+
+			socket.on("ability",(data) => {
+				if(!this.canUseAbility(player, data)) return false
+				this.useAbility(userid, data)	
+			})
+
+			socket.on("start", (data) => {
+				if(!(player.isGM && this.phase == "prologue") ) return false
+				if(this.players.num() < 4 ) return false
+				this.start()
+			})
+
+			socket.on("summonNPC", (data) => {
+				if(!(player.isGM && this.phase == "prologue") ) return false
+				this.players.summonNPC()
+				this.emitPlayer()
+			})
+
+			socket.on("checkCast", (data) => {
+				if(!(player.isGM && this.phase == "prologue") ) return false
+				this.checkCast()
+			})
+
+			socket.on("kick", (data) => {
+				if(!(player.isGM && this.phase == "prologue") ) return false
+				this.players.kick(data.target)
+				this.emitPlayer()
+			})
+
+			socket.on("fix", (data) => {
+				if(!(player.isGM && this.phase == "prologue") ) return false
+				this.fixInfo(data)
+
+			})
+		})				
+	}
+
+	close(){
+		GameIO.writeHTML(this.log.all(), this.players.list, this.villageInfo())
+		GameIO.update(this.vno,{"state":"logged"})
+	}
+}
+
+class GameIO{
+	static writeHTML(log, player, vinfo){
+		ejs.renderFile("./views/worewolf_html.ejs", {
+			logs: log,
+			players: player,
+			vinfo: vinfo
+		},function(err, html){
+			if(err) console.log(err)
+			fs.writeFile("./public/log/"+vinfo.no+".html", html, "utf8", function(err){
+				console.log(err)
+			})
+		})
+	}
+
+	static update(vno, data){
+		GameSchema.updateOne(
+			{vno: vno},
+			{$set: data},
+			(err) => {if (err) console.log(err)}
+		)
+	}
+
+	static find(vno){
+		return GameSchema.findOne({"vno": vno}).exec()
+	}
+}
+
+class GameManager{
+	constructor(io){
+		this.io = io
+		this.games = []
+		this.listen()
+	}
+
+	listen(){
+
+		console.log("listen!")
+		var mgr = this
+
+		var rd = this.io.of((name, query, next) => {next(null, /^\/room-\d+$/.test(name))}).on("connect", async function(socket){
+			var nsp = socket.nsp
+			var vno = nsp.name.match(/\d+/)[0] - 0
+
+			if(!mgr.games.includes(vno)){
+
+				var result = await GameIO.find(vno)
+
+				if(result){
+					mgr.games.push(vno)
+					var village = new Game(nsp, result)
+					village.listen()
+					console.log("listen room-"+vno)
+				}
+			}
+		})
+	}
+}
+
+module.exports = GameManager

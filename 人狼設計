@@ -1,0 +1,162 @@
+/*
+
+village
+-村番号:vno: int
+-宣伝文:ad : str
+-村人リスト:players : class
+-gm情報:gm: player
+-設定:option
+-ログ:log: array(log)(後述)
+--時間:time
+---昼時間:day: int
+---投票時間:vote: int
+---夜時間:night: int
+---能力実行時間:ability: int
+---n秒ルール:n-second: int
+--配役:casting: str
+-ゲーム内識別id用のカウンタ: count : int
+
+player
+-ゲーム内で使用する識別id:no : int?
+-ゲーム内で使用する名前:cn: str
+-個人識別ID(認証に用いるもの):userid str
+-役職:job : job(後述)
+-ゲームマスターか否か:isGM : bool
+-生死:isAlive : bool
+-投票:vote: int
+-能力:ability
+--実行したか: isUsed
+--実行先:target
+-socket接続用のid:socketid: str
+
+job
+-名称(アルファベット2文字):name: str
+-日本語の名称: nameja: str
+-説明文:description: str
+
+
+以下すべてbool
+
+能動型
+-占いが出来るか: canFortune
+-護衛ができるかどうか: canGuard
+-襲撃ができるかどうか: canBite
+-共有会話ができるかどうか: canShareTalk
+-狼会話ができるかどうか: canWolfTalk
+-狐会話ができるかどうか: canWolfTalk
+
+受動型
+-霊結果がわかるかどうか: canNecro
+
+常在型
+-共有者がわかるかどうか: canKnowShare
+-狼がわかるかどうか: canKnowWolf
+
+特性型
+-噛まれても死なない isResistBite
+-占われると死ぬ ismelt
+-発言が大きくなるかどうか: isBigTalk
+-狼に噛まれたとき相打ちにするかどうか && 処刑された時道連れを出すかどうか: isStandoff
+-妖狐がいなくなった時、後追いする: isFellowFox
+-初日がなれない onlyNotDamy
+
+判定型
+-陣営: camp(human, wolf, fox, bat?)
+-勝敗判定時のカウント: species: str(human, wolf, fox)
+-占い結果 resultFortune str(ja)
+-霊能結果 resultNecro: str(ja)
+
+job英語一覧
+村人:villager[VLG]
+占い師:fortune[FTN]
+霊能者:necro[NCR]
+狩人:guardman[GDM]
+共有者:share[SHR]
+猫又:cat[CAT]
+
+狂人:madman[MAD]
+狂信者:fanatic[FNT]
+人狼:wolf[WLF]
+
+妖狐:fox[FOX]
+背徳者:imo[IMO]
+
+
+vote
+-各日最大4回分:arrayのarrayになるか
+
+配役
+
+Y(Yakiniku) 焼き肉鯖おすすめの配役
+
+ 8:村占霊共2狂狼2:8CFO
+ 9:村3占霊狩狼2こ:9D背徳
+10:
+11:村5占霊狩狂狼2:11A
+12:村5占霊狩狂狼2狐:12B
+13:村6占霊狩狂狼2狐:12B+村1
+14:村2占霊狩共2猫信狼3狐背:14D
+15:村3占霊狩共2猫信狼3狐背:14D+村1
+16:村6占霊狩共2狂狼3狐:16A
+17:村7占霊狩共2狂狼3狐:17A
+18:村6占霊狩共2猫狂狼4狐:18A猫
+19:村6占霊狩共2猫信狼4狐背:19D
+
+
+W(Wakamete) わかめて鯖スタンダードな配役
+
+ 8:村5占狼2
+ 9:村5占霊狼2
+10:村5占霊狂狼2
+11:村5占霊狩狂狼2
+12:村6占霊狩狂狼2(狐なし！)
+13:村4占霊狩共2狂狼2狐
+14:村5占霊狩共2狂狼2狐
+15:村6占霊狩共2狂狼2狐
+16:村6占霊狩共2狂狼3狐
+17:村7占霊狩共2狂狼3狐
+18:村6占霊狩共2猫狂狼4狐
+19:村6占霊狩共2猫信狼4狐
+
+
+V(Varient) ちょっとひねっ
+
+ 8:
+ 9:
+10:
+11:村5占霊狩狂狼2:11A
+12:村4占霊狩狼狂狼3:12A猫
+13:村5占霊狩狼狂狼3:12A猫+村1
+14:村2占霊狩共2猫信狼3狐背:14D
+15:村3占霊狩共2猫信狼3狐背:14D+村1
+16:村6占霊狩探共狂狼3狐:16探偵
+17:村7占霊狩探共狂狼3狐:17探偵
+18:村7占霊狩探共狂狼4狐:18探偵(テスト)
+19:村6占霊狩共2猫信狼4狐背:19D
+
+Z(自由配役) 
+
+*/
+
+
+class Village{
+	constructor(setting){
+		this.vno = setting.vno || 1
+		this.ad = setting.ad || "誰でも歓迎"
+		this.players = []
+		this.gm = setting.gm
+		this.casting = setting.casting || "Y"
+		this.time = {}
+		if(setting.time){
+			this.time = setting.time
+		} else {
+			this.time = {
+				day: 255,
+				vote: 120,
+				night: 180,
+				ability: 120,
+				n-second: 15
+			}
+		}
+	}
+}
