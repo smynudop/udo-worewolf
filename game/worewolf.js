@@ -67,6 +67,7 @@ class Player{
 		this.color = data.color || "red"
 		this.job = null
 		this.isGM = data.isGM || false
+		this.isKariGM = data.isKariGM || false
 		this.isDamy = data.isDamy || false
 		this.isNPC = data.isNPC || false
 		this.isAlive = true
@@ -80,6 +81,11 @@ class Player{
 		this.log = log
 
 		this.socket = new PlayerSocket(data.socket)
+	}
+
+	update(cn, color){
+		this.cn = cn
+		this.color = color
 	}
 
 	forClientSummary(){
@@ -99,11 +105,12 @@ class Player{
 			color: this.color,
 			job: this.job,
 			isGM: this.isGM,
+			isKariGM: this.isKariGM,
 			isAlive: this.isAlive,
 			vote: this.voteTarget,
 			ability:{
 				isUsed: this.ability.isUsed,
-				target: this.ability.target ? this.ability.target.no : null
+				target: this.ability.target
 			}
 		}
 	}
@@ -143,46 +150,10 @@ class Player{
 		this.guarded = false
 	}
 
-
-	fortune(target){
+	useAbility(type,target){
 		this.setTarget(target)
-
-		this.log.add("fortune",{
-			no: this.no,
-			player: this.cn,
-			target: target.cn,
-			result: target.job.fortuneResult
-		})
+		this.log.add(type, {player: this, target: target})
 		this.socket.emit("useAbilitySuccess")
-	}
-
-	necro(target){
-		this.log.add("necro", {
-			no: this.no,
-			target: target.cn, 
-			result: target.job.necroResult
-		})
-	}
-
-	guard(target){
-		this.setTarget(target)
-		
-		this.log.add("guard",{
-			no: this.no,
-			player: this.cn,
-			target: target.cn,
-		})
-		this.socket.emit("useAbilitySuccess")
-	}
-
-	bite(target){
-		this.setTarget(target)
-
-		this.log.add("bite",{
-			no: this.no,
-			player: this.cn,
-			target: target.cn,
-		})
 	}
 
 	noticeDamy(damy){
@@ -287,7 +258,7 @@ class PlayerManager{
 		}	
 	}
 
-	num(){
+	get num(){
 		return this.list.length
 	}
 
@@ -320,10 +291,6 @@ class PlayerManager{
 			}
 		}
 		return this.players[id]
-	}
-
-	GM(){
-		return this.players[999]
 	}
 
 	damy(){
@@ -437,17 +404,6 @@ class PlayerManager{
 	}
 
 	setGM(gmid){
-		var wolfs = new Player({
-			userid: "damyid",
-			socket: null,
-			no: 998, 
-			cn: "狼たち",
-			color: "wolfs",
-			isGM: true
-		}, this)
-		this.players[998] = wolfs
-
-
 		var gm = new Player({
 			userid: gmid,
 			socket: null,
@@ -461,6 +417,16 @@ class PlayerManager{
 		this.userid2no[gmid] = 999	
 
 		gm.job = Cast.job("GM")
+	}
+
+	setKariGM(gmid){
+		this.add({
+			userid: gmid,
+			socket: null,
+			cn: "仮GM",
+			color: "orange",
+			isKariGM: true
+		})	
 	}
 
 	isCompleteVote(){
@@ -547,6 +513,66 @@ class Room{
 	}
 }
 
+class Date{
+	constructor(){
+		this.day = 1
+		this.phase = "prologue"
+		this.phaseLimit = null
+	}
+
+	setLimit(sec){
+		this.phaseLimit = moment().add(sec, "seconds").format()
+	}
+
+	clearLimit(){
+		this.phaseLimit = null
+	}
+
+	leftSeconds(){
+		return this.phaseLimit ? moment().diff(this.phaseLimit, "seconds") * -1 : null
+	}
+
+	sunrise(){
+		this.day++
+	}
+
+	pass(phase){
+		this.phase = phase
+	}
+
+	forLog(){
+		return {day: this.day, phase: this.phase}
+	}
+
+	is(phase){
+		return phase == this.phase
+	}
+
+	canWolfTalk(){
+		return this.phase == "night"
+	}
+
+	canNightTalk(){
+		return this.phase == "night" || this.phase == "ability"
+	}
+
+	canDiscuss(){
+		return ["prologue","day","epilogue"].includes(this.phase)
+	}
+
+	canTweet(){
+		return ["day","vote","night","ability"].includes(this.phase)
+	}
+
+	canVote(){
+		return ["day","vote"].includes(this.phase)
+	}
+
+	canUseAbility(){
+		return ["night", "ability"].includes(this.phase)
+	}
+}
+
 class Game{
 	constructor(io, data){
 		this.io = io
@@ -562,17 +588,18 @@ class Game{
 			ability: 120,
 			nsec: 15
 		}
+		this.GMid = data.GMid
 		this.capacity = data.capacity || 17
 		this.isShowJobDead = data.isShowJobDead || true
+		this.isKariGM = data.isKariGM || true
 
-		this.log = new Log(io, this)
+		this.date = new Date()
+		this.log = new Log(io, this.date)
 		this.players = new PlayerManager(this.log)
 		this.room = new Room(this.players, this.isShowJobDead)
 
-		this.phase = "prologue"
-		this.phaseLimit = null
 		this.timerFlg = null
-		this.day = 1
+		this.leftVoteNum = 4
 
 		this.win = null
 		this.exec = null
@@ -581,24 +608,34 @@ class Game{
 		this.biter = null
 		this.fortuned = []
 
-		this.players.setGM(data.GMid)
-
 		this.log.add("vinfo", this.villageInfo())
 
 		this.players.summonDamy()
 
+		if(this.isKariGM){
+			this.players.setKariGM(data.GMid)	
+		} else {
+			this.players.setGM(data.GMid)
+		}
+
 	}
 
 	fixInfo(data){
-		console.log(data)
 		for(var key in data){
 			if(this[key] === undefined) continue
 			this[key] = data[key]
-			console.log(key, data[key])
 		}
 
 		GameIO.update(this.vno, data)
 		this.log.add("vinfo", this.villageInfo())
+	}
+
+	fixPersonalInfo(player,data){
+		var cn = data.cn.trim()
+		if(cn.length == 0 || cn.length > 8 )return false
+		player.update(cn, data.color)
+
+		this.emitPlayer()
 	}
 
 	npcTalk(){
@@ -608,12 +645,12 @@ class Game{
 				cn: player.cn,
 				color: player.color
 			}
-			if(this.phase == "day"){
+			if(this.date.is("day")){
 				var talks = ["おはよー","おはよ","朝じゃん","眠たい"]
 				data.type = "discuss"
 				data.message = talks.lot()
 				this.log.add("talk",data)
-			} else if (this.phase == "night"){
+			} else if (this.date.is("night")){
 				if(player.job.canWolfTalk){
 					data.type = "wolf"
 					data.message = "アオーン"
@@ -640,26 +677,26 @@ class Game{
 		switch(data.type){
 
 			case "discuss":
-				return ["prologue", "day"].includes(this.phase)
+				return this.date.canDiscuss()
 				    && player.isAlive
-				    || this.phase == "epilogue"
+				    || this.date.is("epilogue")
 
 			case "tweet":
-				return ["discuss","vote","night","ability"].includes(this.phase)
+				return this.date.canTweet()
 				    && player.isAlive
 
 			case "share":
-				return ["night", "ability"].includes(this.phase)
+				return this.date.canNightTalk()
 				    && player.job.canShareTalk
 				    && player.isAlive
 
 			case "fox":
-				return ["night", "ability"].includes(this.phase)
+				return this.date.canNightTalk()
 				    && player.job.canFoxTalk
 				    && player.isAlive
 
 			case "wolf":
-				return this.phase == "night"
+				return this.date.canWolfTalk()
 				    && player.job.canWolfTalk
 				    && player.isAlive
 
@@ -671,7 +708,7 @@ class Game{
 	}
 
 	canVote(player, data){
-		if(!["day", "vote"].includes(this.phase)) return false
+		if(!this.date.canVote()) return false
 		if(!player) return false
 		if(!this.players.pick(data.target)) return false
 		if(player.no == data.target) return false
@@ -681,7 +718,7 @@ class Game{
 
 	canUseAbility(player, data){
 
-		if(!["night", "ability"].includes(this.phase)) return false
+		if(!this.date.canUseAbility()) return false
 		if(!player) return false
 
 		var target = this.players.pick(data.target)
@@ -711,7 +748,7 @@ class Game{
 			pr: this.pr,
 			no: this.vno,
 			time : this.time,
-			GMid: this.players.GM().userid,
+			GMid: this.GMid,
 			capacity: this.capacity,
 			casttype: this.casttype,
 			isShowJobDead: this.isShowJobDead
@@ -722,7 +759,7 @@ class Game{
 
 		var summary = this.players.forClientSummary()
 		var detail = this.players.forClientDetail()
-		if(this.phase == "epilogue"){
+		if(this.date.is("epilogue")){
 			if(socket){
 				socket.emit("player", detail)
 			} else{
@@ -743,7 +780,6 @@ class Game{
 
 		var player = this.players.pick(userid)
 
-		data.day = this.day
 		data.cn = player.cn
 		data.color = player.color
 
@@ -770,16 +806,16 @@ class Game{
 
 		switch(data.type){
 			case "fortune":
-				player.fortune(target)
+				player.useAbility("fortune", target)
 				this.fortuned.push(target.no)
 				break
 
 			case "guard":
-				player.guard(target)
+				player.useAbility("guard", target)
 				break
 
 			case "bite":
-				player.bite(target)
+				player.useAbility("bite", target)
 
 				this.bite = target
 				this.biter = player
@@ -797,14 +833,14 @@ class Game{
 
 		GameIO.update(this.vno, {"state":"playing"})
 
-		this.phase = "vote" // これをやらないとログが出ない
+		this.date.pass("vote") // これをやらないとログが出ない
 		this.casting()
 
 		this.changePhase("night")
 	}
 
 	casting(){
-		var castlist = Cast.makeJobs(this.casttype, this.players.num())
+		var castlist = Cast.makeJobs(this.casttype, this.players.num)
 		var job,i
 		for(var player of this.players){
 
@@ -821,14 +857,14 @@ class Game{
 		this.room.assign()
 		this.players.setKnow()
 
-		var txt = Cast.makeCastTxt(this.casttype, this.players.num())
+		var txt = Cast.makeCastTxt(this.casttype, this.players.num)
 		this.log.add("system",{
 			message: `配役は${txt}です。`
 		})
 	}
 
 	checkCast(){
-		var txt = Cast.makeCastTxtAll(this.players.num())
+		var txt = Cast.makeCastTxtAll(this.players.num)
 		this.log.add("system",{
 			message: txt
 		})	
@@ -870,9 +906,9 @@ class Game{
 
 			case "night":
 
-				this.phase = "vote"
+				this.date.pass("vote")
 				
-				if(this.day >= 2){
+				if(this.date.day >= 2){
 					for(var player of this.players.savoVote()){
 						var r = this.players.lot(player.no)
 						player.vote(r, true)
@@ -881,7 +917,7 @@ class Game{
 					var voteResult = this.players.compileVote()
 
 					this.log.add("voteSummary",{
-						message: `${this.day}日目 投票結果。` + voteResult.table
+						message: `${this.date.day}日目 投票結果。` + voteResult.table
 					})
 					
 					if(!voteResult.exec){
@@ -909,36 +945,30 @@ class Game{
 				this.fortuned = []
 				this.bite = null
 				this.biter = null
+				this.leftVoteNum = 4
 
-				this.log.add("changePhase",{phase: "night", day: this.day})
+				this.pass("night")
 
-				if(this.day==1){
+				if(this.date.day==1){
 					var damy = this.players.damy()
 					this.bite = damy
-					this.log.add("bite",{player: "狼", target: damy.cn})
+					this.log.add("bite",{player: {cn: "狼", no: 998}, target: damy})
 
-					var reikos = this.players.select("canKnowDamyJob")
-					for(var reiko of reikos){
+					for(var reiko of this.players.select("canKnowDamyJob")){
 						reiko.noticeDamy(damy)
 					}
 				}
 
-				if(this.day >= 2){
+				if(this.date.day >= 2){
 					for(var player of this.players.select("canNecro")){
-						player.necro(this.exec)
+						player.useAbility("necro", this.exec)
 					}					
 				}
 
-				this.npcTalk()
-
-				this.setTimer("night","ability")
 				break
 
 			case "ability":
-				this.log.add("changePhase",{
-					phase: "ability"
-				})
-				this.setTimer("ability","day")
+				this.pass("ability")
 				break
 
 			case "day":
@@ -950,20 +980,20 @@ class Game{
 					this.bite = target
 					this.biter = biter
 
-					biter.bite(target)
+					biter.useAbility("bite",target, true)
 				}
 
 				/*自動占い*/
 				for(var player of this.players.savoAbility("canFortune")){
 					var target = this.players.lot(player.no)
-					player.fortune(target, true)
+					player.useAbility("fortune",target, true)
 				}
 
 				/*自動護衛*/
-				if(this.day >= 2){
+				if(this.date.day >= 2){
 					for(var player of this.players.savoAbility("canGuard")){
 						var target = this.players.lot(player.no)
-						player.guard(target, true)
+						player.useAbility("guard",target, true)
 					}
 
 					/* 護衛集計 */
@@ -1008,48 +1038,53 @@ class Game{
 				}
 
 				this.players.fellowFox()
+
 				if(this.endCheck()) return false
 
 				this.room.assign()
+				this.date.sunrise()
+				this.pass("day")
 
-				this.log.add("changePhase",{
-					day: this.day+1,
-					phase: "day"
-				})
-
-				this.day++
-
-				this.setTimer("day","vote")
 				break
 
 			case "vote":
-				this.log.add("changePhase",{
-					day: this.day,
-					phase: "vote"
-				})
-
-				this.setTimer("vote","night")
+			
+				this.pass("vote")
 				this.players.npcVote()
+
 				break		
 
 			case "revote":
+				this.leftVoteNum--
+
+				if(!this.leftVoteNum){
+					this.log.add("gameend",{side: "引き分け"})
+					this.changePhase("epilogue")
+					return false
+				}
+
 				this.log.add("changePhase",{
-					phase: "revote"
+					phase: "revote",
+					left: this.leftVoteNum
 				})
-				phase = "vote"
-				this.setTimer("vote", "night")
 
 				this.players.resetVote()
+
+				this.pass("vote")
 				this.players.npcVote()
+
+				break
+			case "epilogue":
+				this.date.pass("epilogue")
 				break
 
 		}
 
-		this.phase = phase
+		this.emitPlayer()
 		this.emitPersonalData()
 		this.emitChangePhase(phase)
 
-		if(phase == "epilogue"){
+		if(this.date.is("epilogue")){
 			this.finish()
 		}
 
@@ -1058,7 +1093,7 @@ class Game{
 
 	finish(){
 		clearTimeout(this.timerFlg)
-		this.phaseLimit = null
+		this.date.clearLimit()
 
 		this.emitPlayer()
 		this.io.emit("initialLog", this.log.all())
@@ -1080,20 +1115,17 @@ class Game{
 			phase: phase,
 			left: this.time[phase],
 			targets: this.players.makeTargets(),
-			day: this.day
+			day: this.date.day
 		})
 	}
 
 	emitInitialPhase(socket){
-		var time = null
-		if(this.phaseLimit){
-			time = moment().diff(this.phaseLimit, "seconds") * -1
-		} 
+		var time = this.date.leftSeconds()
 		socket.emit("changePhase", {
-			phase: this.phase,
+			phase: this.date.phase,
 			left: time,
 			targets: this.players.makeTargets(),
-			day: this.day,
+			day: this.date.day,
 			villageInfo: this.villageInfo()
 		})		
 	}
@@ -1104,24 +1136,36 @@ class Game{
 		}
 	}
 
-	setTimer(from,to){
+	pass(phase){
+		var next = {
+			"day": "vote",
+			"vote": "night",
+			"night": "ability",
+			"ability": "day"
+		}
+		this.date.pass(phase)
+		this.log.add("changePhase",this.date.forLog())
+
 		clearTimeout(this.timerFlg)
 
 		this.timerFlg = setTimeout(() => {
-			this.changePhase(to)
-		}, 1000 * this.time[from])
-
-		this.phaseLimit = moment().add(this.time[from], "seconds").format()
-		this.emitPlayer()
+			this.changePhase(next[phase])
+		}, 1000 * this.time[phase])
+		this.date.setLimit(this.time[phase])
 	}
 
 	emitInitialLog(userid, socket){
-		if(this.phase == "epilogue"){
+		if(this.date.is("epilogue")){
 			socket.emit("initialLog", this.log.all())
+			return false
 		}
 		var player = this.players.pick(userid)
 		var logs = this.log.initial(player)
 		socket.emit("initialLog", logs)
+	}
+
+	permitGMCommand(player){
+		return (player.isGM || player.isKariGM && this.date.is("prologue"))
 	}
 
 	listen(){
@@ -1151,7 +1195,7 @@ class Game{
 			socket.on("enter",(data) => {
 
 				if(this.players.in(userid)) return false
-				if(this.players.num() >=  this.capacity) {
+				if(this.players.num >=  this.capacity) {
 					return false
 				}
 
@@ -1167,6 +1211,11 @@ class Game{
 				if(!this.players.in(userid)) return false
 				this.players.leave(userid)
 				this.emitPlayer()
+			})
+
+			socket.on("fix-player", (data) => {
+				if(!player) return false
+				this.fixPersonalInfo(player,data)
 			})
 
 			socket.on("talk",(data) => {
@@ -1185,34 +1234,38 @@ class Game{
 			})
 
 			socket.on("start", (data) => {
-				if(!(player.isGM && this.phase == "prologue") ) return false
-				if(this.players.num() < 4 ) return false
+				if(!this.permitGMCommand(player)) return false
+				if(this.players.num < 4 ) return false
 				this.start()
 			})
 
 			socket.on("summonNPC", (data) => {
-				if(!(player.isGM && this.phase == "prologue") ) return false
+				if(!this.permitGMCommand(player)) return false
 				this.players.summonNPC()
 				this.emitPlayer()
 			})
 
 			socket.on("checkCast", (data) => {
-				if(!(player.isGM && this.phase == "prologue") ) return false
+				if(!this.permitGMCommand(player)) return false
+
 				this.checkCast()
 			})
 
 			socket.on("kick", (data) => {
-				if(!(player.isGM && this.phase == "prologue") ) return false
+				if(!this.permitGMCommand(player)) return false
+
 				this.players.kick(data.target)
 				this.emitPlayer()
 			})
 
-			socket.on("fix", (data) => {
-				if(!(player.isGM && this.phase == "prologue") ) return false
+			socket.on("fix-gm", (data) => {
+				if(!this.permitGMCommand(player)) return false
+
 				this.fixInfo(data)
 
 			})
-		})				
+		})
+		this.io.emit("refresh")			
 	}
 
 	close(){

@@ -76,8 +76,15 @@ $(function(){
         socket.emit("kick",{target: target})
     })
 
-    $("#fix").click(function(){
-        socket.emit("fix",{
+    $("#fix-player").click(function(){
+        socket.emit("fix-player",{
+            cn: $("#fix-cn").val(),
+            color:   $("#fix-color").val(),
+        })
+    })
+
+    $("#fix-gm").click(function(){
+        socket.emit("fix-gm",{
             name: $("#fix-name").val(),
             pr:   $("#fix-pr").val(),
             casttype: $("#fix-casttype").val(),
@@ -188,6 +195,10 @@ $(function(){
 
     });
 
+    socket.on("refresh",function(){
+        location.reload()
+    })
+
     $("#command-login").show()
 
 })
@@ -272,7 +283,7 @@ function refresh(){
         }
     } else {
         var commands
-        if(me.isGM){
+        if(me.isGM || me.isKariGM && phase == "prologue"){
              $("#command-gm").show()
         }
         if(phase == "prologue"){
@@ -435,7 +446,7 @@ function refreshPlayers(data){
 
 
 
-    if(me.isGM){
+    if(me.isGM || me.isKariGM){
         var select = $("#gmTarget")
         select.empty()
         $("<option></option>").html("▼選択")

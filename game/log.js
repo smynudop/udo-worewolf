@@ -1,8 +1,8 @@
 class Log{
-	constructor(nsp, game){
+	constructor(nsp, date){
 		this.list = []
 		this.nsp = nsp
-		this.game = game
+		this.date = date
 		this.count = 1
 	}
 
@@ -118,7 +118,7 @@ class Log{
 			case "talk":
 				data = (option)
 				data.message = this.escape(data.message)
-				data.day  = data.day || this.game.day
+				data.day  = this.date.day
 
 
 				if(data.type == "discuss"){
@@ -152,35 +152,35 @@ class Log{
 			case "fortune":
 				var isAuto = option.isAuto ? "【自動実行】" : ""
 				data = ({
-					no: option.no,
+					no: option.player.no,
 					type: "personal",
-					message: `【占い】${option.player}さんは${option.target}を占い、結果は【${option.result}】でした。${isAuto}`
+					message: `【占い】${option.player.cn}さんは${option.target.cn}さんを占い、結果は【${option.target.fortuneResult}】でした。${isAuto}`
 				})
 				break
 
 			case "necro":
 				data = ({
-					no: option.no,
+					no: option.player.no,
 					type: "personal",
-					message: `【霊能】前日処刑された${option.target}さんは【${option.result}】でした。`
+					message: `【霊能】前日処刑された${option.target.cn}さんは【${option.target.necroResult}】でした。`
 				})
 				break
 
 			case "guard":
 				var isAuto = option.isAuto ? "【自動実行】" : ""
 				data = ({
-					no: option.no,
+					no: option.player.no,
 					type: "personal",
-					message: `【護衛】${option.player}さんは${option.target}を護衛します。${isAuto}`
+					message: `【護衛】${option.player.cn}さんは${option.target.cn}を護衛します。${isAuto}`
 				})
 				break
 
 			case "bite":
 				var isAuto = option.isAuto ? "【自動実行】" : ""
 				data = ({
-					no: option.no,
+					no: option.player.no,
 					type: "wolf-system",
-					message: `【襲撃】${option.player}さんは${option.target}を狙います。${isAuto}`
+					message: `【襲撃】${option.player.cn}さんは${option.target.cn}を狙います。${isAuto}`
 				})
 				break
 
@@ -210,6 +210,13 @@ class Log{
 				break
 
 			case "gameend":
+				if(option.side == "引き分け"){
+					data = ({
+						type: "system",
+						message: `【引き分け】です！`
+					})					
+					break
+				}
 				data = ({
 					type: "system",
 					message: `【${option.side}】の勝利です！`
@@ -233,7 +240,7 @@ class Log{
 					case "revote":
 						data = {
 							type: "system",
-							message: `再投票になりました。`
+							message: `再投票になりました。あと${option.left}回で決まらなければ引き分けになります。`
 						}
 						break
 					case "night":
@@ -315,8 +322,8 @@ GM：${option.GMid}`
 				}
 				break
 		}
-		data.day = this.game.day
-		data.phase = this.game.phase
+		data.day = this.date.day
+		data.phase = this.date.phase
 		this.list.push(data)
 		
 		switch(data.type){

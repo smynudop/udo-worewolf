@@ -168,6 +168,16 @@ header h1{
 	width:50%;
 }
 
+div.box{
+	display:inline-block;
+	vertical-align: top;
+	text-align: left;
+	padding: 0px 5px;
+}
+input[type=button].big{
+	width:150px;
+	height:80px;
+}
 #vinfo{
 	text-align:left;
 	display:none;

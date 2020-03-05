@@ -47,10 +47,30 @@
 				<input id="enter" type="button" value="入室">      		
 			</div>
 			<div id="command-logout">
-				<input type="button" value="退室" class="exit">				   		
+				<div class="box">
+				CN:<input type="text" id="fix-cn"><br>
+				色:<select id="fix-color">
+					<option value="red">赤</option>
+					<option value="pink">ピンク</option>
+					<option value="orange">オレンジ</option>
+					<option value="yellow">黄色</option>
+					<option value="green">緑</option>
+					<option value="skyblue">水色</option>
+					<option value="blue">青</option>
+					<option value="indigo">藍</option>
+					<option value="purple">紫</option>
+					<option value="black">黒</option>
+				</select><br>
+				<input type="button" value="変更" id="fix-player">
+			</div><div class="box">
+				<input type="button" value="退室" class="exit">	
+				</div>			   		
 			</div>
 			<div id="command-gm">
-				<input type="button" value="ゲーム開始" id="gameStart">
+				<div class="box">
+				<input type="button" value="ゲーム開始" class="big" id="gameStart">
+				</div>
+				<div class="box"> 
 				<input type="button" value="NPC召喚" id="summonNPC">	
 				<input type="button" value="配役確認" id="checkCast">
 				<input type="button" value="村情報修正" id="fixVillageInfo">
@@ -58,6 +78,7 @@
 
 				<select id="gmTarget"></select>
 				<input type="button" value="キック" id="kick">
+				</div>
 			<div id="vinfo">
 				村名<input type="text" id="fix-name"><br>
 				PR<input type="text" id="fix-pr"><br>
@@ -68,7 +89,7 @@
 				定員<input type="number" id="fix-capacity">
 				配役<select id="fix-casttype"><option value="Y">Y</option><option value="D">D</option></select>
 				霊界表示<select id="fix-isShowJobDead"><option value="1">はい</option><option value="0">いいえ</option></select>
-				<input type="button" value="変更" id="fix">
+				<input type="button" value="変更" id="fix-gm">
 			</div>
 			</div>
 			<div id="command-ability">

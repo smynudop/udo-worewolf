@@ -25,9 +25,12 @@ var registerRouter = require("./routes/register")
 var castRouter = require("./routes/cast")
 
 var app = express();
-
-var mongoURL = "mongodb://localhost:27017/worewolf"
-//var mongoURL = "mongodb://heroku_9pvbfnxx:i2rp4vjh712sm5pnme6os9pf6o@ds133271.mlab.com:33271/heroku_9pvbfnxx"
+var mongoURL
+if(process.env.NODE_ENV == "development"){
+  mongoURL = "mongodb://localhost:27017/worewolf"
+} else {
+  mongoURL = "mongodb://heroku_9pvbfnxx:i2rp4vjh712sm5pnme6os9pf6o@ds133271.mlab.com:33271/heroku_9pvbfnxx"
+}
 mongoose.set('useCreateIndex', true)
 mongoose.connect(mongoURL, { useNewUrlParser: true ,  useUnifiedTopology: true});
 
