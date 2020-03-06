@@ -179,11 +179,13 @@ $(function(){
     socket.on("voteSuccess", function(no){
         isVote = true
         $("#command-vote .alert").addClass("hide")
+        $("#menu-sp-discuss").removeClass("alert") 
     })
 
     socket.on("useAbilitySuccess", function(no){
         isUseAbility = true
         $("#command-ability .alert").addClass("hide")
+        $("#menu-sp-discuss").removeClass("alert") 
     })
 
 
@@ -313,9 +315,11 @@ function refresh(){
 
                     if(phase == "day"){
                         commands.unshift(["discuss", "発言"])   
-                        $("#command-vote .alert").addClass("hide")        
+                        $("#command-vote .alert").addClass("hide")   
+                        $("#menu-sp-discuss").removeClass("alert")        
                     } else {
-			        	$("#command-vote .alert").toggleClass("hide", isVote)                    	
+			        	$("#command-vote .alert").toggleClass("hide", isVote)
+                        $("#menu-sp-discuss").toggleClass("alert",!isVote)                  	
                     }
 
                     break
@@ -352,8 +356,10 @@ function refresh(){
                             commands.unshift(["wolf", "会話"])                    
                         }
     			    	$("#command-ability .alert").addClass("hide")
+                        $("#menu-sp-discuss").removeClass("alert") 
                     } else {
-    			    	$("#command-ability .alert").toggleClass("hide", isUseAbility)                    	
+    			    	$("#command-ability .alert").toggleClass("hide", isUseAbility) 
+                        $("#menu-sp-discuss").toggleClass("alert", !isUseAbility)                    	
                     }
 
 
@@ -531,6 +537,7 @@ function appendTalks(data){
 
     if(phase == "day" || phase == "vote"){
         $("#discuss tr").not(".votedetail")
+                          .not(`.day${day}-vote`)
                           .not(`.day${day}-day`)
                           .not(`.day${day-1}-ability`)
                           .remove()
@@ -538,6 +545,7 @@ function appendTalks(data){
 
     if(phase == "night" || phase == "ability"){
         $("#discuss tr").not(".votedetail")
+                        .not(`.day${day}-ability`)
                           .not(`.day${day}-night`)
                           .not(`.day${day}-vote`)
                           .remove()

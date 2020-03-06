@@ -58,7 +58,7 @@ header .top{
 }
 header h1{
 	font-size:18px;
-	line-height: 40px;
+	line-height: 30px;
 
 	margin:0;
 	padding:0;
@@ -454,20 +454,33 @@ blockquote div.resno{
 	color:white;
 	border-left: 1px solid #ccc;
 	border-right: 1px solid #ccc;
+
+	position: relative;
+}
+
+#menu-sp li.alert:before{
+	position:absolute;
+	width: 24px;
+	height:24px;
+	top:-15px;
+	right:0px;
+	border-radius:13px;
+	background-color:red;
+	color:white;
+	content:"！";
+	font-weight: bold;
+	font-size:20px;
+	line-height: 24px;
 }
 
 #memoButton{
 	display:none;
 }
-#memo{
-	position: fixed;
-	width: 700px;
-	height:100vh;
-	padding:10px;
-	background-color: rgba(127,127,127,0.7);
 
-	top: 0;
-	right: -700px;
+#memo{
+	display:none;
+	width: 100%;
+	height:calc(100vh - 70px);
 }
 
 #memo.disp{
@@ -475,31 +488,21 @@ blockquote div.resno{
 }
 
 #memoClose{
-	width: 24px;
-	height:24px;
-	position: absolute;
-	top:10px;
-	right:10px;
-	background-color:white;
-	border-radius: 4px;
-	text-align: center;
-	font-size:24px;
-	line-height: 24px;
-	cursor: pointer;
+	display:none;
 }
 
 
 #memoTabs{
 	height: 24px;
 	font-size:0;
-	margin-top:16px;
+	text-align: center
 }
 
 .memoTab{
 	height:100%;
 	line-height: 24px;
 	display: inline-block;
-	width: 120px;
+	width: 30%;
 	border-radius: 8px 8px 0px 0px;
 	background-color: white;
 	text-align: center;
@@ -515,6 +518,8 @@ blockquote div.resno{
 .memoTab.selected{
 	color:orange;
 	background-color: white;
+	border: 1px solid orange;
+	border-bottom: 0px;
 }
 
 #memoBody{
@@ -529,29 +534,35 @@ blockquote div.resno{
 	overflow-y: scroll;
 }
 
+#memoVote, #memoFree{
+	display:none;
+}
+
 #memoDiscuss{
 	font-size:0;
 }
 
 #memoDiscussFilter{
-	position: sticky;
-	top:0;
-	display: inline-block;
-	font-size:12px;
-	width: 130px;
-	vertical-align: top;
+	font-size:0;
+	max-height:30%;
+	overflow:hidden;
+	display:flex;
 }
 
 #memoDiscussPlayer, #memoDiscussDay{
 	margin:0;
 	padding:0;
+	width:50%;
+	max-height: 100%;
+	overflow-y:auto;
+	font-size:12px;
+	vertical-align: top;
+
+	border: 1px solid #666;
+
 }
 
-#memoDiscussPlayer{
-	margin-bottom: 20px;
-}
-
-#memoDiscussPlayer li{
+#memoDiscussFilter li{
 	list-style: none;
 	margin: 0;
 	padding:0;
@@ -567,30 +578,37 @@ blockquote div.resno{
 	background-color: #fff280;
 }
 
+#memoDiscussFilter li.selected{
+	background-color: #fff280;
+}
+
 #memoDiscussTable {
 	display: inline-block;
 	font-size:12px;
-	width: 520px;
+	width: 100%;
 	border-collapse: collapse;
+	padding:0;
+}
+
+#memoDiscussTable > tr > td{
+	display:block;
 }
 
 #memoDiscussTable tr{
+
+	width: 100%;
+	display: block;
 	display: none;
 }
 
-#memoDiscussTable td.name{
-	width:130px;
-	max-width: 130px;
-	vertical-align: top;
-	font-size:12px;
+#memoDiscussTable td.talk{
+	line-height: 1.5;
 }
 
 #memoDiscussTable td.talk{
-	width:390px;
-	max-width: 390px;
-	vertical-align: top;
-	font-size:12px;
 	position: relative;
+	padding-right:24px;
+	padding-left:12px;
 }
 
 #memoDiscussTable div.quote{

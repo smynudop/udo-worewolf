@@ -31,15 +31,27 @@ $(function(){
 	$("#menu-sp-discuss").click(function(){
 		$("#right").hide()
 		$("#left").show()
+		$("#memo").hide()
 	})
 	$("#menu-sp-player").click(function(){
 		$("#left").hide()
 		$("#right").show()
+		$("#memo").hide()
+	})
+	$("#menu-sp-memo").click(function(){
+		$("#left").hide()
+		$("#right").hide()
+		$("#memo").show()
+		filterPlayer("all")
 	})
 
 })
 
 function filterPlayer(no){
+
+	$("#memoDiscussPlayer li").removeClass("selected")
+	$(this).addClass("selected")
+
 	if(no == "all"){
 		$("#memoDiscussTable tr").show()
 	} else {
@@ -50,6 +62,10 @@ function filterPlayer(no){
 }
 
 function filterDay(day){
+
+	$("#memoDiscussDay li").removeClass("selected")
+	$(this).addClass("selected")
+	
 	if(day == "all"){
 		$("#memoDiscussTable tr").show()
 	} else {
