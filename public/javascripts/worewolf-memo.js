@@ -28,6 +28,14 @@ $(function(){
 		filterDay(day)
 	})	
 
+	$("#menu-sp-discuss").click(function(){
+		$("#right").hide()
+		$("#left").show()
+	})
+	$("#menu-sp-player").click(function(){
+		$("#left").hide()
+		$("#right").show()
+	})
 
 })
 

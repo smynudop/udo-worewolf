@@ -1,0 +1,619 @@
+* { box-sizing: border-box; }
+
+html{
+	font-family: Helvetica, sans-serif;
+
+}
+
+body{
+	margin:0;
+	padding:0;
+	background: url(../images/bg_gray.gif) fixed;
+	background-position: left 50% top 50%;
+	font-size:12px;
+}
+
+body.day{
+	background-image: url(../images/bg_lightblue.gif);
+}
+
+body.vote{
+	background-image: url(../images/bg_yellow.gif);
+}
+
+body.night{
+	background-image: url(../images/bg_black.gif);
+	background-color: #333;
+}
+
+body.ability{
+	background-image: url(../images/bg_blue.gif);
+	background-color: #333;
+}
+
+#container{
+	width: calc(100% - 20px);
+	min-height:calc(100vh - 30px);
+	margin: 0 auto;
+	background-color:#fefefe;
+	padding:5px;
+}
+
+
+header{
+	font-size:13px;
+	width:100%;
+	height:30px;
+	line-height: 30px;
+	background-color: orange;
+	padding: 0px 10px;
+	position: relative;
+}
+
+header .top{
+	position: absolute;
+	right:5px;
+	bottom: 3px;
+	line-height:1;
+}
+header h1{
+	font-size:18px;
+	line-height: 40px;
+
+	margin:0;
+	padding:0;
+	display:inline;
+}
+
+#second{
+	font-weight: bold;
+	font-size:18px;
+}
+
+#left{
+	background-color:white;
+}
+
+#right{
+	display:none;
+}
+
+
+#talk{
+	height:110px;
+	display:flex;
+	flex-direction:column;
+	flex-wrap: wrap;
+	justify-content: space-around;
+}
+
+.hide{
+	visibility: hidden;			
+}
+
+#option{
+	width:100px;
+	text-align:center;
+	display:inline-block;
+
+}
+
+#option select{
+	width:90%;
+}
+
+#chat{
+	width: 30%;
+	height: 40px;
+	vertical-align: bottom;
+}
+
+#message{
+	width:65%;
+	height: 100px;
+	vertical-align: bottom;
+}
+
+.size{
+	display: inline-block;
+	width:30px;
+	height:30px;
+	border: 2px solid #999;
+	border-radius:2px;
+	line-height: 30px;
+	cursor: pointer;
+	margin: 5px 0px;
+	vertical-align: bottom;
+	user-select: none;
+}
+
+.size.selected{
+	border-color:red;
+}
+
+.size.big{
+	color: crimson;
+	font-weight: bold;
+}
+
+.size.small{
+	color: navy;
+}
+
+
+#command{
+	margin-bottom: 10px;
+}
+
+#job{
+	display:none;
+	border-radius:5px;
+	background-color: #d0d0d0;
+	padding: 5px;
+	user-select: none;
+	margin-bottom: 10px;
+}
+
+#command > div{
+	display:none;
+	text-align:center;
+	border-radius: 5px;
+	padding:5px;
+	margin-bottom: 10px;
+}
+
+.handle{
+	cursor: pointer;
+	user-select: none;
+}
+
+#command > div div.detail{
+	display:none;
+}
+
+#command-logout, #command-gm{
+	background-color: #d0d0d0;
+}
+
+#command-vote{
+	background-color: moccasin;
+}
+
+#command-vote > div, #command-ability > div{
+	display:inline-block;
+	width:50%;
+}
+
+select{
+	height:20px;
+}
+
+div.box{
+	display:inline-block;
+	vertical-align: top;
+	text-align: left;
+	padding: 0px 5px;
+}
+
+input[type=button]{
+	height: 20px;
+	font-size:12px;
+}
+
+input[type=button].big{
+	width:80px;
+	height:40px;
+}
+input[type=text]{
+	width:120px;
+	height:20px;
+}
+
+input[type=number]{
+	width:50px;	
+	height:20px;
+}
+
+input.long{
+	width:100%;
+}
+
+#vinfo{
+	text-align:left;
+	display:none;
+}
+#vinfo div{
+	display: inline-block;
+}
+
+
+div.alert{
+	font-weight:bold;
+	color:white;
+	background-color:red;
+	border-radius: 5px;
+	font-size:18px;
+
+}
+
+
+div.alert.hide{
+	visibility: hidden;
+}
+
+#discuss {
+	width:100%;
+	border-collapse: collapse;
+
+	font-size:12px;
+	line-height:1.6;
+
+	margin-bottom: 40px;
+}
+
+#discuss > tr > td{
+	display:block;
+}
+
+
+#discuss td.name{
+	max-width: 100%;
+	vertical-align: top;
+	font-size:12px;
+	line-height: 1.5;
+}
+
+#discuss td.talk {
+	position:relative;
+	padding-left:12px;
+	padding-right:25px;
+	width:100%;
+	max-width: 100%;
+	overflow:hidden;
+}
+
+#discuss div.quote{
+	width:20px;
+	height:20px;
+	background-color : #333;
+	border-radius:2px;
+	position: absolute;
+	top:0px;
+	right:0px;
+	background: url(../images/quote.png) no-repeat center #666;
+	cursor: pointer;
+}
+
+tr.discuss td.talk.big{
+	color: crimson;
+	font-weight: bold;
+}
+
+tr.discuss td.talk.small{
+	color: teal;
+}
+
+.talk blockquote{
+	border:1px solid #666;
+	margin: 5px 5px 5px 0px;
+	padding:5px;
+	border-radius: 3px;
+	font-size: 11px;
+
+	position: relative;
+}
+
+blockquote div.resno{
+	position: absolute;
+	right:-1px;
+	top:-1px;
+
+	width:60px;
+	height:16px;
+
+	border-radius: 3px;
+	background-color:#454545;
+	color: white;
+	text-align:center;
+}
+
+.votesummary{
+	font-weight: normal;
+	border-collapse: collapse;
+	margin: 10px;
+}
+
+.votesummary td{
+	border: 1px solid #666;
+	border-width: 1px 0px;
+	padding:2px;
+}
+.talk{
+
+}
+
+.system, .progress {
+	background-color:#d0d0d0;
+	font-weight:bold;
+
+}
+
+
+.info{
+	background-color: #d0d0d0;
+}
+
+.tweet{
+	background-color: dimgray;
+	color:white;
+}
+
+.wolf{
+	background-color: pink;
+}
+
+.wolf-system{
+	background-color: pink;
+	user-select: none;
+}
+
+
+.share{
+	background-color: palegreen;
+}
+
+.fox{
+	background-color:  yellow;
+}
+
+.personal{
+	background-color: paleturquoise;
+	user-select: none;
+}
+
+.grave{
+	background-color: wheat;
+}
+
+.gmMessage{
+	background-color: violet;
+}
+
+.offline{
+	color: red;
+}
+
+.vote{
+	background-color: moccasin;
+}
+
+.votenum{
+	background-color: orange;
+	border-radius: 8px;
+	padding:0px 4px;
+	color:white;
+	font-weight: bold;
+}
+
+#playerlist{
+	margin:0;
+	padding:0;
+}
+
+#playerlist li{
+	list-style: none;
+	margin: 0;
+	padding:2px 0px;
+	border-top: 1px solid #999;
+}
+
+#playerlist li:last-of-type{
+	border-bottom: 1px solid #999;
+}
+
+#playerlist li.dead{
+	background-color: #d0d0d0;
+}
+
+.red{color: red;}
+.pink{color: pink;}
+.orange{color: orange;}
+.yellow{color: yellow;}
+.green{color: green;}
+.skyblue{color: skyblue;}
+.blue{color: blue;}
+.indigo{color: indigo;}
+.purple{color: purple;}
+.black{color: black;}
+
+#menu-sp{
+	width: 100%;
+	height: 40px;
+
+	position: fixed;
+	bottom:0;
+	left:0;
+	
+	padding:0;
+	margin:0;
+
+	display:flex;
+	background-color:white;
+
+	justify-content: space-around;
+}
+
+
+#menu-sp li{
+	font-size:16px;
+	width: 33%;
+	list-style: none;
+	line-height:40px;
+	text-align: center;
+	background-color: #333;
+	color:white;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+}
+
+#memoButton{
+	display:none;
+}
+#memo{
+	position: fixed;
+	width: 700px;
+	height:100vh;
+	padding:10px;
+	background-color: rgba(127,127,127,0.7);
+
+	top: 0;
+	right: -700px;
+}
+
+#memo.disp{
+	right: 0px;
+}
+
+#memoClose{
+	width: 24px;
+	height:24px;
+	position: absolute;
+	top:10px;
+	right:10px;
+	background-color:white;
+	border-radius: 4px;
+	text-align: center;
+	font-size:24px;
+	line-height: 24px;
+	cursor: pointer;
+}
+
+
+#memoTabs{
+	height: 24px;
+	font-size:0;
+	margin-top:16px;
+}
+
+.memoTab{
+	height:100%;
+	line-height: 24px;
+	display: inline-block;
+	width: 120px;
+	border-radius: 8px 8px 0px 0px;
+	background-color: white;
+	text-align: center;
+	cursor:pointer;
+	background-color: orange;
+	color:white;
+	font-weight:bold;
+	font-size: 12px;
+	vertical-align: top;
+	user-select: none;
+}
+
+.memoTab.selected{
+	color:orange;
+	background-color: white;
+}
+
+#memoBody{
+	height: calc(100% - 40px);
+	background-color: white;
+	border-radius: 0px 8px 8px 8px;
+	padding:5px;
+}
+
+#memoDiscuss, #memoVote, #memoFree{
+	height: 100%;
+	overflow-y: scroll;
+}
+
+#memoDiscuss{
+	font-size:0;
+}
+
+#memoDiscussFilter{
+	position: sticky;
+	top:0;
+	display: inline-block;
+	font-size:12px;
+	width: 130px;
+	vertical-align: top;
+}
+
+#memoDiscussPlayer, #memoDiscussDay{
+	margin:0;
+	padding:0;
+}
+
+#memoDiscussPlayer{
+	margin-bottom: 20px;
+}
+
+#memoDiscussPlayer li{
+	list-style: none;
+	margin: 0;
+	padding:0;
+	cursor: pointer;
+	user-select: none;
+}
+
+#memoDiscussFilter li.selected{
+	background-color: #fff280;
+}
+
+#memoDiscussFilter li:hover{
+	background-color: #fff280;
+}
+
+#memoDiscussTable {
+	display: inline-block;
+	font-size:12px;
+	width: 520px;
+	border-collapse: collapse;
+}
+
+#memoDiscussTable tr{
+	display: none;
+}
+
+#memoDiscussTable td.name{
+	width:130px;
+	max-width: 130px;
+	vertical-align: top;
+	font-size:12px;
+}
+
+#memoDiscussTable td.talk{
+	width:390px;
+	max-width: 390px;
+	vertical-align: top;
+	font-size:12px;
+	position: relative;
+}
+
+#memoDiscussTable div.quote{
+	position: absolute;
+	right:0;
+	top:0;
+}
+#memoDiscussTable div.quote:before{
+	content:"引用";
+	color:blue;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+
+#memoDiscussTable td.talk blockquote{
+	font-size:12px;
+	padding:5px;
+	margin-right:25px;
+
+}
+
+#memoFreeSpace{
+	width: 100%;
+	height: 90%;
+}

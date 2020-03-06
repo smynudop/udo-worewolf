@@ -99,6 +99,11 @@ $(function(){
         })
     })
 
+    $(".handle").click(function(){
+        console.log($(this).closest("div"))
+        $(this).parent().find(".detail").toggle()
+    })
+
     $(".size").click(function(){
     	var s = $(this).data("size")
     	$(".size").removeClass("selected")

@@ -154,7 +154,7 @@ class Log{
 				data = ({
 					no: option.player.no,
 					type: "personal",
-					message: `【占い】${option.player.cn}さんは${option.target.cn}さんを占い、結果は【${option.target.fortuneResult}】でした。${isAuto}`
+					message: `【占い】${option.player.cn}さんは${option.target.cn}さんを占い、結果は【${option.target.job.fortuneResult}】でした。${isAuto}`
 				})
 				break
 
@@ -162,7 +162,7 @@ class Log{
 				data = ({
 					no: option.player.no,
 					type: "personal",
-					message: `【霊能】前日処刑された${option.target.cn}さんは【${option.target.necroResult}】でした。`
+					message: `【霊能】前日処刑された${option.target.cn}さんは【${option.target.job.necroResult}】でした。`
 				})
 				break
 

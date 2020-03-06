@@ -4,15 +4,15 @@
 	<title>人狼 焼肉鯖</title>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="../stylesheets/worewolf.css">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
-	<div id="container">
 	<header>
 		<h1 id="title">人狼</h1>
 		<span id="pr"></span>
 		<span id="phase"></span><span id="timer"></span>
 		<div class="top"><a href="/">トップへ</a></div>
-	</header>
+	</header><div id="container">
 	<div id="left">
 		<div id="talk" class="hide">
 			<textarea id="message" autocomplete="off" rows="5" cols="60" /></textarea><input id="chat" type="button" value="発言"><div id="option">
@@ -47,9 +47,12 @@
 				<input id="enter" type="button" value="入室">      		
 			</div>
 			<div id="command-logout">
+				<div class="handle">▼個人情報を変更</div>
+				<div class="detail"> 
 				<div class="box">
-				CN:<input type="text" id="fix-cn"><br>
-				色:<select id="fix-color">
+				<table>
+				<tr><td>CN:</td><td><input type="text" id="fix-cn"></td></tr>
+				<tr><td>色:</td><td><select id="fix-color">
 					<option value="red">赤</option>
 					<option value="pink">ピンク</option>
 					<option value="orange">オレンジ</option>
@@ -60,35 +63,36 @@
 					<option value="indigo">藍</option>
 					<option value="purple">紫</option>
 					<option value="black">黒</option>
-				</select><br>
-				<input type="button" value="変更" id="fix-player">
+				</select></td></tr>
+				<tr><td></td><td><input type="button" value="変更" id="fix-player"></td></tr>
+				</table>
 			</div><div class="box">
-				<input type="button" value="退室" class="exit">	
-				</div>			   		
+				<input type="button" value="退室" class="exit big">	
+				</div>
+				</div>
 			</div>
 			<div id="command-gm">
-				<div class="box">
-				<input type="button" value="ゲーム開始" class="big" id="gameStart">
-				</div>
+				<div class="handle">▼村の設定</div>
+				<div class="detail">
+				<div class="box"><input type="button" value="ゲーム開始" class="big" id="gameStart"></div>
+				<div class="box"><input type="button" value="配役確認" class="big" id="checkCast"></div>
+				<div class="box"><input type="button" value="村情報修正" class="big" id="fixVillageInfo"></div>
 				<div class="box"> 
 				<input type="button" value="NPC召喚" id="summonNPC">	
-				<input type="button" value="配役確認" id="checkCast">
-				<input type="button" value="村情報修正" id="fixVillageInfo">
-				<br>
-
 				<select id="gmTarget"></select>
 				<input type="button" value="キック" id="kick">
 				</div>
+				</div>
 			<div id="vinfo">
-				村名<input type="text" id="fix-name"><br>
-				PR<input type="text" id="fix-pr"><br>
-				昼<input type="number" id="fix-time-day">
-				投票<input type="number" id="fix-time-vote">
-				夜<input type="number" id="fix-time-night">
-				能力<input type="number" id="fix-time-ability"><br>
-				定員<input type="number" id="fix-capacity">
-				配役<select id="fix-casttype"><option value="Y">Y</option><option value="D">D</option></select>
-				霊界表示<select id="fix-isShowJobDead"><option value="1">はい</option><option value="0">いいえ</option></select>
+				<div>村名</div><input type="text" id="fix-name"class="long"><br>
+				<div>PR</div><input type="text" id="fix-pr" class="long"><br>
+				<div>昼</div><input type="number" id="fix-time-day">
+				<div>投票</div><input type="number" id="fix-time-vote">
+				<div>夜</div><input type="number" id="fix-time-night">
+				<div>能力</div><input type="number" id="fix-time-ability"><br>
+				<div>定員</div><input type="number" id="fix-capacity">
+				<div>配役</div><select id="fix-casttype"><option value="Y">Y</option></select>
+				<div>霊界表示</div><select id="fix-isShowJobDead"><option value="1">はい</option><option value="0">いいえ</option></select><br>
 				<input type="button" value="変更" id="fix-gm">
 			</div>
 			</div>
@@ -123,6 +127,12 @@
 	</div>
 
 	</div>
+
+	<ul id="menu-sp">
+		<li id="menu-sp-discuss">発言</li>
+		<li id="menu-sp-player">参加者</li>
+		<li></li>
+	</ul>
 
 	<div id="memoButton"> memo </div>
 	<div id="memo">

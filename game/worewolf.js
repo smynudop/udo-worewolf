@@ -1208,7 +1208,7 @@ class Game{
 			})
 
 			socket.on("leave",(data) => {
-				if(!this.players.in(userid)) return false
+				if(!player || player.isGM || player.isKariGM) return false
 				this.players.leave(userid)
 				this.emitPlayer()
 			})
