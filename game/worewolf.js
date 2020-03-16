@@ -151,6 +151,13 @@ class Player{
 		})
 	}
 
+	revive(){
+		this.isAlive = true
+		this.log.add("comeback",{
+			player: this
+		})
+	}
+
 	isVote(){
 		return this.voteTarget !== null
 	}
@@ -162,9 +169,10 @@ class Player{
 		this.guarded = false
 	}
 
-	useAbility(type,target){
+	useAbility(type,target, isAuto){
+		isAuto = isAuto || false
 		this.setTarget(target)
-		this.log.add(type, {player: this, target: target})
+		this.log.add(type, {player: this, target: target, isAuto: isAuto})
 		this.socket.emit("useAbilitySuccess")
 	}
 
@@ -227,9 +235,7 @@ class PlayerManager{
 
 		var p = this.pick(target)
 		var userid = p.userid
-		if(!p.isDamy && !p.isNPC) {
-			p.socket.emit("leaveSuccess")			
-		}
+		p.socket.emit("leaveSuccess")			
 
 		
 		this.log.add("kick",{
@@ -247,7 +253,6 @@ class PlayerManager{
 	refreshList(){
 		this.list = Object.values(this.players).filter((p) => p.no < 990)
 		this.listAll  = Object.values(this.players)
-
 	}
 
 	forClientSummary(){
@@ -399,7 +404,8 @@ class PlayerManager{
 			socket: null,
 			cn: "初日犠牲者",
 			color: "orange",
-			isDamy: true			
+			isDamy: true,
+			isNPC: true		
 		})
 	}
 
@@ -750,7 +756,14 @@ class Game{
 			case "bite":
 				if(!player.job.canBite) return false
 				if(target.job.canBite) return false
-				break				
+				break
+
+			case "revive":
+				if(!player.job.canRevive) return false
+				if(target.isAlive) return false
+				if(this.date.day < 3 ) return false
+				break
+
 		}
 		return true
 	}
@@ -790,9 +803,6 @@ class Game{
 	}
 
 	talk(userid, data){
-
-		console.log("talk")
-
 		var player = this.players.pick(userid)
 
 		if(this.isBanTalk){
@@ -851,7 +861,10 @@ class Game{
 				}
 
 				this.io.to("wolf").emit("useAbilitySuccess")
-				break				
+				break
+			case "revive":
+				player.useAbility("revive", target)
+				break			
 		}
 	}
 
@@ -1029,9 +1042,22 @@ class Game{
 					}
 				}
 
-				var kills = []
-				var imos = []
+				for(let player of this.players.select("canRevive")){
+					if(player.ability.target === null) continue
+					let target = this.players.pick(player.ability.target)
 
+					if(target.isDamy){
+						if(Math.floor(Math.random()*100) < 50){
+							target.revive()
+						}
+					} else{
+						if(Math.floor(Math.random()*100) < 30){
+							target.revive()
+						}
+					}
+				}
+
+				var kills = []
 
 				var bite = this.bite
 				if(!bite.guarded && !bite.job.isResistBite){
@@ -1151,6 +1177,7 @@ class Game{
 			left: this.time[phase],
 			nsec: nsec,
 			targets: this.players.makeTargets(),
+			deathTargets: this.players.makeDeathTargets(),
 			day: this.date.day
 		})
 	}

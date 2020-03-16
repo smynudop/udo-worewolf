@@ -1,6 +1,6 @@
 var socket
 var players
-var phase,targets, day=0
+var phase,targets,deathTargets, day=0
 var sec,nsec, timerflg
 var isVote = true, isUseAbility = true
 var size = "normal"
@@ -226,6 +226,8 @@ function changePhase(data){
 
     phase = data.phase
     targets = data.targets
+    deathTargets = data.deathTargets
+
     if(data.day > day){
         for(var d = day+1; d<=data.day; d++){
             $("<li></li>").html(d+"日目")
@@ -344,19 +346,25 @@ function refresh(){
 
                 	isUseAbility = me.ability.isUsed
 
-
-                    if(me.job.canFortune || ((me.job.canGuard || me.job.canBite) && day >= 2)){
+                    if(me.job.canFortune 
+                    || (me.job.canGuard  && day >= 2)
+                    || (me.job.canBite && day >= 2)
+                    || (me.job.canRevive && day >= 3)){
                         $("#command-ability").show()
+                        $("#command-ability").addClass("personal")
+
                         updateAbilityTarget(targets)
+
                         if(me.job.canGuard){
                             $("#ability").data("type", "guard").val("護衛")
-                            $("#command-ability").addClass("personal")
                         } else if(me.job.canFortune){
                             $("#ability").data("type", "fortune").val("占う")
-                            $("#command-ability").addClass("personal")
                         } else if(me.job.canBite){
                             $("#ability").data("type", "bite").val("襲撃")
                             $("#command-ability").addClass("wolf")
+                        } else if(me.job.canRevive){
+                            $("#ability").data("type", "revive").val("蘇生")
+                            updateAbilityTarget(deathTargets)
                         }       
                     }
                     if(me.job.canShareTalk){

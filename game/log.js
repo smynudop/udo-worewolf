@@ -185,6 +185,15 @@ class Log{
 				})
 				break
 
+			case "revive":
+				var isAuto = option.isAuto ? "【自動実行】" : ""
+				data = ({
+					no: option.player.no,
+					type: "personal",
+					message: `【蘇生】${option.player.cn}さんは${option.target.cn}の蘇生を試みます。${isAuto}`
+				})
+				break
+
 			case "wolfNeigh":
 				data = {
 					no: 998,
@@ -256,6 +265,13 @@ class Log{
 							message: `もうすぐ夜が明けます。行動対象を決定してください`
 						}
 						break
+				}
+				break
+
+			case "comeback":
+				data = {
+					type:"system",
+					message: option.player.cn+"さんは奇跡的に蘇生しました。"
 				}
 				break
 			case "death":
