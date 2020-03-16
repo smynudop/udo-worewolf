@@ -6,13 +6,13 @@
 	<link rel="stylesheet" href="../stylesheets/worewolf.css">
 </head>
 <body>
-	<div id="container">
 	<header>
 		<h1 id="title"><%= vinfo.name %></h1>
 		<%= vinfo.no %>番地
 		<span id="pr"><%= vinfo.pr %></span>
 		<div class="top"><a href="/">トップへ</a></div>
 	</header>
+	<div id="container">
 	<div id="left">
 		<table id="discuss">
 			<% for(var log of logs.reverse()){ %>

@@ -32,6 +32,7 @@ class Log{
 				case "info":
 				case "gmMessage":
 				case "discuss":
+				case "restrict":
 				case "progress":
 				case "wolfNeigh":
 					logs.push(log)
@@ -316,8 +317,10 @@ class Log{
 					cn: "システム",
 					message: `【村の情報】
 
-${option.name} 定員${option.capacity}名 配役${option.casttype} 霊界表示${option.isShowJobDead}
-昼${option.time.day}秒、投票${option.time.vote}秒、夜${option.time.night}秒、能力実行${option.time.ability}秒
+${option.name}
+
+定員${option.capacity}名 配役${option.casttype} 霊界表示${option.isShowJobDead}
+昼${option.time.day}秒、投票${option.time.vote}秒、夜${option.time.night}秒、能力実行${option.time.ability}秒、n秒${option.time.nsec}秒
 GM：${option.GMid}`
 				}
 				break
@@ -331,6 +334,7 @@ GM：${option.GMid}`
 			case "info":
 			case "gmMessage":
 			case "discuss":
+			case "restrict":
 			case "progress":
 			case "wolfNeigh":
 				this.nsp.emit("talk", data)

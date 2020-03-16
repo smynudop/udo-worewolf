@@ -69,5 +69,33 @@ h1{
 	width:400px;
 }
 
+@media screen and (max-width:768px){
+	#logo{
+		width : 100%;
+	}
+
+	#logo > img{
+		width: 100%;
+	}
+
+	#desc{
+		width:100%;
+	}
+
+
+	#menu{
+		width:100%;
+		text-align: center;
+		margin-bottom: 30px;
+	}
+
+	#desc, #menu{
+		display:block;
+	}
+	#menu div{
+		width:50%;
+	}
+}
+
 
 

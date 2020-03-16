@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>人狼ルーム一覧</title>
+    <%- include("head", {title: "人狼ロビー"}) %>
     <link rel='stylesheet' href='/stylesheets/lobby.css' />
-    <link rel='stylesheet' href='/stylesheets/common.css' />
-    <meta charset="utf-8">
   </head>
   <body>
-    <div id="container">
-    <%- include("header_login", {title: "ロビー"}) %>
 
+    <div id="container">
+<%- include("header_login", {title: "ロビー"}) %>
+    
+    <div id="table_wrap">
 
     <% if(result.length == 0) {%>
         現在部屋はありません。<br>
@@ -31,6 +31,7 @@
         </table>
         <a href="/makeroom">新しく部屋を作成</a>
     <% } %>
+    </div>
 	</div>
   </body>
 </html>

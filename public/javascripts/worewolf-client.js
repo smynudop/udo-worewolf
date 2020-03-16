@@ -1,7 +1,7 @@
 var socket
 var players
 var phase,targets, day=0
-var sec, timerflg
+var sec,nsec, timerflg
 var isVote = true, isUseAbility = true
 var size = "normal"
 
@@ -94,9 +94,11 @@ $(function(){
                 vote: $("#fix-time-vote").val()-0,
                 night: $("#fix-time-night").val()-0,
                 ability: $("#fix-time-ability").val()-0,
+                nsec: $("#fix-time-nsec").val()-0
             },
             isShowJobDead: $("#fix-isShowJobDead").val() == 1
         })
+        $("#vinfo").hide()
     })
 
     $(".handle").click(function(){
@@ -240,25 +242,38 @@ function changePhase(data){
         $("#pr").html(vinfo.pr)
         $("title").html(vinfo.name+" - 焼肉鯖")
 
-        $("#fix-name").val(vinfo.name)
-        $("#fix-pr").val(vinfo.pr)
-        $("#fix-casttype").val(vinfo.casttype)
-        $("#fix-time-day").val(vinfo.time.day)
-        $("#fix-time-vote").val(vinfo.time.vote)
-        $("#fix-time-night").val(vinfo.time.night)
-        $("#fix-time-ability").val(vinfo.time.ability) 	
-        $("#fix-capacity").val(vinfo.capacity)
+        for(var key in vinfo){
+            if(key == "time"){
+                for(var key2 in vinfo.time){
+                    $(`#fix-time-${key2}`).val(vinfo.time[key2])
+                }
+            } else {
+                $(`#fix-${key}`).val(vinfo[key])
+            }
+        }
     }
 
     $("body").removeClass().addClass(data.phase)
 
     sec = data.left
+    nsec = data.nsec || 0
+
     clearInterval(timerflg)
     if(sec){
-        $("#timer").html(` あと<span id="second">${sec}</span>秒`)
+        var nsectxt = ""
+        if(data.nsec){
+            nsectxt = `<span id="n-second">${nsec}</span>`
+        }
+        $("#timer").html(` あと<span id="second">${sec}</span>秒${nsectxt}`)
         timerflg = setInterval(function(){
             sec--
             $("#second").html(sec)
+
+            if(--nsec <= 0){
+                $("#n-second").remove()
+            } else {
+                $("#n-second").html(nsec)
+            }
         },1000)
     } else {
         $("#timer").html("")
@@ -442,7 +457,8 @@ function refreshPlayers(data){
 
         var job = player.job ? `[${player.job.nameja}]` : ""
         var userid = player.userid ? `<br>${player.userid}`: ""
-        li.html(li.html()+job+userid)
+        var trip = player.trip ? " "+player.trip : ""
+        li.html(li.html()+job+userid+trip)
         li.appendTo(ul)
 
         player.isAlive ? a++ : d++

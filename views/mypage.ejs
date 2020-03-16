@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include("head", {title: "マイページ"}) %>
+    <style>
+        #container{
+            text-align: center;
+        }
+        form{
+            margin:20px 0px;
+            border: 1px solid #999;
+        }
+        table{
+            margin: 0 auto;
+        }
+        #mes{
+            margin: 20px 0px;
+        }
+    </style>
+  </head>
+
+  <body>
+
+    <div id="container">
+    <%- include("header_login", {title: "マイページ"}) %>
+    <div id="mes"></div>
+        <b><%= userid %> <%= trip %></b>
+        <form method="post" action="/mypage/change_password">
+            <table>
+            <tr><td colspan="2">パスワードを変更</td></tr>
+            <tr><td>現在のパスワード:</td><td><input type="password" name="now"></td></tr>
+            <tr><td>新しいパスワード:</td><td><input type="password" name="new"></td></tr>
+            <tr><td>新しいパスワード(確認):</td><td><input type="password" name="new2"></td></tr>
+
+            <tr><td colspan="2"><input type="submit"></td></tr></table>
+        </form>
+        <form method="post" action="/mypage/set_trip">
+            トリップを設定<br>
+            トリップキー:#<input type="text" name="key"><br>
+            <input type="submit">
+        </form>
+	</div>
+    <script>
+        let mes = location.search.split("=").pop()
+        switch(mes){
+            case "success_set_trip":
+                $("#mes").html("トリップを変更しました。")
+                break
+            case "success_change_password":
+                $("#mes").html("パスワードを変更しました。")
+                break
+            case "failed_change_password":
+                $("#mes").html("パスワードの変更に失敗しました。<br>パスワードは英数字と_で構成してください。")
+                break
+        }
+    </script>
+  </body>
+</html>

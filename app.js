@@ -18,11 +18,10 @@ var loginRouter = require("./routes/login");
 var logoutRouter = require("./routes/logout")
 var makeroomRouter = require("./routes/makeroom")
 var worewolfRouter = require("./routes/worewolf")
-var prohibitedRouter = require("./routes/prohibited")
 var ruleRouter = require("./routes/rule")
 var oldRouter = require("./routes/old")
 var registerRouter = require("./routes/register")
-var castRouter = require("./routes/cast")
+var mypageRouter = require("./routes/mypage")
 
 var app = express();
 var mongoURL
@@ -61,16 +60,17 @@ io.use(function(socket, next){
 })
 
 app.use('/', indexRouter);
+
+app.use("/", ruleRouter) // ほぼ静的ファイル
+
 app.use('/login', loginRouter);
 app.use('/logout', logoutRouter)
 app.use("/chatroom", chatroomRouter)
 app.use("/makeroom", makeroomRouter)
 app.use("/worewolf", worewolfRouter)
-app.use("/prohibited", prohibitedRouter)
-app.use("/rule", ruleRouter)
 app.use("/old", oldRouter)
 app.use("/register", registerRouter)
-app.use("/cast", castRouter)
+app.use("/mypage", mypageRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

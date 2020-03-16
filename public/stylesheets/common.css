@@ -10,6 +10,7 @@ body{
 	padding:0;
 	margin:0;
 	background-image: url(../images/bg_gray.gif);
+
 }
 
 header{
@@ -25,16 +26,21 @@ header div{
 }
 
 header .title{
-	width:150px;
+	width:75%;
 	font-size:24px;
 	font-weight: bold;
 	line-height: 40px;
 }
 
 header .user{
-	width: 640px;
+	width: 24%;
 	text-align:right;
 }
+
+@media screen and (min-width:769px){
+
+
+
 
 #container{ 
 	background-color: rgba(255,255,255,0.7);
@@ -53,4 +59,13 @@ header .user{
 
 h2,h3{
 	margin:0;
+}
+}
+
+@media screen and (max-width:768px){
+	#container{
+		width:100%;
+		padding:10px;
+		background-color:white;
+	}
 }

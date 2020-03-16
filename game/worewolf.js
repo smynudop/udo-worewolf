@@ -1,6 +1,7 @@
 const moment = require("moment")
 const schema = require("../schema")
 const GameSchema = schema.Game
+const User = schema.User
 
 const Log = require("./log")
 const fs = require("fs")
@@ -81,12 +82,22 @@ class Player{
 		this.log = log
 
 		this.socket = new PlayerSocket(data.socket)
+		
+		this.getTrip()
+	}
+
+	async getTrip(){
+		if(this.isDamy || this.isNPC) return false
+		let user = await User.findOne({userid: this.userid}).exec()
+		this.trip = user.trip
 	}
 
 	update(cn, color){
 		this.cn = cn
 		this.color = color
 	}
+
+
 
 	forClientSummary(){
 		return {
@@ -101,6 +112,7 @@ class Player{
 		return {
 			no: this.no,
 			userid: this.userid,
+			trip: this.trip,
 			cn: this.cn,
 			color: this.color,
 			job: this.job,
@@ -591,7 +603,7 @@ class Game{
 		this.GMid = data.GMid
 		this.capacity = data.capacity || 17
 		this.isShowJobDead = data.isShowJobDead || true
-		this.isKariGM = data.isKariGM || true
+		this.isKariGM = data.kariGM
 
 		this.date = new Date()
 		this.log = new Log(io, this.date)
@@ -600,6 +612,7 @@ class Game{
 
 		this.timerFlg = null
 		this.leftVoteNum = 4
+		this.isBanTalk = false
 
 		this.win = null
 		this.exec = null
@@ -768,17 +781,30 @@ class Game{
 		}else{
 			if(socket){
 				socket.emit("player", summary)
-			} else{
+			} else {
 				this.io.emit("player", summary)
 				this.io.to("gm").to("all").emit("player", detail)			
-			}			
+			}
 		}
 
 	}
 
 	talk(userid, data){
 
+		console.log("talk")
+
 		var player = this.players.pick(userid)
+
+		if(this.isBanTalk){
+			this.log.add("talk",{
+				cn : "???",
+				color: "black",
+				type: "restrict",
+				message: "まだ発言できません"
+			})
+			player.socket.emit("banTalk")
+			return false
+		}
 
 		data.cn = player.cn
 		data.color = player.color
@@ -1045,6 +1071,13 @@ class Game{
 				this.date.sunrise()
 				this.pass("day")
 
+				if(this.time.nsec){
+					this.isBanTalk = true
+					setTimeout(()=>{
+						this.isBanTalk = false
+					}, this.time.nsec * 1000)
+				}
+
 				break
 
 			case "vote":
@@ -1069,6 +1102,7 @@ class Game{
 				})
 
 				this.players.resetVote()
+				phase = "vote"
 
 				this.pass("vote")
 				this.players.npcVote()
@@ -1111,9 +1145,11 @@ class Game{
 	}
 
 	emitChangePhase(phase){
+		var nsec = (phase == "day" && this.time.nsec) ? this.time.nsec : null
 		this.io.emit("changePhase", {
 			phase: phase,
 			left: this.time[phase],
+			nsec: nsec,
 			targets: this.players.makeTargets(),
 			day: this.date.day
 		})
@@ -1316,13 +1352,13 @@ class GameManager{
 		var rd = this.io.of((name, query, next) => {next(null, /^\/room-\d+$/.test(name))}).on("connect", async function(socket){
 			var nsp = socket.nsp
 			var vno = nsp.name.match(/\d+/)[0] - 0
-
-			if(!mgr.games.includes(vno)){
-
+			console.log(mgr.games)
+			if(!(mgr.games.includes(vno))){
+				mgr.games.push(vno)
+				
 				var result = await GameIO.find(vno)
 
 				if(result){
-					mgr.games.push(vno)
 					var village = new Game(nsp, result)
 					village.listen()
 					console.log("listen room-"+vno)

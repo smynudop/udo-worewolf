@@ -1,3 +1,8 @@
+#table_wrap{
+	width:100%;
+	max-width:100%;
+	overflow:auto;
+}
 
 
 
@@ -14,4 +19,17 @@
 #rooms th,#rooms td{
 	border: 1px solid #666;
 	padding:5px;
+}
+
+
+@media screen and (max-width:768px){
+	tr{
+		display:block;
+		border:1px solid #666;
+	}
+	#rooms td, #rooms th{
+		display:block;
+		border:0px solid #111;
+		padding:0;
+	}
 }

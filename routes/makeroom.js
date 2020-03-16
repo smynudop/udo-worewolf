@@ -24,6 +24,7 @@ router.post('/', function(req, res, next) {
 		var pr = req.body.pr
 		var casttype = req.body.casttype
 		var capacity = req.body.capacity
+		var kariGM = req.body.kariGM == "1"
 		var time = {}
 
 		if(!name || name.length >= 24 || name.length == 0){
@@ -47,15 +48,14 @@ router.post('/', function(req, res, next) {
 			capacity = 20
 		}
 
-		for(var t of ["day", "vote", "night", "ability"]){
-			if(!req.body[t] || req.body[t]-0 > 600 || req.body[t] - 0 < 10){
+		for(var t of ["day", "vote", "night", "ability", "nsec"]){
+			if(!req.body[t] || req.body[t]-0 > 600){
 				res.render("makeroom", {userid:userid,error: "時間が不正です"})				
 				return false
 			} else {
 				time[t] = req.body[t] -0 
 			}
 		}
-		time.nsec = 0
 
 		Game.find({}, {}, {sort:{vno: -1}, limit:1}, function(err,data){
 			if(err) console.log(error)
@@ -75,6 +75,7 @@ router.post('/', function(req, res, next) {
 			game.time = time
 			game.capacity = capacity
 			game.state = "recruit"
+			game.kariGM = kariGM
 
 			game.save(function(err){
 				if(err) console.log(err)

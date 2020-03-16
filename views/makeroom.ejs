@@ -106,13 +106,14 @@
 				配役:
 				<div class="help">？<div class="desc">
 					Y(Yakiniku)…焼肉鯖おすすめの配役です。<br>
-					W(Wakamete)…続わかめて鯖をベースにした、シンプルな配役です。製作中です。<br>
-					V(Variant)…あちこちから<s>パク</s>アデアをお借りした、一風変わった配役です。製作中です。
+					W(Wakamete)…続わかめて鯖をベースにした、シンプルな配役です。<br>
+					V(Variant)…一風変わった配役です。製作中です。
 				</div></div>
 			</td>
 			<td>
 				<select name="casttype" value="Y">
 					<option value="Y">Y</option>
+					<option value="W">W</option>
 				</select>
 			</td>
 		</tr>
@@ -132,13 +133,24 @@
 		<tr>
 			<td>
 				時間：<div class="help">？<div class="desc">各フェイズの時間です。<br>
-				焼肉鯖は夜時間固定を採用しています。能力実行時間は90秒～120秒程度を推奨します。</div></div><br>
+				焼肉鯖は夜時間固定を採用しています。能力実行時間は90秒～120秒程度を推奨します。<br>
+				n秒は、夜があけてから一定時間喋れないルールです。0秒の場合はありません。</div></div><br>
 			</td>
 			<td>
 				昼　：<input name="day" type="number" value="270" min="10" max="600">秒<br>
 				投票：<input name="vote" type="number" value="180" min="10" max="300">秒<br>
 				夜　：<input name="night" type="number" value="180" min="10" max="600">秒<br>
 				能力：<input name="ability" type="number" value="120" min="10" max="300">秒<br>
+				n秒：<input name="nsec" type="number" value="10" min="0" max="20">秒<br>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				仮GM:<div class="help">？<div class="desc">仮GMは、ゲームにプレイヤーとして参加します。<br>
+				身内村でない場合は、不慮の自体に備えGM制をおすすめします。</div></div>
+			</td>
+			<td>
+				<select name="kariGM"><option value="0">しない</option><option value="1">する</option></select>
 			</td>
 		</tr>
 		<tr><td colspan="2">

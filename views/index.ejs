@@ -4,6 +4,7 @@
     <title>オンライン人狼焼肉鯖</title>
     <link rel='stylesheet' href='/stylesheets/common.css' />
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta charset="utf-8">
   </head>
   <body>
@@ -36,6 +37,7 @@
     <% } %>
         <a href="/rule"><div>人狼のルール</div></a>
         <a href="/prohibited"><div>禁止事項</div></a>
+        <a href="/usage"><div>鯖の使い方</div></a>
         <a href="/cast"><div>配役一覧</div></a>
         <a href="/old"><div>過去ログ</div></a>
 
@@ -43,7 +45,7 @@
 
 	<div id="user">
     <% if(islogin) { %>
-    <p><%= userid %>でログイン中 <a href="./logout">ログアウト</a></p>
+    <p><%= userid %>でログイン中 <a href="./mypage">マイページ</a></p>
     <% } %>
     </div>
 	</div>

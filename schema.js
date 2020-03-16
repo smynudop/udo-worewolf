@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var User = new Schema({
     userid : { type: String, required: true, unique: true }, 
-    password : { type: String, required: true }
+    password : { type: String, required: true },
+    trip: String
 });
 
 var Game = new Schema({
@@ -20,7 +21,8 @@ var Game = new Schema({
 	},
 	capacity: {type:Number, required: true},
 	GMid: {type: String, required: true},
-	state: {type: String}
+	state: {type: String},
+	kariGM: {type: Boolean}
 })
 
 module.exports = {

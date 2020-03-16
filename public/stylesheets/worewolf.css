@@ -1,3 +1,114 @@
 @import url("./worewolf_sp.css") screen and (max-width:768px);
 @import url("./worewolf_pc.css") screen and (min-width:769px);
  
+
+
+#command-gm, #command-logout{
+	background-color: #fff280;
+}
+
+ .votesummary{
+	font-weight: normal;
+	font-size:14px;
+	border-collapse: collapse;
+	margin: 10px;
+}
+
+.votesummary td{
+	border: 1px solid #666;
+	border-width: 1px 0px;
+	padding:2px;
+}
+
+.system, .progress {
+	background-color:#d0d0d0;
+	font-weight:bold;
+}
+
+
+.info{
+	background-color: #d0d0d0;
+}
+
+.tweet{
+	background-color: dimgray;
+	color:white;
+}
+
+.wolf{
+	background-color: pink;
+}
+
+.wolf-system{
+	background-color: pink;
+	user-select: none;
+}
+
+
+.share{
+	background-color: palegreen;
+}
+
+.fox{
+	background-color:  yellow;
+}
+
+.personal{
+	background-color: paleturquoise;
+	user-select: none;
+}
+
+.grave{
+	background-color: wheat;
+}
+
+.gmMessage{
+	background-color: violet;
+}
+
+.offline{
+	color: red;
+}
+
+.vote{
+	background-color: moccasin;
+}
+
+.votenum{
+	background-color: orange;
+	border-radius: 8px;
+	padding:0px 4px;
+	color:white;
+	font-weight: bold;
+}
+
+#playerlist{
+	margin:0;
+	padding:0;
+}
+
+#playerlist li{
+	list-style: none;
+	margin: 0;
+	padding:2px 0px;
+	border-top: 1px solid #999;
+}
+
+#playerlist li:last-of-type{
+	border-bottom: 1px solid #999;
+}
+
+#playerlist li.dead{
+	background-color: #d0d0d0;
+}
+
+.red{color: red;}
+.pink{color: pink;}
+.orange{color: orange;}
+.yellow{color: yellow;}
+.green{color: green;}
+.skyblue{color: skyblue;}
+.blue{color: blue;}
+.indigo{color: indigo;}
+.purple{color: purple;}
+.black{color: black;}
