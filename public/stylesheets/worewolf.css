@@ -1,114 +1,164 @@
-@import url("./worewolf_sp.css") screen and (max-width:768px);
-@import url("./worewolf_pc.css") screen and (min-width:769px);
- 
+@import url("./worewolf_sp.css") screen and (max-width: 768px);
+@import url("./worewolf_pc.css") screen and (min-width: 769px);
 
-
-#command-gm, #command-logout{
-	background-color: #fff280;
+#command-gm,
+#command-logout {
+    background-color: #fff280;
 }
 
- .votesummary{
-	font-weight: normal;
-	font-size:14px;
-	border-collapse: collapse;
-	margin: 10px;
+#pr {
+    display: none;
 }
 
-.votesummary td{
-	border: 1px solid #666;
-	border-width: 1px 0px;
-	padding:2px;
+.votesummary {
+    margin-left: 37px;
+    line-height: 1.5;
+    font-weight: normal;
+    border-collapse: separate;
+    border-spacing: 0px 0px;
 }
 
-.system, .progress {
-	background-color:#d0d0d0;
-	font-weight:bold;
+#discuss .votesummary td {
+    padding: 0;
 }
 
-
-.info{
-	background-color: #d0d0d0;
+#discuss tr:not(.vote) td[colspan] {
+    border-right: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
 }
 
-.tweet{
-	background-color: dimgray;
-	color:white;
+#discuss .progress > td,
+#discuss .system > td {
+    line-height: 32px;
 }
 
-.wolf{
-	background-color: pink;
+#discuss .progress td {
+    background-color: rgb(255, 185, 55);
 }
 
-.wolf-system{
-	background-color: pink;
-	user-select: none;
+#discuss td img {
+    display: inline-block;
+    vertical-align: bottom;
+    margin-right: 5px;
+    width: 32px;
+    /*background-color: white;*/
 }
 
-
-.share{
-	background-color: palegreen;
+#discuss tr.system > td {
+    background-color: #ddd;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
 }
 
-.fox{
-	background-color:  yellow;
+.info {
+    background-color: #ddd;
 }
 
-.personal{
-	background-color: paleturquoise;
-	user-select: none;
+.tweet td,
+.wolf td,
+.share td,
+.fox td,
+.wolfNeigh td {
+    background-color: #333;
+    color: white;
 }
 
-.grave{
-	background-color: wheat;
+.tweet td.talk {
+    color: lightblue;
 }
 
-.gmMessage{
-	background-color: violet;
+.wolf td.talk {
+    color: lightpink;
 }
 
-.offline{
-	color: red;
+.wolf-system {
+    background-color: pink;
+    user-select: none;
 }
 
-.vote{
-	background-color: moccasin;
+.share td.talk {
+    color: lightgreen;
 }
 
-.votenum{
-	background-color: orange;
-	border-radius: 8px;
-	padding:0px 4px;
-	color:white;
-	font-weight: bold;
+.fox td.talk {
+    color: yellow;
 }
 
-#playerlist{
-	margin:0;
-	padding:0;
+.personal {
+    background-color: paleturquoise;
+    user-select: none;
 }
 
-#playerlist li{
-	list-style: none;
-	margin: 0;
-	padding:2px 0px;
-	border-top: 1px solid #999;
+.grave {
+    background-color: wheat;
 }
 
-#playerlist li:last-of-type{
-	border-bottom: 1px solid #999;
+.gmMessage {
+    background-color: violet;
 }
 
-#playerlist li.dead{
-	background-color: #d0d0d0;
+.offline {
+    color: red;
 }
 
-.red{color: red;}
-.pink{color: pink;}
-.orange{color: orange;}
-.yellow{color: yellow;}
-.green{color: green;}
-.skyblue{color: skyblue;}
-.blue{color: blue;}
-.indigo{color: indigo;}
-.purple{color: purple;}
-.black{color: black;}
+.votenum {
+    background-color: orange;
+    border-radius: 8px;
+    padding: 0px 4px;
+    color: white;
+    font-weight: bold;
+}
+
+#playerlist {
+    margin: 0;
+    padding: 0;
+}
+
+#playerlist li {
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    border-top: 1px solid #999;
+    font-size: 90%;
+    line-height: 1.6;
+}
+
+#playerlist li:last-of-type {
+    border-bottom: 1px solid #999;
+}
+
+#playerlist li.dead {
+    background-color: #d0d0d0;
+    color: black;
+}
+
+.red {
+    color: red;
+}
+.pink {
+    color: pink;
+}
+.orange {
+    color: orange;
+}
+.yellow {
+    color: yellow;
+}
+.green {
+    color: green;
+}
+.skyblue {
+    color: skyblue;
+}
+.blue {
+    color: blue;
+}
+.indigo {
+    color: indigo;
+}
+.purple {
+    color: purple;
+}
+.black {
+    color: black;
+}

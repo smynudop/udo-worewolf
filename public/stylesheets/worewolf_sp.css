@@ -1,529 +1,535 @@
-* { box-sizing: border-box; }
-
-html{
-	font-family: Helvetica, sans-serif;
-
+* {
+    box-sizing: border-box;
 }
 
-body{
-	margin:0;
-	padding:0;
-	background: url(../images/bg_gray.gif) fixed;
-	background-position: left 50% top 50%;
-	font-size:12px;
+html {
+    font-family: Helvetica, sans-serif;
 }
 
-body.day{
-	background-image: url(../images/bg_lightblue.gif);
+body {
+    margin: 0;
+    padding: 0;
+    background: url(../images/bg_gray.gif) fixed;
+    background-position: left 50% top 50%;
+    font-size: 12px;
 }
 
-body.vote{
-	background-image: url(../images/bg_yellow.gif);
+body.day {
+    background-image: url(../images/bg_lightblue.gif);
 }
 
-body.night{
-	background-image: url(../images/bg_black.gif);
-	background-color: #333;
+body.vote {
+    background-image: url(../images/bg_yellow.gif);
 }
 
-body.ability{
-	background-image: url(../images/bg_blue.gif);
-	background-color: #333;
+body.night {
+    background-image: url(../images/bg_black.gif);
 }
 
-#container{
-	width: calc(100% - 20px);
-	min-height:calc(100vh - 30px);
-	margin: 0 auto;
-	background-color:#fefefe;
-	padding:5px;
+body.ability {
+    background-image: url(../images/bg_blue.gif);
 }
 
-
-header{
-	font-size:13px;
-	width:100%;
-	height:30px;
-	line-height: 30px;
-	background-color: orange;
-	padding: 0px 10px;
-	position: relative;
+#container {
+    width: 100%;
+    min-height: calc(100vh - 30px);
+    margin: 0 auto;
+    background-color: #fefefe;
+    padding: 5px;
 }
 
-header .top{
-	position: absolute;
-	right:5px;
-	bottom: 3px;
-	line-height:1;
-}
-header h1{
-	font-size:18px;
-	line-height: 30px;
-
-	margin:0;
-	padding:0;
-	display:inline;
+body.night #container,
+body.ability #container {
+    background-color: #333;
+    color: white;
 }
 
-#second{
-	font-weight: bold;
-	font-size:18px;
+header {
+    font-size: 13px;
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    background-color: orange;
+    padding: 0px 10px;
+    position: relative;
 }
 
-#left{
-	background-color:white;
+header .top {
+    position: absolute;
+    right: 5px;
+    bottom: 3px;
+    line-height: 1;
+}
+header h1 {
+    font-size: 18px;
+    line-height: 30px;
+
+    margin: 0;
+    padding: 0;
+    display: inline;
 }
 
-#right{
-	display:none;
+#second {
+    font-weight: bold;
+    font-size: 18px;
 }
 
-
-#talk{
-	height:110px;
-	display:flex;
-	flex-direction:column;
-	flex-wrap: wrap;
-	justify-content: space-around;
+#n-second {
+    color: red;
+    font-weight: bold;
+    font-size: 18px;
 }
 
-.hide{
-	visibility: hidden;			
+#left {
+    color: black;
 }
 
-#option{
-	width:100px;
-	text-align:center;
-	display:inline-block;
-
+#right {
+    display: none;
 }
 
-#option select{
-	width:90%;
+#talk {
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: space-around;
 }
 
-#chat{
-	width: 30%;
-	height: 40px;
-	vertical-align: bottom;
+.hide {
+    visibility: hidden;
 }
 
-#message{
-	width:65%;
-	height: 100px;
-	vertical-align: bottom;
+#option {
+    width: 100px;
+    text-align: center;
+    display: inline-block;
 }
 
-.size{
-	display: inline-block;
-	width:30px;
-	height:30px;
-	border: 2px solid #999;
-	border-radius:2px;
-	line-height: 30px;
-	cursor: pointer;
-	margin: 5px 0px;
-	vertical-align: bottom;
-	user-select: none;
+#option select {
+    width: 90%;
 }
 
-.size.selected{
-	border-color:red;
+#chat {
+    width: 30%;
+    height: 40px;
+    vertical-align: bottom;
 }
 
-.size.big{
-	color: crimson;
-	font-weight: bold;
+#message {
+    width: 65%;
+    height: 100px;
+    vertical-align: bottom;
 }
 
-.size.small{
-	color: navy;
+.size {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #999;
+    border-radius: 2px;
+    line-height: 30px;
+    cursor: pointer;
+    margin: 5px 0px;
+    vertical-align: bottom;
+    user-select: none;
 }
 
-
-#command{
-	margin-bottom: 10px;
+.size.selected {
+    border-color: red;
 }
 
-#job{
-	display:none;
-	border-radius:5px;
-	background-color: #d0d0d0;
-	padding: 5px;
-	user-select: none;
-	margin-bottom: 10px;
+.size.big {
+    color: crimson;
+    font-weight: bold;
 }
 
-#command > div{
-	display:none;
-	text-align:center;
-	border-radius: 5px;
-	padding:5px;
-	margin-bottom: 10px;
+.size.small {
+    color: navy;
 }
 
-.handle{
-	cursor: pointer;
-	user-select: none;
+#command {
+    margin-bottom: 10px;
 }
 
-#command > div div.detail{
-	display:none;
+#job {
+    display: none;
+    border-radius: 5px;
+    background-color: #d0d0d0;
+    padding: 5px;
+    user-select: none;
+    margin-bottom: 10px;
 }
 
-#command-logout, #command-gm{
-	background-color: #d0d0d0;
+#command > div {
+    display: none;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    margin-bottom: 10px;
 }
 
-#command-vote{
-	background-color: moccasin;
+.handle {
+    cursor: pointer;
+    user-select: none;
 }
 
-#command-vote > div, #command-ability > div{
-	display:inline-block;
-	width:50%;
+#command > div div.detail {
+    display: none;
 }
 
-select{
-	height:20px;
+#command-logout,
+#command-gm {
+    background-color: #d0d0d0;
 }
 
-div.box{
-	display:inline-block;
-	vertical-align: top;
-	text-align: left;
-	padding: 0px 5px;
+#command-vote {
+    background-color: moccasin;
 }
 
-input[type=button]{
-	height: 20px;
-	font-size:12px;
+#command-vote > div,
+#command-ability > div {
+    display: inline-block;
+    width: 50%;
 }
 
-input[type=button].big{
-	width:80px;
-	height:40px;
-}
-input[type=text]{
-	width:120px;
-	height:20px;
+select {
+    height: 20px;
 }
 
-input[type=number]{
-	width:50px;	
-	height:20px;
+div.box {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
+    padding: 0px 5px;
 }
 
-input.long{
-	width:100%;
+input[type="button"] {
+    height: 20px;
+    font-size: 12px;
 }
 
-#vinfo{
-	text-align:left;
-	display:none;
+input[type="button"].big {
+    width: 80px;
+    height: 40px;
 }
-#vinfo div{
-	display: inline-block;
-}
-
-
-div.alert{
-	font-weight:bold;
-	color:white;
-	background-color:red;
-	border-radius: 5px;
-	font-size:18px;
-
+input[type="text"] {
+    width: 120px;
+    height: 20px;
 }
 
+input[type="number"] {
+    width: 50px;
+    height: 20px;
+}
 
-div.alert.hide{
-	visibility: hidden;
+input.long {
+    width: 100%;
+}
+
+#vinfo {
+    text-align: left;
+    display: none;
+}
+#vinfo div {
+    display: inline-block;
+}
+
+div.alert {
+    font-weight: bold;
+    color: white;
+    background-color: red;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+div.alert.hide {
+    visibility: hidden;
 }
 
 #discuss {
-	width:100%;
-	border-collapse: collapse;
+    width: 100%;
+    border-collapse: collapse;
 
-	font-size:12px;
-	line-height:1.6;
+    font-size: 12px;
+    line-height: 1.6;
 
-	margin-bottom: 40px;
+    margin-bottom: 40px;
 }
 
-#discuss > tr > td{
-	display:block;
+#discuss > tr > td {
+    display: block;
 }
 
-
-#discuss td.name{
-	max-width: 100%;
-	vertical-align: top;
-	font-size:12px;
-	line-height: 1.5;
+#discuss td.name {
+    max-width: 100%;
+    vertical-align: top;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 #discuss td.talk {
-	position:relative;
-	padding-left:12px;
-	padding-right:25px;
-	width:100%;
-	max-width: 100%;
-	overflow:hidden;
+    position: relative;
+    padding-left: 12px;
+    padding-right: 25px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-#discuss div.quote{
-	width:20px;
-	height:20px;
-	background-color : #333;
-	border-radius:2px;
-	position: absolute;
-	top:0px;
-	right:0px;
-	background: url(../images/quote.png) no-repeat center #666;
-	cursor: pointer;
+#discuss div.quote {
+    width: 20px;
+    height: 20px;
+    background-color: #333;
+    border-radius: 2px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background: url(../images/quote.png) no-repeat center #666;
+    cursor: pointer;
 }
 
-tr.discuss td.talk.big{
-	color: crimson;
-	font-weight: bold;
+tr.discuss td.talk.big {
+    color: crimson;
+    font-weight: bold;
 }
 
-tr.discuss td.talk.small{
-	color: teal;
+tr.discuss td.talk.small {
+    color: teal;
 }
 
-.talk blockquote{
-	border:1px solid #666;
-	margin: 5px 5px 5px 0px;
-	padding:5px;
-	border-radius: 3px;
-	font-size: 11px;
+.talk blockquote {
+    border: 1px solid #666;
+    margin: 5px 5px 5px 0px;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 11px;
 
-	position: relative;
+    position: relative;
 }
 
-blockquote div.resno{
-	position: absolute;
-	right:-1px;
-	top:-1px;
+blockquote div.resno {
+    position: absolute;
+    right: -1px;
+    top: -1px;
 
-	width:60px;
-	height:16px;
+    width: 60px;
+    height: 16px;
 
-	border-radius: 3px;
-	background-color:#454545;
-	color: white;
-	text-align:center;
+    border-radius: 3px;
+    background-color: #454545;
+    color: white;
+    text-align: center;
 }
 
+#menu-sp {
+    width: 100%;
+    height: 40px;
 
-#menu-sp{
-	width: 100%;
-	height: 40px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
 
-	position: fixed;
-	bottom:0;
-	left:0;
-	
-	padding:0;
-	margin:0;
+    padding: 0;
+    margin: 0;
 
-	display:flex;
-	background-color:white;
+    display: flex;
+    background-color: white;
 
-	justify-content: space-around;
+    justify-content: space-around;
 }
 
+#menu-sp li {
+    font-size: 16px;
+    width: 33%;
+    list-style: none;
+    line-height: 40px;
+    text-align: center;
+    background-color: #333;
+    color: white;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
 
-#menu-sp li{
-	font-size:16px;
-	width: 33%;
-	list-style: none;
-	line-height:40px;
-	text-align: center;
-	background-color: #333;
-	color:white;
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
-
-	position: relative;
+    position: relative;
 }
 
-#menu-sp li.alert:before{
-	position:absolute;
-	width: 24px;
-	height:24px;
-	top:-15px;
-	right:0px;
-	border-radius:13px;
-	background-color:red;
-	color:white;
-	content:"！";
-	font-weight: bold;
-	font-size:20px;
-	line-height: 24px;
+#menu-sp li.alert:before {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: -15px;
+    right: 0px;
+    border-radius: 13px;
+    background-color: red;
+    color: white;
+    content: "！";
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 24px;
 }
 
-#memoButton{
-	display:none;
+#memoButton {
+    display: none;
 }
 
-#memo{
-	display:none;
-	width: 100%;
-	height:calc(100vh - 70px);
+#memo {
+    display: none;
+    width: 100%;
+    height: calc(100vh - 70px);
 }
 
-#memo.disp{
-	right: 0px;
+#memo.disp {
+    right: 0px;
 }
 
-#memoClose{
-	display:none;
+#memoClose {
+    display: none;
 }
 
-
-#memoTabs{
-	height: 24px;
-	font-size:0;
-	text-align: center
+#memoTabs {
+    height: 24px;
+    font-size: 0;
+    text-align: center;
 }
 
-.memoTab{
-	height:100%;
-	line-height: 24px;
-	display: inline-block;
-	width: 30%;
-	border-radius: 8px 8px 0px 0px;
-	background-color: white;
-	text-align: center;
-	cursor:pointer;
-	background-color: orange;
-	color:white;
-	font-weight:bold;
-	font-size: 12px;
-	vertical-align: top;
-	user-select: none;
+.memoTab {
+    height: 100%;
+    line-height: 24px;
+    display: inline-block;
+    width: 30%;
+    border-radius: 8px 8px 0px 0px;
+    background-color: white;
+    text-align: center;
+    cursor: pointer;
+    background-color: orange;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    vertical-align: top;
+    user-select: none;
 }
 
-.memoTab.selected{
-	color:orange;
-	background-color: white;
-	border: 1px solid orange;
-	border-bottom: 0px;
+.memoTab.selected {
+    color: orange;
+    background-color: white;
+    border: 1px solid orange;
+    border-bottom: 0px;
 }
 
-#memoBody{
-	height: calc(100% - 40px);
-	background-color: white;
-	border-radius: 0px 8px 8px 8px;
-	padding:5px;
+#memoBody {
+    height: calc(100% - 40px);
+    background-color: white;
+    border-radius: 0px 8px 8px 8px;
+    padding: 5px;
 }
 
-#memoDiscuss, #memoVote, #memoFree{
-	height: 100%;
-	overflow-y: scroll;
+#memoDiscuss,
+#memoVote,
+#memoFree {
+    height: 100%;
+    overflow-y: scroll;
 }
 
-#memoVote, #memoFree{
-	display:none;
+#memoVote,
+#memoFree {
+    display: none;
 }
 
-#memoDiscuss{
-	font-size:0;
+#memoDiscuss {
+    font-size: 0;
 }
 
-#memoDiscussFilter{
-	font-size:0;
-	max-height:30%;
-	overflow:hidden;
-	display:flex;
+#memoDiscussFilter {
+    font-size: 0;
+    max-height: 30%;
+    overflow: hidden;
+    display: flex;
 }
 
-#memoDiscussPlayer, #memoDiscussDay{
-	margin:0;
-	padding:0;
-	width:50%;
-	max-height: 100%;
-	overflow-y:auto;
-	font-size:12px;
-	vertical-align: top;
+#memoDiscussPlayer,
+#memoDiscussDay {
+    margin: 0;
+    padding: 0;
+    width: 50%;
+    max-height: 100%;
+    overflow-y: auto;
+    font-size: 12px;
+    vertical-align: top;
 
-	border: 1px solid #666;
-
+    border: 1px solid #666;
 }
 
-#memoDiscussFilter li{
-	list-style: none;
-	margin: 0;
-	padding:0;
-	cursor: pointer;
-	user-select: none;
+#memoDiscussFilter li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
 }
 
-#memoDiscussFilter li.selected{
-	background-color: #fff280;
+#memoDiscussFilter li.selected {
+    background-color: #fff280;
 }
 
-#memoDiscussFilter li:hover{
-	background-color: #fff280;
+#memoDiscussFilter li:hover {
+    background-color: #fff280;
 }
 
-#memoDiscussFilter li.selected{
-	background-color: #fff280;
+#memoDiscussFilter li.selected {
+    background-color: #fff280;
 }
 
 #memoDiscussTable {
-	display: inline-block;
-	font-size:12px;
-	width: 100%;
-	border-collapse: collapse;
-	padding:0;
+    display: inline-block;
+    font-size: 12px;
+    width: 100%;
+    border-collapse: collapse;
+    padding: 0;
 }
 
-#memoDiscussTable > tr > td{
-	display:block;
+#memoDiscussTable > tr > td {
+    display: block;
 }
 
-#memoDiscussTable tr{
-
-	width: 100%;
-	display: block;
-	display: none;
+#memoDiscussTable img {
+    width: 16px;
 }
 
-#memoDiscussTable td.talk{
-	line-height: 1.5;
+#memoDiscussTable tr {
+    width: 100%;
+    display: block;
+    display: none;
 }
 
-#memoDiscussTable td.talk{
-	position: relative;
-	padding-right:24px;
-	padding-left:12px;
+#memoDiscussTable td.talk {
+    line-height: 1.5;
 }
 
-#memoDiscussTable div.quote{
-	position: absolute;
-	right:0;
-	top:0;
-}
-#memoDiscussTable div.quote:before{
-	content:"引用";
-	color:blue;
-	text-decoration: underline;
-	cursor: pointer;
+#memoDiscussTable td.talk {
+    position: relative;
+    padding-right: 24px;
+    padding-left: 12px;
 }
 
-
-#memoDiscussTable td.talk blockquote{
-	font-size:12px;
-	padding:5px;
-	margin-right:25px;
-
+#memoDiscussTable div.quote {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+#memoDiscussTable div.quote:before {
+    content: "引用";
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
-#memoFreeSpace{
-	width: 100%;
-	height: 90%;
+#memoDiscussTable td.talk blockquote {
+    font-size: 12px;
+    padding: 5px;
+    margin-right: 25px;
+}
+
+#memoFreeSpace {
+    width: 100%;
+    height: 90%;
 }
