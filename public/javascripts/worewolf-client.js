@@ -343,7 +343,6 @@ function refresh() {
                 case "night":
                 case "ability":
                     isUseAbility = me.ability.isUsed
-                    console.log(me.ability.isUsed, isUseAbility)
 
                     if (
                         me.job.canFortune ||

@@ -1,21 +1,18 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>ようこそ</title>
-    <link rel='stylesheet' href='/stylesheets/common.css' />
-    <meta charset="utf-8">
-  </head>
-  <body>
-  	<div id="container">
-    <%- include("header_login", {title: "ログイン"}) %>
-    <form action="./login" method="post" style="text-align: center; margin: 30px auto;">
-    ユーザーID:<input type="text" name="userid"><br>
-    パスワード:<input type="password" name="password"><br>
-    <input type="submit"><br><br>
+    <head>
+        <%- include("head", { "title": "ログイン"}) %>
+    </head>
+    <body>
+        <div id="container">
+            <%- include("header_login", {title: "ログイン"}) %>
+            <form action="./login" method="post" style="text-align: center; margin: 30px auto">
+                ユーザーID:<input type="text" name="userid" /><br />
+                パスワード:<input type="password" name="password" /><br />
+                <input type="submit" /><br /><br />
 
-    <a href="/register">新規登録はこちら</a>
-    </form>
-
-	</div>
-  </body>
+                <a href="/register">新規登録はこちら</a>
+            </form>
+        </div>
+    </body>
 </html>

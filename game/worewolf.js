@@ -148,6 +148,7 @@ class Player {
     }
 
     vote(target) {
+        if (this.voteTarget == target.no) return false
         this.voteTarget = target.no
         this.log.add("vote", {
             no: this.no,
@@ -341,8 +342,10 @@ class PlayerManager {
 
     kick(target) {
         if (!(target in this.players)) return false
-
         var p = this.pick(target)
+
+        if (p.isGM || p.isKariGM || p.isDamy) return false
+
         var userid = p.userid
         p.socket.emit("leaveSuccess")
 
@@ -567,7 +570,7 @@ class PlayerManager {
     }
 
     savoAbility(cond) {
-        return this.alive().filter((p) => !p.ability.isused && p.job[cond])
+        return this.alive().filter((p) => !p.ability.isUsed && p.job[cond])
     }
 
     makeTargets() {
@@ -821,8 +824,9 @@ class Game {
 
     talk(userid, data) {
         var player = this.players.pick(userid)
+        if (!player) return false
 
-        if (this.isBanTalk) {
+        if (data.type == "discuss" && this.isBanTalk) {
             this.log.add("talk", {
                 cn: "???",
                 color: "black",
@@ -922,7 +926,7 @@ class Game {
 
     checkCast() {
         var txt = Cast.makeCastTxtAll(this.players.num)
-        this.log.add("system", {
+        this.log.add("info", {
             message: txt,
         })
     }
@@ -1281,8 +1285,9 @@ class Game {
             this.log.add("changePhase", this.date.forLog())
         }
 
-        this.emitChangePhase(phase)
+        this.emitPersonalData()
         this.emitPlayer()
+        this.emitChangePhase(phase)
 
         clearTimeout(this.timerFlg)
 

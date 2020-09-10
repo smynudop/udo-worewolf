@@ -117,6 +117,14 @@ class Log {
     add(type, option) {
         var data
         switch (type) {
+            case "info":
+                data = {
+                    type: "system",
+                    class: "info",
+                    message: option.message,
+                }
+                break
+
             case "talk":
                 data = option
                 data.message = this.escape(data.message)
@@ -145,6 +153,7 @@ class Log {
             case "voteSummary":
                 data = {
                     type: "system",
+                    class: "votedetail",
                     message: option.message,
                 }
                 break
@@ -154,7 +163,10 @@ class Log {
                 data = {
                     no: option.player.no,
                     type: "personal",
-                    message: `<img src='../images/fortune.png'/>【占い】${option.player.cn}さんは${option.target.cn}さんを占い、結果は【${option.target.job.fortuneResult}】でした。${isAuto}`,
+                    message:
+                        `<img src='../images/fortune.png'/>` +
+                        `【占い】${option.player.cn}さんは${option.target.cn}さんを占い、` +
+                        `結果は【<strong>${option.target.job.fortuneResult}</strong>】でした。${isAuto}`,
                 }
                 break
 
@@ -162,7 +174,9 @@ class Log {
                 data = {
                     no: option.player.no,
                     type: "personal",
-                    message: `<img src='../images/necro.png'/>【霊能】前日処刑された${option.target.cn}さんは【${option.target.job.necroResult}】でした。`,
+                    message:
+                        `<img src='../images/necro.png'/>` +
+                        `【霊能】前日処刑された${option.target.cn}さんは【<strong>${option.target.job.necroResult}</strong>】でした。`,
                 }
                 break
 
@@ -214,6 +228,7 @@ class Log {
             case "system":
                 data = {
                     type: "system",
+                    class: "system",
                     message: option.message,
                 }
                 break
@@ -222,12 +237,14 @@ class Log {
                 if (option.side == "引き分け") {
                     data = {
                         type: "system",
+                        class: "system",
                         message: `【引き分け】です！`,
                     }
                     break
                 }
                 data = {
                     type: "system",
+                    class: "system",
                     message: `【${option.side}】の勝利です！`,
                 }
                 break
@@ -236,31 +253,36 @@ class Log {
                 switch (option.phase) {
                     case "day":
                         data = {
-                            type: "progress",
+                            type: "system",
+                            class: "progress",
                             message: `<img src="../images/sun.png" />${option.day}日目の朝になりました。`,
                         }
                         break
                     case "vote":
                         data = {
-                            type: "progress",
+                            type: "system",
+                            class: "progress",
                             message: `<img src='../images/vote.png'/>まもなく日暮れです。投票してください。`,
                         }
                         break
                     case "revote":
                         data = {
                             type: "system",
-                            message: `再投票になりました。あと${option.left}回で決まらなければ引き分けになります。`,
+                            class: "system",
+                            message: `<img src='../images/vote.png'/>再投票になりました。あと${option.left}回で決まらなければ引き分けになります。`,
                         }
                         break
                     case "night":
                         data = {
-                            type: "progress",
+                            type: "system",
+                            class: "progress",
                             message: `<img src="../images/moon.png" />${option.day}日目の夜になりました。`,
                         }
                         break
                     case "ability":
                         data = {
-                            type: "progress",
+                            type: "system",
+                            class: "progress",
                             message: `<img src='../images/ability.png'/>もうすぐ夜が明けます。行動対象を決定してください`,
                         }
                         break
@@ -270,6 +292,7 @@ class Log {
             case "comeback":
                 data = {
                     type: "system",
+                    class: "system",
                     message: option.player.cn + "さんは奇跡的に蘇生しました。",
                 }
                 break
@@ -280,7 +303,7 @@ class Log {
                             type: "system",
                             message:
                                 "<img src='../images/bite.png'/>" +
-                                option.player +
+                                `<strong>${option.player}</strong>` +
                                 "さんは無残な姿で発見された……",
                         }
                         break
@@ -290,7 +313,7 @@ class Log {
                             type: "system",
                             message:
                                 "<img src='../images/exec.png'/>" +
-                                option.player +
+                                `<strong>${option.player}</strong>` +
                                 "さんは村民協議の結果処刑された……",
                         }
                         break
@@ -298,14 +321,14 @@ class Log {
                     case "standoff":
                         data = {
                             type: "system",
-                            message: option.player + "さんは猫又の呪いで死亡しました……",
+                            message: `<strong>${option.player}</strong>さんは猫又の呪いで死亡しました……`,
                         }
                         break
 
                     case "fellow":
                         data = {
                             type: "system",
-                            message: option.player + "さんは妖狐の後を追って死を選びました……",
+                            message: `<strong>${option.player}</strong>さんは妖狐の後を追って死を選びました……`,
                         }
                         break
                 }
@@ -335,20 +358,23 @@ class Log {
 
             case "addPlayer":
                 data = {
-                    type: "info",
+                    type: "system",
+                    class: "info",
                     message: `${option.player}さんが入村しました`,
                 }
                 break
 
             case "leavePlayer":
                 data = {
-                    type: "info",
+                    type: "system",
+                    class: "info",
                     message: `${option.player}さんが退村しました`,
                 }
                 break
             case "kick":
                 data = {
-                    type: "info",
+                    type: "system",
+                    class: "info",
                     message: `${option.player}さんが村八分になりました`,
                 }
                 break
@@ -361,7 +387,8 @@ class Log {
                 let nsec = option.time.nsec ? option.time.nsec + "秒" : "なし"
                 let isShow = option.isShowJobDead ? "あり" : "なし"
                 data = {
-                    type: "info",
+                    type: "system",
+                    class: "info",
                     no: 999,
                     cn: "システム",
                     message: `【村の情報】
