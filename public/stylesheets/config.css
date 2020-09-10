@@ -1,0 +1,15 @@
+:root {
+    --header-color: orange;
+    --progress-color: rgb(255, 185, 55);
+    --system-color: #ddd;
+    --vote-color: rgb(255, 234, 190);
+    --night-bg-color: rgb(84, 84, 97);
+    --tweet-color: lightblue;
+    --wolftalk-color: lightpink;
+    --wolf-bg-color: pink;
+    --sharetalk-color: lightgreen;
+    --foxtalk-color: yellow;
+    --personal-bg-color: paleturquoise;
+    --grave-bg-color: wheat;
+    --gm-bg-color: rgb(235, 170, 218);
+}

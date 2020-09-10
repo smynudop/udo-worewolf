@@ -1,3 +1,5 @@
+@import url("./config.css") screen;
+
 * {
     box-sizing: border-box;
 }
@@ -12,6 +14,7 @@ body {
     background: url(../images/bg_gray.gif) fixed;
     background-position: left 50% top 50%;
     font-size: 14px;
+    overflow-y: scroll;
 }
 
 body.day {
@@ -32,7 +35,7 @@ body.ability {
 
 body.night div#container,
 body.ability div#container {
-    background-color: #333;
+    background-color: var(--night-bg-color);
     color: white;
 }
 
@@ -53,7 +56,7 @@ header {
     font-size: 16px;
     width: 1000px;
     height: 40px;
-    background-color: orange;
+    background-color: var(--header-color);
     padding: 0px 10px;
     position: relative;
     margin: 0 auto;
@@ -161,8 +164,8 @@ header h1 {
 
 #job {
     display: none;
-    border-radius: 5px;
-    background-color: #d0d0d0;
+    border: 2px solid var(--night-bg-color);
+    background-color: white;
     padding: 5px;
     user-select: none;
     margin-bottom: 10px;
@@ -192,7 +195,7 @@ header h1 {
 }
 
 #command-vote {
-    background-color: moccasin;
+    background-color: var(--vote-color);
 }
 
 #command-vote > div,

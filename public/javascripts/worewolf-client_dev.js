@@ -10,204 +10,233 @@ var isVote = true,
 var size = "normal"
 var msgtmp
 
-$(function () {
-    socket = io("/room-" + vno)
+class Game {
+    constructor() {
+        this.io = new IO()
+    }
+}
 
-    $("#enter").click(function () {
-        //入室申請
-        var data = {
-            cn: $("#name").val(),
-            color: $("#color").val(),
-        }
-        if (data.cn.length > 8 || data.cn.length == 0) {
-            alert("名前は8文字以内にしてください")
+class IO {
+    constructor(game) {
+        this.game = game
+        this.socket = io("/room-" + vno)
+        this.on()
+    }
+
+    on() {
+        let socket = this.socket
+
+        socket.on("talk", function (data) {
+            appendTalk(data)
+        })
+
+        socket.on("you", function (data) {
+            setMe(data)
+        })
+
+        socket.on("player", function (data) {
+            refreshPlayers(data)
+        })
+
+        socket.on("initialLog", function (data) {
+            $("#discuss").empty()
+            $("#memoDiscussTable").empty()
+            appendTalks(data)
+        })
+
+        socket.on("enterSuccess", function (data) {
+            $("#talk").removeClass("hide")
+            setMe(data)
+            refresh()
+        })
+
+        socket.on("leaveSuccess", function (no) {
+            $("#command > div").hide()
+            $("#command-login").show()
+            $("#talk").removeClass("hide")
+        })
+
+        socket.on("voteSuccess", function (no) {
+            isVote = true
+            $("#command-vote .alert").addClass("hide")
+            $("#menu-sp-discuss").removeClass("alert")
+        })
+
+        socket.on("useAbilitySuccess", function (no) {
+            isUseAbility = true
+            $("#command-ability .alert").addClass("hide")
+            $("#menu-sp-discuss").removeClass("alert")
+        })
+
+        socket.on("changePhase", function (data) {
+            changePhase(data)
+        })
+
+        socket.on("disconnect", function (data) {
+            $("#command > div").hide()
+            $("#talk").addClass("hide")
+            $("#command-reload").show()
+        })
+
+        socket.on("refresh", function () {
+            location.reload()
+        })
+
+        socket.on("banTalk", function () {
+            $("#message").val(msgtmp)
+        })
+    }
+}
+
+class Memo {
+    constructor(game) {
+        this.game = game
+    }
+}
+
+class Display {
+    constructor(game) {
+        this.game = game
+        this.on()
+    }
+
+    on() {
+        $("#enter").click(function () {
+            //入室申請
+            var data = {
+                cn: $("#name").val(),
+                color: $("#color").val(),
+            }
+            if (data.cn.length > 8 || data.cn.length == 0) {
+                alert("名前は8文字以内にしてください")
+                return false
+            }
+            socket.emit("enter", data)
             return false
-        }
-        socket.emit("enter", data)
-        return false
-    })
-
-    $(".exit").click(function () {
-        socket.emit("leave", "")
-        return false
-    })
-
-    $("#chat").click(function () {
-        sendMessage()
-        return false
-    })
-
-    $("#vote").click(function () {
-        var v = $("#voteTarget").val()
-        if (v == "▼選択") return false
-
-        socket.emit("vote", {
-            target: v,
         })
-        return false
-    })
 
-    $("#ability").click(function () {
-        var v = $("#abilityTarget").val()
-        if (v == "▼選択") return false
-
-        socket.emit("ability", {
-            type: $(this).data("type"),
-            target: v,
+        $(".exit").click(function () {
+            socket.emit("leave", "")
+            return false
         })
-        return false
-    })
 
-    $("#gameStart").click(function () {
-        socket.emit("start")
-        return false
-    })
-
-    $("#summonNPC").click(function () {
-        socket.emit("summonNPC")
-        return false
-    })
-
-    $("#checkCast").click(function () {
-        socket.emit("checkCast")
-        return false
-    })
-
-    $("#kick").click(function () {
-        var target = $("#gmTarget").val()
-        if (target === null) return false
-
-        socket.emit("kick", { target: target })
-    })
-
-    $("#fix-player").click(function () {
-        socket.emit("fix-player", {
-            cn: $("#fix-cn").val(),
-            color: $("#fix-color").val(),
-        })
-    })
-
-    $("#fix-gm").click(function () {
-        socket.emit("fix-gm", {
-            name: $("#fix-name").val(),
-            pr: $("#fix-pr").val(),
-            casttype: $("#fix-casttype").val(),
-            capacity: $("#fix-capacity").val() - 0,
-            time: {
-                day: $("#fix-time-day").val() - 0,
-                vote: $("#fix-time-vote").val() - 0,
-                night: $("#fix-time-night").val() - 0,
-                ability: $("#fix-time-ability").val() - 0,
-                nsec: $("#fix-time-nsec").val() - 0,
-            },
-            isShowJobDead: $("#fix-isShowJobDead").val() == 1,
-        })
-        $("#vinfo").hide()
-    })
-
-    $(".handle").click(function () {
-        $(this).parent().find(".detail").toggle()
-    })
-
-    $(".size").click(function () {
-        var s = $(this).data("size")
-        $(".size").removeClass("selected")
-        if (size == s) {
-            size = "normal"
-        } else {
-            size = s
-            $(this).addClass("selected")
-        }
-    })
-
-    $("#fixVillageInfo").click(() => {
-        $("#vinfo").toggle()
-    })
-
-    $("#discuss").on("click", ".quote", function (e) {
-        var day = $(this).data("day")
-        var resno = $(this).data("resno")
-        var res = `>>${day}-${resno}`
-        $("#message").val($("#message").val() + res)
-    })
-
-    $("#memoDiscussTable").on("click", ".quote", function (e) {
-        var day = $(this).data("day")
-        var resno = $(this).data("resno")
-        var res = `>>${day}-${resno}`
-        $("#message").val($("#message").val() + res)
-    })
-
-    $(window).keydown(function (e) {
-        if (e.ctrlKey && e.keyCode == 13) {
+        $("#chat").click(function () {
             sendMessage()
             return false
-        }
-    })
+        })
 
-    socket.on("talk", function (data) {
-        appendTalk(data)
-    })
+        $("#vote").click(function () {
+            var v = $("#voteTarget").val()
+            if (v == "▼選択") return false
 
-    socket.on("you", function (data) {
-        setMe(data)
-    })
+            socket.emit("vote", {
+                target: v,
+            })
+            return false
+        })
 
-    socket.on("player", function (data) {
-        refreshPlayers(data)
-    })
+        $("#ability").click(function () {
+            var v = $("#abilityTarget").val()
+            if (v == "▼選択") return false
 
-    socket.on("initialLog", function (data) {
-        $("#discuss").empty()
-        $("#memoDiscussTable").empty()
-        appendTalks(data)
-    })
+            socket.emit("ability", {
+                type: $(this).data("type"),
+                target: v,
+            })
+            return false
+        })
 
-    socket.on("enterSuccess", function (data) {
-        $("#talk").removeClass("hide")
-        setMe(data)
-        refresh()
-    })
+        $("#gameStart").click(function () {
+            socket.emit("start")
+            return false
+        })
 
-    socket.on("leaveSuccess", function (no) {
-        $("#command > div").hide()
-        $("#command-login").show()
-        $("#talk").addClass("hide")
-    })
+        $("#summonNPC").click(function () {
+            socket.emit("summonNPC")
+            return false
+        })
 
-    socket.on("voteSuccess", function (no) {
-        isVote = true
-        $("#command-vote .alert").addClass("hide")
-        $("#menu-sp-discuss").removeClass("alert")
-    })
+        $("#checkCast").click(function () {
+            socket.emit("checkCast")
+            return false
+        })
 
-    socket.on("useAbilitySuccess", function (no) {
-        isUseAbility = true
-        $("#command-ability .alert").addClass("hide")
-        $("#menu-sp-discuss").removeClass("alert")
-    })
+        $("#kick").click(function () {
+            var target = $("#gmTarget").val()
+            if (target === null) return false
 
-    socket.on("changePhase", function (data) {
-        changePhase(data)
-    })
+            socket.emit("kick", { target: target })
+        })
 
-    socket.on("disconnect", function (data) {
-        $("#command > div").hide()
-        $("#talk").addClass("hide")
-        $("#command-reload").show()
-    })
+        $("#fix-player").click(function () {
+            socket.emit("fix-player", {
+                cn: $("#fix-cn").val(),
+                color: $("#fix-color").val(),
+            })
+        })
 
-    socket.on("refresh", function () {
-        location.reload()
-    })
+        $("#fix-gm").click(function () {
+            socket.emit("fix-gm", {
+                name: $("#fix-name").val(),
+                pr: $("#fix-pr").val(),
+                casttype: $("#fix-casttype").val(),
+                capacity: $("#fix-capacity").val() - 0,
+                time: {
+                    day: $("#fix-time-day").val() - 0,
+                    vote: $("#fix-time-vote").val() - 0,
+                    night: $("#fix-time-night").val() - 0,
+                    ability: $("#fix-time-ability").val() - 0,
+                    nsec: $("#fix-time-nsec").val() - 0,
+                },
+                isShowJobDead: $("#fix-isShowJobDead").val() == 1,
+            })
+            $("#vinfo").hide()
+        })
 
-    socket.on("banTalk", function () {
-        $("#message").val(msgtmp)
-    })
+        $(".handle").click(function () {
+            $(this).parent().find(".detail").toggle()
+        })
 
-    // メッセージを受信する
+        $(".size").click(function () {
+            var s = $(this).data("size")
+            $(".size").removeClass("selected")
+            if (size == s) {
+                size = "normal"
+            } else {
+                size = s
+                $(this).addClass("selected")
+            }
+        })
 
-    $("#command-login").show()
+        $("#fixVillageInfo").click(() => {
+            $("#vinfo").toggle()
+        })
+
+        $("#discuss").on("click", ".quote", function (e) {
+            var day = $(this).data("day")
+            var resno = $(this).data("resno")
+            var res = `>>${day}-${resno}`
+            $("#message").val($("#message").val() + res)
+        })
+
+        $("#memoDiscussTable").on("click", ".quote", function (e) {
+            var day = $(this).data("day")
+            var resno = $(this).data("resno")
+            var res = `>>${day}-${resno}`
+            $("#message").val($("#message").val() + res)
+        })
+
+        $(window).keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                sendMessage()
+                return false
+            }
+        })
+    }
+}
+
+$(function () {
+    let game = new Game()
 })
 
 function setMe(data) {
@@ -247,8 +276,6 @@ function changePhase(data) {
                 for (var key2 in vinfo.time) {
                     $(`#fix-time-${key2}`).val(vinfo.time[key2])
                 }
-            } else if (key == "isShowJobDead") {
-                $("fix-isShowJobDead").val(vinfo[key] ? 1 : 0)
             } else {
                 $(`#fix-${key}`).val(vinfo[key])
             }
@@ -504,9 +531,8 @@ function appendTalk(data) {
 
     var d = "day" + data.day
     var phase = "day" + data.day + "-" + data.phase
-    var cl = data.class || data.type
 
-    var tr = $("<tr></tr>").addClass(d).addClass(phase).addClass(cl)
+    var tr = $("<tr></tr>").addClass(d).addClass(phase).addClass(data.type)
 
     if (["system", "wolf-system", "progress", "vote", "personal", "info"].includes(data.type)) {
         tr.append(`<td colspan="2">${data.message.replace(/\n/g, "<br>")}</td>`)
