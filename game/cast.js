@@ -7,6 +7,14 @@ class Job {
         this.fortuneResult = "村人"
         this.necroResult = "村人"
         this.know = ""
+        this.desc = ""
+
+        this.ability = []
+        this.knowFriend = []
+        this.talk = []
+        this.watch = []
+        this.forever = []
+        this.winCond = ["winCamp"]
     }
 }
 
@@ -23,7 +31,7 @@ class Fortune extends Job {
         super("fortune")
         this.nameja = "占い師"
         this.desc = "毎晩生存者一人を占い、人狼かどうか調べることが出来ます。"
-        this.canFortune = true
+        this.ability = ["fortune"]
     }
 }
 
@@ -32,7 +40,7 @@ class Necro extends Job {
         super("necro")
         this.nameja = "霊能者"
         this.desc = "前の日に処刑された人が、人狼かどうかがわかります。"
-        this.canNecro = true
+        this.ability = ["necro"]
     }
 }
 
@@ -41,16 +49,15 @@ class Guard extends Job {
         super("guard")
         this.nameja = "狩人"
         this.desc = "毎晩一人を襲撃から守ることが出来ます。人狼の心を読みましょう。"
-        this.canGuard = true
+        this.ability = ["guard"]
     }
 }
 class Share extends Job {
     constructor() {
-        super("guard")
+        super("share")
         this.nameja = "共有者"
         this.desc = "毎晩一人を襲撃から守ることが出来ます。人狼の心を読みましょう。"
-        this.canKnowShare = true
-        this.canShareTalk = true
+        this.talk = ["share"]
     }
 }
 
@@ -60,8 +67,8 @@ class Cat extends Job {
         this.nameja = "猫又"
         this.desc =
             "狼に噛まれると、噛んだ狼を返り討ちにします。処刑されると、生存者一人を巻き添えにします。"
-        this.isStandOff = true
         this.onlyNotDamy = true
+        this.forever = ["standoff"]
     }
 }
 
@@ -72,12 +79,14 @@ class Wolf extends Job {
         this.desc = "村人を襲撃し、処刑を免れ、村を人狼のものにするのです。"
         this.camp = "wolf"
         this.species = "wolf"
-        this.canWolfTalk = true
-        this.canKnowWolf = true
-        this.canBite = true
         this.onlyNotDamy = true
         this.fortuneResult = "人狼"
         this.necroResult = "人狼"
+
+        this.talk = ["wolf"]
+        this.ability = ["bite"]
+        this.knowFriend = ["wolf"]
+        this.forever = ["notBitten"]
     }
 }
 
@@ -96,7 +105,8 @@ class Fanatic extends Job {
         this.nameja = "狂信者"
         this.desc = "人狼が誰だかわかる狂人です。人狼陣営として、狼の手助けをしましょう。"
         this.camp = "wolf"
-        this.canKnowWolf = true
+
+        this.knowFriend = ["wolf"]
     }
 }
 
@@ -107,11 +117,11 @@ class Fox extends Job {
         this.desc = "占われず、処刑されず、時には抵抗して、とにかく生存しましょう。"
         this.camp = "fox"
         this.species = "fox"
-        this.isResistBite = true
-        this.ismelt = true
         this.onlyNotDamy = true
-        this.canKnowFox = true
-        this.canFoxTalk = true
+
+        this.forever = ["melt", "resistBite"]
+        this.knowFriend = ["fox"]
+        this.talk = ["fox"]
     }
 }
 
@@ -122,12 +132,11 @@ class NecroFox extends Job {
         this.desc = "初日犠牲者の役職がわかる妖狐です。情報のリードを活かしましょう。"
         this.camp = "fox"
         this.species = "fox"
-        this.isResistBite = true
-        this.ismelt = true
         this.onlyNotDamy = true
-        this.canKnowFox = true
-        this.canFoxTalk = true
-        this.canKnowDamyJob = true
+
+        this.forever = ["melt", "resistBite", "knowdamy"]
+        this.knowFriend = ["fox"]
+        this.talk = ["fox"]
     }
 }
 
@@ -136,9 +145,10 @@ class Immoralist extends Job {
         super("immoralist")
         this.nameja = "背徳者"
         this.desc = "人間でありながら妖狐陣営です。妖狐の生存に全力を尽くしましょう。"
-        this.canKnowFox = true
-        this.isFellowFox = true
         this.camp = "fox"
+
+        this.knowFriend = ["fox"]
+        this.forever = ["fellowFox"]
     }
 }
 
@@ -148,7 +158,8 @@ class Noble extends Job {
         this.nameja = "貴族"
         this.desc =
             "狼に襲撃された時、奴隷を身代わりにして生き延びることが出来ます。ただ、恨みを買っているようですよ。"
-        this.isUseDecoy = true
+
+        this.forever = ["useDecoy"]
     }
 }
 
@@ -157,9 +168,10 @@ class Slave extends Job {
         super("slave")
         this.nameja = "奴隷"
         this.desc = "村人の勝利に加え、貴族の死亡が勝利条件です。ときには反逆も必要かもしれません。"
-        this.isDecoy = true
-        this.canKnowNoble = true
-        this.killNoble = true
+
+        this.knowFriend = ["noble"]
+        this.forever = ["decoy"]
+        this.winCond = ["winCamp", "killNoble"]
     }
 }
 
@@ -168,9 +180,7 @@ class Bat extends Job {
         super("bat")
         this.nameja = "蝙蝠"
         this.desc = "生存のみが勝利条件です。強いものの味方に立ち、とにかく生き延びましょう。"
-        this.camp = "bat"
-        this.ignoreCamp = true
-        this.mustAlive = true
+        this.winCond = ["alive"]
     }
 }
 
@@ -179,8 +189,9 @@ class Magician extends Job {
         super("magician")
         this.nameja = "魔術師"
         this.desc = "3日目以降、死者を蘇生することが出来ます。ただ、その確率は…？"
-        this.canRevive = true
         this.offShowJobDead = true
+
+        this.ability = ["revive"]
     }
 }
 
@@ -196,7 +207,7 @@ const castList = {
     Y: {
         4: { 村人: 1, 占い: 1, 狂人: 1, 人狼: 1 },
         5: { 村人: 1, 占い: 1, 狩人: 1, 狂人: 1, 人狼: 1 },
-        6: { 占い: 5, 人狼: 1 },
+        6: { 村人: 2, 占い: 1, 霊能: 1, 狂人: 1, 人狼: 1 },
         7: { 村人: 2, 占い: 1, 霊能: 1, 狩人: 1, 狂人: 1, 人狼: 1 },
         8: { 村人: 1, 占い: 1, 霊能: 1, 共有: 2, 狂人: 1, 人狼: 2 },
         9: { 村人: 3, 占い: 1, 霊能: 1, 狩人: 1, 人狼: 2, 蝙蝠: 1 },

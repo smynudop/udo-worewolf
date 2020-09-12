@@ -166,7 +166,7 @@ class Log {
                     message:
                         `<img src='../images/fortune.png'/>` +
                         `【占い】${option.player.cn}さんは${option.target.cn}さんを占い、` +
-                        `結果は【<strong>${option.target.job.fortuneResult}</strong>】でした。${isAuto}`,
+                        `結果は【<strong>${option.target.status.fortuneResult}</strong>】でした。${isAuto}`,
                 }
                 break
 
@@ -176,7 +176,7 @@ class Log {
                     type: "personal",
                     message:
                         `<img src='../images/necro.png'/>` +
-                        `【霊能】前日処刑された${option.target.cn}さんは【<strong>${option.target.job.necroResult}</strong>】でした。`,
+                        `【霊能】前日処刑された${option.target.cn}さんは【<strong>${option.target.status.necroResult}</strong>】でした。`,
                 }
                 break
 

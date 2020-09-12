@@ -3,11 +3,18 @@ const schema = require("../schema")
 const GameSchema = schema.Game
 const User = schema.User
 
+const PlayerSocket = require("./socket")
+
+const commandInfo = require("./command")
+const abilityInfo = commandInfo.ability
+const talkInfo = commandInfo.talk
+
 const Log = require("./log")
 const fs = require("fs")
 const ejs = require("ejs")
 const Cast = require("./cast")
 const e = require("express")
+const { runInThisContext } = require("vm")
 
 const talkTemplate = {
     discuss: ["おはよ", "おはようこ", "おはよー", "おはようございます"],
@@ -17,53 +24,182 @@ const talkTemplate = {
     tweet: ["暇だな", "誰が狼や……", "あ、ヒヒ落ちたw"],
 }
 
-class socketLike {
-    constructor() {
-        this.id = "this is not socket"
-        this.rooms = {}
-    }
-    emit() {
-        return false
-    }
-    join() {
-        return false
-    }
-    leave() {
-        return false
-    }
-}
+class Status {
+    constructor(player) {
+        this.name = ""
+        this.nameja = ""
+        this.camp = "" //陣営
+        this.species = "" //種族(勝敗判定に使う)
 
-class PlayerSocket {
-    constructor(socket) {
-        this.socket = socket || new socketLike()
-        this.rooms = new Set()
+        this.isAlive = true
+
+        this.fortuneResult = "村人"
+        this.necroResult = "村人"
+
+        this.desc = ""
+        this.knowText = ""
+
+        //永続の属性(呪殺・噛み耐性など)
+        this.forever = []
+
+        //一時的な属性(噛まれた、占われた)
+        this.temporary = []
+
+        //窓に発言する
+        this.talk = []
+
+        //窓を見る
+        this.watch = []
+
+        //能力
+        this.ability = []
+
+        //役職を知る
+        this.know = []
+
+        this.winCond = []
+
+        this.limit = {}
+
+        this.target = null
+        this.vote = null
+
+        this.player = player
+        this.date = player.date
     }
 
-    emit(type, data) {
-        this.socket.emit(type, data)
+    command() {
+        return this.ability
+            .map((a) => {
+                let info = abilityInfo[a]
+                if (!info) return null
+                info.target = this.player.manager.makeTargets(info.targetType)
+                return info
+            })
+            .filter((a) => a !== null)
     }
 
-    join(name) {
-        this.socket.join(name)
-        this.rooms.add(name)
+    talkCommand() {
+        let commands = []
+        for (let type in talkInfo) {
+            let t = talkInfo[type]
+            if (this.player.canTalkNow({ type: type })) {
+                commands.push(t)
+            }
+        }
+        return commands
     }
 
-    leave(name) {
-        this.socket.leave(name)
-        this.rooms.delete(name)
-    }
-
-    leaveAll() {
-        for (var room of this.rooms) {
-            this.leave(room)
+    forClient() {
+        let desc = this.desc
+            ? `あなたは【${this.nameja}】です。<br>${this.desc}${this.knowText}`
+            : ""
+        return {
+            name: this.name,
+            nameja: this.nameja,
+            desc: desc,
+            ability: this.ability,
+            target: this.target,
+            vote: this.vote,
+            command: this.command(),
+            talkCommand: this.talkCommand(),
         }
     }
 
-    updateSocket(socket) {
-        this.socket = socket
-        for (var room of this.rooms) {
-            this.join(room)
+    set(job) {
+        this.name = job.name
+        this.nameja = job.nameja
+        this.camp = job.camp //陣営
+        this.species = job.species //種族(勝敗判定に使う)
+
+        this.fortuneResult = job.fortuneResult
+        this.necroResult = job.necroResult
+
+        this.desc = job.desc
+
+        this.talk = job.talk
+        this.watch = job.watch
+        this.ability = job.ability
+        this.know = job.knowFriend
+        this.forever = job.forever
+        this.winCond = job.winCond
+    }
+
+    get isUsedAbility() {
+        return this.target !== null
+    }
+
+    get isVote() {
+        return this.vote !== null
+    }
+
+    add(attr, player) {
+        this.temporary.push(attr)
+        this.limit[attr] = this.date.day
+
+        if (this.has("standoff") && attr == "bitten" && player) {
+            player.status.add("stand")
         }
+        if (this.has("standoff") && attr == "maxVoted") {
+            let s = this.player.randomSelectTarget()
+            s.status.add("stand")
+        }
+    }
+
+    except(attr) {
+        if (this.temporary.includes(attr)) {
+            this.temprary = this.temporary.filter((a) => a != attr)
+            delete this.limit[attr]
+        }
+    }
+
+    can(ability) {
+        return this.ability.includes(ability)
+    }
+
+    canTalk(type) {
+        return this.talk.includes(type)
+    }
+
+    canWatch(type) {
+        return this.talk.includes(type) || this.watch.includes(type)
+    }
+
+    canKnow(job) {
+        return this.know.includes(job) || this.watch.includes(job) || this.talk.includes(job)
+    }
+
+    has(attr) {
+        return this.forever.includes(attr) || this.temporary.includes(attr)
+    }
+
+    hasnot(attr) {
+        return !this.has(attr)
+    }
+
+    winCondhas(attr) {
+        return this.winCond.includes(attr)
+    }
+
+    get hasAliveDecoy() {
+        return this.player.manager.select((p) => p.status.name == "slave").length > 0
+    }
+
+    get isDead() {
+        return !this.isAlive
+    }
+
+    update() {
+        let newTemporary = []
+        for (let attr of this.temporary) {
+            if (!this.limit[attr]) continue
+            if (this.limit[attr] >= this.date.day) {
+                newTemporary.push(attr)
+            } else {
+                delete this.limit[attr]
+            }
+        }
+        this.temporary = newTemporary
     }
 }
 
@@ -74,44 +210,75 @@ class Player {
 
         this.cn = data.cn || "kari"
         this.color = data.color || "red"
-        this.job = null
         this.isGM = data.isGM || false
         this.isKariGM = data.isKariGM || false
         this.isDamy = data.isDamy || false
         this.isNPC = data.isNPC || false
-        this.isAlive = true
-        this.voteTarget = null
-        this.ability = {
-            isUsed: false,
-            target: null,
-        }
-        this.guarded = false
+        this.waitCall = false
+        this.trip = ""
 
         this.manager = manager
         this.log = manager.log
         this.date = manager.date
 
+        this.status = new Status(this)
         this.socket = new PlayerSocket(data.socket)
 
         this.getTrip()
     }
 
     async getTrip() {
-        if (this.isDamy || this.isNPC || this.isNull) return false
+        if (this.isBot) return false
         let user = await User.findOne({ userid: this.userid }).exec()
         this.trip = user.trip
     }
 
+    get isAlive() {
+        return this.status.isAlive
+    }
+
     get isDead() {
-        return !this.isAlive
+        return !this.status.isAlive
     }
 
     get hasPermittionOfGMCommand() {
-        return this.isGM || (this.isKariGM && this.date.is("prologue"))
+        return (this.isGM || this.isKariGM) && this.date.is("prologue")
     }
 
     get isNull() {
         return this.no == 997
+    }
+
+    get isBot() {
+        return this.isDamy || this.isNPC || this.isNull
+    }
+
+    get isUsedAbility() {
+        return this.status.isUsedAbility
+    }
+
+    get isVote() {
+        return this.status.isVote
+    }
+
+    has(attr) {
+        return this.status.has(attr)
+    }
+
+    hasnot(attr) {
+        return this.status.hasnot(attr)
+    }
+
+    winCondhas(attr) {
+        return this.status.winCondhas(attr)
+    }
+
+    except(attr) {
+        this.status.except(attr)
+    }
+
+    can(ability) {
+        return this.status.can(ability)
     }
 
     update(cn, color) {
@@ -121,35 +288,36 @@ class Player {
 
     forClientSummary() {
         return {
+            type: "summary",
             no: this.no,
             cn: this.cn,
             color: this.color,
             isAlive: this.isAlive,
+            waitCall: this.waitCall,
         }
     }
 
     forClientDetail() {
         return {
+            type: "detail",
             no: this.no,
             userid: this.userid,
             trip: this.trip,
             cn: this.cn,
             color: this.color,
-            job: this.job,
+            status: this.status.forClient(),
             isGM: this.isGM,
             isKariGM: this.isKariGM,
             isAlive: this.isAlive,
-            vote: this.voteTarget,
-            ability: {
-                isUsed: this.ability.isUsed,
-                target: this.ability.target,
-            },
+            vote: this.status.vote,
+            ability: this.status.target,
+            waitCall: this.waitCall,
         }
     }
 
     vote(target) {
-        if (this.voteTarget == target.no) return false
-        this.voteTarget = target.no
+        if (this.status.vote == target.no) return false
+        this.status.vote = target.no
         this.log.add("vote", {
             no: this.no,
             player: this.cn,
@@ -159,12 +327,11 @@ class Player {
     }
 
     setTarget(target) {
-        this.ability.target = target.no
-        this.ability.isUsed = true
+        this.status.target = target.no
     }
 
     kill(reason) {
-        this.isAlive = false
+        this.status.isAlive = false
         this.log.add("death", {
             reason: reason,
             player: this.cn,
@@ -173,21 +340,19 @@ class Player {
     }
 
     revive() {
-        this.isAlive = true
+        this.status.isAlive = true
         this.log.add("comeback", {
             player: this,
         })
     }
 
     isVote() {
-        return this.voteTarget !== null
+        return this.status.isVote
     }
 
     reset() {
-        this.voteTarget = null
-        this.ability.isUsed = false
-        this.ability.target = null
-        this.guarded = false
+        this.status.vote = null
+        this.status.target = null
     }
 
     useAbility(type, target, isAuto) {
@@ -195,19 +360,23 @@ class Player {
         this.setTarget(target)
         this.log.add(type, { player: this, target: target, isAuto: isAuto })
         this.socket.emit("useAbilitySuccess")
+
+        if (type == "bite") {
+            this.status.add("biter")
+        }
     }
 
     noticeDamy(damy) {
         this.log.add("reiko", {
             no: this.no,
-            job: damy.job.nameja,
+            job: damy.status.nameja,
         })
     }
 
     nightTalkType() {
-        if (this.job.canWolfTalk) return "wolf"
-        if (this.job.canFoxTalk) return "fox"
-        if (this.job.canShareTalk) return "share"
+        if (this.status.canTalk("wolf")) return "wolf"
+        if (this.status.canTalk("fox")) return "fox"
+        if (this.status.canTalk("share")) return "share"
         return "tweet"
     }
 
@@ -228,24 +397,31 @@ class Player {
         let date = this.date
         switch (data.type) {
             case "discuss":
-                return (date.canDiscuss() && this.isAlive) || date.is("epilogue")
+                return (
+                    (date.canDiscuss() && this.isAlive && !this.isGM) ||
+                    date.is("epilogue") ||
+                    date.is("prologue")
+                )
 
             case "tweet":
                 return date.canTweet() && this.isAlive
 
             case "share":
-                return date.canNightTalk() && this.job.canShareTalk && this.isAlive
+                return date.canNightTalk() && this.status.canTalk("share") && this.isAlive
 
             case "fox":
-                return date.canNightTalk() && this.job.canFoxTalk && this.isAlive
+                return date.canNightTalk() && this.status.canTalk("fox") && this.isAlive
 
             case "wolf":
-                return date.canWolfTalk() && this.job.canWolfTalk && this.isAlive
+                return date.canWolfTalk() && this.status.canTalk("wolf") && this.isAlive
 
             case "grave":
                 return this.isDead || this.isGM
+
+            case "gmMessage":
+                return this.isGM
         }
-        return true
+        return false
     }
 
     canVote(data) {
@@ -268,28 +444,34 @@ class Player {
         var target = this.manager.pick(data.target)
         if (!target) return false
 
+        if (!this.status.can(data.type)) return false
+
         switch (data.type) {
             case "fortune":
-                if (!this.job.canFortune) return false
-                if (this.ability.isUsed) return false
+                if (this.isUsedAbility) return false
                 break
 
             case "guard":
-                if (!this.job.canGuard) return false
                 break
 
             case "bite":
-                if (!this.job.canBite) return false
-                if (target.job.canBite) return false
+                if (target.has("notBitten")) return false
                 break
 
             case "revive":
-                if (!this.job.canRevive) return false
                 if (target.isAlive) return false
                 if (this.date.day < 3) return false
                 break
         }
         return true
+    }
+
+    startRollcall() {
+        this.waitCall = true
+    }
+
+    call() {
+        this.waitCall = false
     }
 }
 
@@ -382,7 +564,14 @@ class PlayerManager {
 
     resetVote() {
         for (var player of this) {
-            player.voteTarget = null
+            player.status.vote = null
+        }
+    }
+
+    startRollcall() {
+        for (let player of this) {
+            if (player.isBot) continue
+            player.startRollcall()
         }
     }
 
@@ -391,9 +580,9 @@ class PlayerManager {
     }
 
     numBySpecies() {
-        var human = this.species("human").length
-        var wolf = this.species("wolf").length
-        var fox = this.species("fox").length
+        var human = this.select((p) => p.status.species == "human").length
+        var wolf = this.select((p) => p.status.species == "wolf").length
+        var fox = this.select((p) => p.status.species == "fox").length
 
         return {
             human: human,
@@ -435,16 +624,16 @@ class PlayerManager {
             .lot()
     }
 
-    species(species) {
-        return this.alive().filter((p) => p.job.species == species)
+    select(func) {
+        return this.alive().filter((p) => func(p))
     }
 
-    select(cond, reverse) {
-        return this.alive().filter((p) => p.job[cond])
+    has(attr) {
+        return this.alive().filter((p) => p.has(attr))
     }
 
-    exclude(cond) {
-        return this.alive().filter((p) => !p.job[cond])
+    selectAll(func) {
+        return this.list.filter((p) => func(p))
     }
 
     compileVote() {
@@ -452,11 +641,11 @@ class PlayerManager {
         var table = `<table class="votesummary"><tbody>`
 
         for (var player of this.alive()) {
-            var target = this.pick(player.voteTarget)
-            var get = this.alive().filter((p) => p.voteTarget == player.no).length
+            var target = this.pick(player.status.vote)
+            var get = this.alive().filter((p) => p.status.vote == player.no).length
             votes[player.no] = get
 
-            table += `<tr class="votedetail"><td>${player.cn}</td><td>(${get})</td><td>→</td><td>${target.cn}</td></tr>`
+            table += `<tr class="eachVote"><td>${player.cn}</td><td>(${get})</td><td>→</td><td>${target.cn}</td></tr>`
         }
 
         table += "</tbody></table>"
@@ -473,41 +662,43 @@ class PlayerManager {
     }
 
     setKnow() {
-        var wolf = this.select("canBite").map((p) => p.cn)
-        wolf = "【能力発動】人狼は" + wolf.join("、")
+        var wolf = this.select((p) => p.status.species == "wolf")
+            .map((p) => p.cn)
+            .join("、")
+        var share = this.select((p) => p.status.name == "share")
+            .map((p) => p.cn)
+            .join("、")
+        var fox = this.select((p) => p.status.species == "fox")
+            .map((p) => p.cn)
+            .join("、")
+        var noble = this.select((p) => p.status.name == "noble")
+            .map((p) => p.cn)
+            .join("、")
 
-        var share = this.select("canShareTalk").map((p) => p.cn)
-        share = "【能力発動】共有者は" + share.join("、")
-
-        var fox = this.species("fox").map((p) => p.cn)
-        fox = "【能力発動】妖狐は" + fox.join("、")
-
-        var noble = this.select("isUseDecoy").map((p) => p.cn)
-        noble = "【能力発動】貴族は" + noble.join("、")
+        let texts = {
+            wolf: "<br>【能力発動】人狼は" + wolf,
+            share: "<br>【能力発動】共有者は" + share,
+            fox: "<br>【能力発動】妖狐は" + fox,
+            noble: "<br>【能力発動】貴族は" + noble,
+        }
 
         for (var player of this) {
-            if (player.job.canKnowWolf) {
-                player.job.know += wolf
-            }
-            if (player.job.canKnowShare) {
-                player.job.know += share
-            }
-            if (player.job.canKnowFox) {
-                player.job.know += fox
-            }
-            if (player.job.canKnowNoble) {
-                player.job.know += noble
+            for (let job in texts) {
+                if (player.status.canKnow(job)) {
+                    player.status.knowText += texts[job]
+                }
             }
         }
     }
 
-    fellowFox() {
-        if (this.species("fox").length == 0) {
-            var imos = this.select("isFellowFox")
-            for (var imo of imos) {
-                imo.kill("fellow")
-            }
+    updateStatus() {
+        for (let player of this) {
+            player.status.update()
         }
+    }
+
+    isDeadAllFox() {
+        return this.select((p) => p.status.species == "fox").length == 0
     }
 
     summonDamy() {
@@ -541,24 +732,23 @@ class PlayerManager {
                 color: "orange",
                 isKariGM: true,
             })
-        } else {
-            var gm = new Player(
-                {
-                    userid: gmid,
-                    socket: null,
-                    no: 999,
-                    isGM: true,
-                    cn: "ゲームマスター",
-                    color: "gm",
-                },
-                this
-            )
-            this.players[999] = gm
-
-            this.userid2no[gmid] = 999
-
-            gm.job = Cast.job("GM")
+            return false
         }
+        var gm = new Player(
+            {
+                userid: gmid,
+                socket: null,
+                no: 999,
+                isGM: true,
+                cn: "ゲームマスター",
+                color: "gm",
+            },
+            this
+        )
+        this.players[999] = gm
+        this.userid2no[gmid] = 999
+        gm.status.set(Cast.job("GM"))
+        this.refreshList()
     }
 
     isCompleteVote() {
@@ -569,15 +759,23 @@ class PlayerManager {
         return this.alive().filter((p) => !p.isVote())
     }
 
-    savoAbility(cond) {
-        return this.alive().filter((p) => !p.ability.isUsed && p.job[cond])
+    savoAbility(ability) {
+        return this.alive().filter((p) => !p.isUsedAbility && p.status.can(ability))
     }
 
-    makeTargets() {
+    makeTargets(type) {
+        type = type || "alive"
         var targets = {}
-        for (var player of this.alive()) {
-            targets[player.no] = player.cn
+        if (type == "alive") {
+            for (var player of this.alive()) {
+                targets[player.no] = player.cn
+            }
+        } else {
+            for (var player of this.dead()) {
+                targets[player.no] = player.cn
+            }
         }
+
         return targets
     }
 
@@ -625,17 +823,15 @@ class Room {
                 socket.leave("grave")
             }
 
-            if (!player.job) continue
-
-            if (player.job.canShareTalk) {
+            if (player.status.canWatch("share")) {
                 socket.join("share")
             }
 
-            if (player.job.canWolfTalk) {
+            if (player.status.canWatch("wolf")) {
                 socket.join("wolf")
             }
 
-            if (player.job.canFoxTalk) {
+            if (player.status.canWatch("fox")) {
                 socket.join("fox")
             }
         }
@@ -734,10 +930,6 @@ class Game {
         this.win = null
         this.exec = null
 
-        this.bite = null
-        this.biter = null
-        this.fortuned = []
-
         this.nullPlayer = this.players.nullPlayer
 
         this.log.add("vinfo", this.villageInfo())
@@ -763,6 +955,14 @@ class Game {
         player.update(cn, data.color)
 
         this.emitPlayer()
+    }
+
+    startRollcall() {
+        this.players.startRollcall()
+        this.emitPlayer()
+        this.log.add("system", {
+            message: "点呼が開始されました。参加者は発言してください。",
+        })
     }
 
     npcTalk() {
@@ -837,6 +1037,11 @@ class Game {
             return false
         }
 
+        if (player.waitCall) {
+            player.call()
+            this.emitPlayer()
+        }
+
         data.cn = player.cn
         data.color = player.color
 
@@ -860,31 +1065,16 @@ class Game {
         if (!player || !target) return false
 
         switch (data.type) {
-            case "fortune":
-                player.useAbility("fortune", target)
-                this.fortuned.push(target.no)
-                break
-
-            case "guard":
-                player.useAbility("guard", target)
-                break
-
             case "bite":
-                player.useAbility("bite", target)
-
-                this.bite = target
-                this.biter = player
-
-                for (var wolf of this.players.select("canBite")) {
-                    player.setTarget(target)
+                for (var biter of this.players.has("biter")) {
+                    biter.except("biter")
                 }
 
                 this.io.to("wolf").emit("useAbilitySuccess")
                 break
-            case "revive":
-                player.useAbility("revive", target)
-                break
         }
+
+        player.useAbility(data.type, target)
     }
 
     canStart() {
@@ -912,7 +1102,7 @@ class Game {
                 job = castlist[i]
             } while (player.isDamy && job.onlyNotDamy)
 
-            player.job = job
+            player.status.set(job)
             castlist.splice(i, 1)
         }
         this.room.assign()
@@ -925,6 +1115,8 @@ class Game {
     }
 
     checkCast() {
+        if (!this.canStart()) return false
+
         var txt = Cast.makeCastTxtAll(this.players.num)
         this.log.add("info", {
             message: txt,
@@ -938,19 +1130,12 @@ class Game {
             fox = alives.fox
 
         if (wolf == 0) {
-            if (fox >= 1) {
-                this.win = "fox"
-            } else {
-                this.win = "human"
-            }
+            this.win = fox ? "fox" : "human"
             this.finish()
             return true
-        } else if (wolf >= human) {
-            if (fox >= 1) {
-                this.win = "fox"
-            } else {
-                this.win = "wolf"
-            }
+        }
+        if (wolf >= human) {
+            this.win = fox ? "fox" : "wolf"
             this.finish()
             return true
         }
@@ -962,7 +1147,7 @@ class Game {
         this.finish()
     }
 
-    execution() {
+    compileVote() {
         if (this.date.day == 1) return true
 
         for (var player of this.players.savoVote()) {
@@ -977,122 +1162,152 @@ class Game {
                 voteResult.table,
         })
 
-        if (!voteResult.exec) return false
-
-        var exec = voteResult.exec
-        exec.kill("exec")
-        this.exec = exec
-
-        if (exec.job.isStandOff) {
-            this.players.lot(exec.no).kill("standoff")
+        if (voteResult.exec) {
+            voteResult.exec.status.add("maxVoted")
         }
 
-        this.players.fellowFox()
+        return voteResult.exec
+    }
 
-        return true
+    exection() {
+        for (let player of this.players.has("maxVoted")) {
+            player.kill("exec")
+        }
+    }
+
+    killStandoff() {
+        for (let player of this.players.has("stand")) {
+            player.kill("standoff")
+        }
     }
 
     useFirstNightAbility() {
         var damy = this.players.damy()
-        this.bite = damy
+        damy.status.add("bitten")
         this.log.add("bite", { player: { cn: "狼", no: 998 }, target: damy })
 
-        for (var reiko of this.players.select("canKnowDamyJob")) {
+        for (var reiko of this.players.has("knowdamy")) {
             reiko.noticeDamy(damy)
         }
     }
 
     autoUseAbility() {
         /*自動噛み処理*/
-        if (this.bite === null) {
-            var biter = this.players.select("canBite").lot()
-            var target = this.players.exclude("canBite").lot()
 
-            this.bite = target
-            this.biter = biter
+        let biter = this.players.has("biter")
+        if (!biter.length && this.date.day >= 2) {
+            var autobiter = this.players.select((p) => p.status.can("bite")).lot()
+            var target = this.players.select((p) => !p.status.can("bite")).lot()
 
-            biter.useAbility("bite", target, true)
+            autobiter.useAbility("bite", target, true)
         }
 
         /*自動占い*/
-        for (var player of this.players.savoAbility("canFortune")) {
+        for (var player of this.players.savoAbility("fortune")) {
             player.randomUseAbility("fortune")
         }
 
         /*自動護衛*/
         if (this.date.day < 2) return false
 
-        for (var player of this.players.savoAbility("canGuard")) {
+        for (var player of this.players.savoAbility("guard")) {
             player.randomUseAbility("guard")
         }
     }
 
     guard() {
         if (this.date.day >= 2) {
-            for (var player of this.players.select("canGuard")) {
-                var target = this.players.pick(player.ability.target)
-                target.guarded = true
+            for (var player of this.players.select((p) => p.status.can("guard"))) {
+                var target = this.players.pick(player.status.target)
+                target.status.add("guarded")
             }
         }
     }
 
     revive() {
-        for (let player of this.players.select("canRevive")) {
-            if (player.ability.target === null) continue
+        for (let player of this.players.select((p) => p.status.can("revive"))) {
+            if (!player.isUsedAbility) continue
 
-            let target = this.players.pick(player.ability.target)
+            let target = this.players.pick(player.status.target)
             let threshold = target.isDamy ? 50 : 30
             if (Math.floor(Math.random() * 100) < threshold) {
-                target.revive()
+                target.status.add("revive")
             }
+        }
+
+        for (let player of this.players.has("revive")) {
+            player.revive()
         }
     }
 
     attack() {
-        var kills = []
+        for (let player of this.players.has("biter")) {
+            let target = this.players.pick(player.status.target)
+            target.status.add("bitten", player)
+        }
 
-        var bite = this.bite
-        if (!bite.guarded && !bite.job.isResistBite) {
-            var slave = this.players.select("isDecoy")
-            if (bite.job.isUseDecoy && slave.length) {
-                kills = kills.concat(slave)
-            } else {
-                kills.push(bite)
+        for (let player of this.players.has("bitten")) {
+            if (player.has("guarded") || player.has("resistBite")) continue
+
+            if (player.has("useDecoy") && player.status.hasAliveDecoy) {
+                for (let decoy of this.players.select((p) => p.status.name == "slave")) {
+                    decoy.status.add("stand")
+                }
+                continue
             }
 
-            if (bite.job.isStandOff) {
-                kills.push(this.biter)
+            player.status.add("eaten")
+        }
+
+        for (var fortune of this.players.select((p) => p.can("fortune"))) {
+            var target = this.players.pick(fortune.status.target)
+            target.status.add("fortuned")
+        }
+
+        for (var fortuned of this.players.has("fortuned")) {
+            if (fortuned.has("melt")) {
+                fortuned.status.add("eaten")
             }
         }
 
-        for (var f of this.fortuned) {
-            var fortuned = this.players.pick(f)
-            if (fortuned.job.ismelt) {
-                kills.push(fortuned)
+        for (var eaten of this.players.has("eaten")) {
+            eaten.kill("bite")
+        }
+    }
+
+    killStand() {
+        for (var stand of this.players.has("stand")) {
+            stand.kill("bite")
+        }
+    }
+
+    fellow() {
+        if (this.players.isDeadAllFox()) {
+            for (var imo of this.players.has("fellowFox")) {
+                imo.kill("fellow")
             }
         }
-
-        for (var kill of kills) {
-            kill.kill("bite")
-        }
-
-        this.players.fellowFox()
     }
 
     nightReset() {
         this.players.reset()
         this.room.assign()
 
-        this.fortuned = []
-        this.bite = null
-        this.biter = null
         this.leftVoteNum = 4
+    }
+
+    updateStatus() {
+        this.players.updateStatus()
     }
 
     useNightAbility() {
         if (this.date.day < 2) return false
-        for (var player of this.players.select("canNecro")) {
-            player.useAbility("necro", this.exec)
+
+        let exec = this.players.selectAll((p) => p.has("executed"))[0]
+        if (!exec) return false
+
+        for (var player of this.players.select((p) => p.status.can("necro"))) {
+            player.useAbility("necro", exec)
         }
     }
 
@@ -1108,11 +1323,16 @@ class Game {
         switch (phase) {
             case "night":
                 this.date.pass("vote")
-                let isExecSuccess = this.execution()
-                if (!isExecSuccess) {
+                let isExec = this.compileVote()
+                if (!isExec) {
                     this.changePhase("revote")
                     return false
                 }
+
+                this.exection()
+                this.killStandoff()
+                this.fellow()
+
                 if (this.endCheck()) return false
 
                 this.nightReset()
@@ -1133,14 +1353,18 @@ class Game {
                 this.autoUseAbility()
 
                 this.guard()
-                this.revive()
                 this.attack()
+                this.killStand()
+                this.revive()
+                this.fellow()
 
                 if (this.endCheck()) return false
 
                 this.room.assign()
                 this.date.sunrise()
                 this.pass("day")
+
+                this.updateStatus()
 
                 this.setnsec()
 
@@ -1225,16 +1449,17 @@ class Game {
 
         for (let player of this.players) {
             let isWin = true
-            if (!player.job.ignoreCamp && player.job.camp != this.win) {
+            if (player.winCondhas("winCamp") && player.status.camp != this.win) {
                 isWin = false
             }
-            if (player.job.mustAlive && player.isDead) {
+            if (player.winCondhas("alive") && player.isDead) {
                 isWin = false
             }
-            if (player.killNoble) {
-                if (this.players.select("isUseDecoy").length != 0) {
-                    isWin = false
-                }
+            if (
+                player.winCondhas("killNoble") &&
+                this.players.select((p) => p.status.name == "noble").length
+            ) {
+                isWin = false
             }
             this.log.add("result", { result: isWin ? "win" : "lose", player: player })
         }
@@ -1369,6 +1594,11 @@ class Game {
                 this.useAbility(userid, data)
             })
 
+            socket.on("rollcall", (data) => {
+                if (!player.hasPermittionOfGMCommand) return false
+                this.startRollcall()
+            })
+
             socket.on("start", (data) => {
                 if (!player.hasPermittionOfGMCommand) return false
                 this.start()
@@ -1448,25 +1678,21 @@ class GameManager {
         console.log("listen!")
         var mgr = this
 
-        var rd = this.io
-            .of((name, query, next) => {
-                next(null, /^\/room-\d+$/.test(name))
-            })
-            .on("connect", async function (socket) {
-                var nsp = socket.nsp
-                var vno = nsp.name.match(/\d+/)[0] - 0
-                if (!mgr.games.includes(vno)) {
-                    mgr.games.push(vno)
+        var rd = this.io.of(/^\/room-\d+$/).on("connect", async function (socket) {
+            var nsp = socket.nsp
+            var vno = nsp.name.match(/\d+/)[0] - 0
+            if (mgr.games.includes(vno)) return false
 
-                    var result = await GameIO.find(vno)
+            mgr.games.push(vno)
 
-                    if (result) {
-                        var village = new Game(nsp, result)
-                        village.listen()
-                        console.log("listen room-" + vno)
-                    }
-                }
-            })
+            var result = await GameIO.find(vno)
+
+            if (result) {
+                var village = new Game(nsp, result)
+                village.listen()
+                console.log("listen room-" + vno)
+            }
+        })
     }
 }
 
