@@ -6,9 +6,12 @@
     display: none;
 }
 
-#command-gm,
-#command-logout {
+#command-gm {
     background-color: var(--gm-bg-color);
+}
+
+#command-logout {
+    background-color: var(--personal-bg-color);
 }
 
 #pr {
@@ -107,6 +110,10 @@ table.votesummary {
 
 .gmMessage {
     background-color: var(--gm-bg-color);
+}
+
+.uncall {
+    color: red;
 }
 
 .offline {

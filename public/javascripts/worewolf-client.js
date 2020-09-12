@@ -2,13 +2,14 @@ var socket
 var players
 var phase,
     targets,
-    deathTargets,
     day = 0
 var sec, nsec, timerflg
 var isVote = true,
     isUseAbility = true
 var size = "normal"
 var msgtmp
+
+var villageData
 
 $(function () {
     socket = io("/room-" + vno)
@@ -39,7 +40,7 @@ $(function () {
 
     $("#vote").click(function () {
         var v = $("#voteTarget").val()
-        if (v == "▼選択") return false
+        if (v == "damy") return false
 
         socket.emit("vote", {
             target: v,
@@ -49,7 +50,7 @@ $(function () {
 
     $("#ability").click(function () {
         var v = $("#abilityTarget").val()
-        if (v == "▼選択") return false
+        if (v == "damy") return false
 
         socket.emit("ability", {
             type: $(this).data("type"),
@@ -70,6 +71,11 @@ $(function () {
 
     $("#checkCast").click(function () {
         socket.emit("checkCast")
+        return false
+    })
+
+    $("#rollcall").click(function () {
+        socket.emit("rollcall")
         return false
     })
 
@@ -212,19 +218,18 @@ $(function () {
 
 function setMe(data) {
     me = data
-    if (me.job) {
-        var know = me.job.know ? "<br>" + me.job.know : ""
-        var jobtxt = `あなたは【${me.job.nameja}】です。<br>${me.job.desc}${know}`
-        $("#job").show().html(jobtxt)
+    if (me.status.desc != "") {
+        $("#job").show().html(me.status.desc)
     } else {
         $("#job").hide()
     }
 }
 
 function changePhase(data) {
+    villageData = data
+
     phase = data.phase
     targets = data.targets
-    deathTargets = data.deathTargets
 
     if (data.day > day) {
         for (var d = day + 1; d <= data.day; d++) {
@@ -281,130 +286,85 @@ function changePhase(data) {
         $("#timer").html("")
     }
 
-    if (phase == "day") {
-        $("#discuss tr")
-            .not(".votedetail")
-            .not(`.day${day}-day`)
-            .not(`.day${day - 1}-ability.system`)
-            .not(".personal")
-            .remove()
-    }
-
-    if (phase == "night") {
-        $("#discuss tr")
-            .not(".votedetail")
-            .not(`.day${day}-night`)
-            .not(`.day${day}-vote.system`)
-            .remove()
-    }
-
+    slim()
     refresh()
 }
 
 function refresh() {
     $("#command > div").hide()
+    updateCommand(me.status.talkCommand)
+
     if (me.isWatch) {
         if (phase == "prologue") {
             $("#command-login").show()
         }
-    } else {
-        var commands
-        if (me.isGM || (me.isKariGM && phase == "prologue")) {
-            $("#command-gm").show()
-        }
-        if (phase == "prologue") {
-            if (!me.isGM) {
-                $("#command-logout").show()
-            }
-            commands = [["discuss", "発言"]]
-        } else if (phase == "epilogue") {
-            commands = [["discuss", "発言"]]
-        } else if (!me.isGM && me.isAlive) {
-            commands = [["tweet", "独り言"]]
-            switch (phase) {
-                case "day":
-                case "vote":
-                    isVote = me.vote !== null
+        return false
+    }
 
-                    $("#command-vote").show()
-                    updateVoteTarget(targets)
+    if (me.isGM || (me.isKariGM && phase == "prologue")) {
+        $("#command-gm").show()
+    }
+    if (!me.isGM && phase == "prologue") {
+        $("#command-logout").show()
+    }
+    if (!me.isGM && me.isAlive) {
+        switch (phase) {
+            case "day":
+                $("#command-vote").show()
+                updateVoteTarget(targets)
 
-                    if (phase == "day") {
-                        commands.unshift(["discuss", "発言"])
-                        $("#command-vote .alert").addClass("hide")
-                        $("#menu-sp-discuss").removeClass("alert")
-                    } else {
-                        $("#command-vote .alert").toggleClass("hide", isVote)
-                        $("#menu-sp-discuss").toggleClass("alert", !isVote)
-                    }
+                $("#command-vote .alert").addClass("hide")
+                $("#menu-sp-discuss").removeClass("alert")
+                break
 
-                    break
+            case "vote":
+                $("#command-vote").show()
+                updateVoteTarget(targets)
 
-                case "night":
-                case "ability":
-                    isUseAbility = me.ability.isUsed
+                isVote = me.vote !== null
+                $("#command-vote .alert").toggleClass("hide", isVote)
+                $("#menu-sp-discuss").toggleClass("alert", !isVote)
 
-                    if (
-                        me.job.canFortune ||
-                        (me.job.canGuard && day >= 2) ||
-                        (me.job.canBite && day >= 2) ||
-                        (me.job.canRevive && day >= 3)
-                    ) {
+                break
+
+            case "night":
+                for (let com of me.status.command) {
+                    if (com.since <= villageData.day) {
                         $("#command-ability").show()
-                        $("#command-ability").addClass("personal")
-
-                        updateAbilityTarget(targets)
-
-                        if (me.job.canGuard) {
-                            $("#ability").data("type", "guard").val("護衛")
-                        } else if (me.job.canFortune) {
-                            $("#ability").data("type", "fortune").val("占う")
-                        } else if (me.job.canBite) {
-                            $("#ability").data("type", "bite").val("襲撃")
-                            $("#command-ability").addClass("wolf")
-                        } else if (me.job.canRevive) {
-                            $("#ability").data("type", "revive").val("蘇生")
-                            updateAbilityTarget(deathTargets)
-                        }
+                        $("#ability").data("type", com.type).val(com.text)
+                        updateAbilityTarget(com.target)
                     }
-                    if (me.job.canShareTalk) {
-                        commands.unshift(["share", "会話"])
-                    }
-                    if (me.job.canFoxTalk) {
-                        commands.unshift(["fox", "会話"])
-                    }
+                }
 
-                    if (phase == "night") {
-                        if (me.job.canWolfTalk) {
-                            commands.unshift(["wolf", "会話"])
-                        }
-                        $("#command-ability .alert").addClass("hide")
-                        $("#menu-sp-discuss").removeClass("alert")
-                    } else {
-                        $("#command-ability .alert").toggleClass("hide", isUseAbility)
-                        $("#menu-sp-discuss").toggleClass("alert", !isUseAbility)
-                    }
+                $("#command-ability .alert").addClass("hide")
+                $("#menu-sp-discuss").removeClass("alert")
+                break
 
-                    break
-            }
-        } else if (!me.isGM && !me.isAlive) {
-            commands = [["grave", "霊話"]]
-        } else {
-            commands = [
-                ["grave", "霊話"],
-                ["gmMessage", "全体へ発言"],
-            ]
+            case "ability":
+                isUseAbility = me.ability !== null
+
+                for (let com of me.status.command) {
+                    if (com.since <= villageData.day) {
+                        $("#command-ability").show()
+                        $("#ability").data("type", com.type).val(com.text)
+                        updateAbilityTarget(com.target)
+                    }
+                }
+
+                $("#command-ability .alert").toggleClass("hide", isUseAbility)
+                $("#menu-sp-discuss").toggleClass("alert", !isUseAbility)
+
+                break
         }
-
-        updateCommand(commands)
     }
 }
 
 function updateAbilityTarget(targets) {
     var select = $("#abilityTarget")
     var v = select.val()
+
     select.empty()
-    $("<option></option").html("▼選択").val("").appendTo(select)
+    $("<option></option").html("▼選択").val("damy").appendTo(select)
     for (var key in targets) {
         if (me.no == key) continue
         $("<option></option").html(targets[key]).val(key).appendTo(select)
@@ -416,21 +376,32 @@ function updateVoteTarget(targets) {
     var select = $("#voteTarget")
     var v = select.val()
     select.empty()
-    $("<option></option").html("▼選択").val("").appendTo(select)
+    $("<option></option").html("▼選択").val("damy").appendTo(select)
+    let flg = false
+
     for (var key in targets) {
         if (me.no == key) continue
         $("<option></option").html(targets[key]).val(key).appendTo(select)
+        if (key == v) {
+            flg = true
+        }
     }
-    select.val(v)
+    select.val(flg ? v : "damy")
 }
 
 function updateCommand(commands) {
     var select = $("#talkType")
+    var v = select.val()
     select.empty()
+
+    let flg = false
     for (var command of commands) {
-        $("<option></option").html(command[1]).val(command[0]).appendTo(select)
+        $("<option></option").html(command.text).val(command.type).appendTo(select)
+        if (command.type == v) {
+            flg = true
+        }
     }
-    select.val(commands[0][0])
+    select.val(flg ? v : commands[0].type)
 }
 
 function refreshPlayers(data) {
@@ -441,8 +412,7 @@ function refreshPlayers(data) {
 
     ul.empty()
     memoul.empty()
-    var a = 0,
-        d = 0
+
     for (let player of data) {
         if (player.no > 990) continue
 
@@ -451,20 +421,22 @@ function refreshPlayers(data) {
         li.html(`<span class="${player.color}">◆</span>${player.cn}`)
             .data("no", player.no)
             .addClass(alive)
+            .toggleClass("uncall", player.waitCall)
 
         li.clone(true).appendTo(memoul)
 
-        var job = player.job ? `[${player.job.nameja}]` : ""
+        var job = player.status ? `[${player.status.nameja}]` : ""
         var userid = player.userid ? `<br>${player.userid}` : ""
         var trip = player.trip ? " " + player.trip : ""
         li.html(li.html() + job + userid + trip)
         li.appendTo(ul)
-
-        player.isAlive ? a++ : d++
     }
-    var join = "参加者:" + (a + d)
-    var dora = ` 生存:${a} 死亡${d}`
-    $("#playernum").html(join + dora)
+
+    let a = players.filter((p) => p.no < 990 && p.isAlive).length
+    let d = players.filter((p) => p.no < 990 && !p.isAlive).length
+
+    var join = `参加者:${a + d} 生存:${a} 死亡${d}`
+    $("#playernum").html(join)
 
     $("<li></li>").html("全員表示").data("no", "all").appendTo(memoul)
 
@@ -510,7 +482,7 @@ function appendTalk(data) {
     if (["system", "wolf-system", "progress", "vote", "personal", "info"].includes(data.type)) {
         tr.append(`<td colspan="2">${data.message.replace(/\n/g, "<br>")}</td>`)
     } else {
-        if (data.type == "wolfNeigh" && ((me.job && me.job.canWolfTalk) || me.isGM)) return false
+        if (data.type == "wolfNeigh" && me.isGM) return false
 
         $("<td></td>")
             .addClass("name")
@@ -545,22 +517,27 @@ function appendTalks(data) {
     for (let t of data) {
         appendTalk(t)
     }
+    slim()
+}
 
-    if (phase == "day" || phase == "vote") {
+function slim() {
+    if (phase == "day") {
         $("#discuss tr")
+            .not(".eachVote")
             .not(".votedetail")
-            .not(`.day${day}-vote`)
-            .not(`.day${day}-day`)
-            .not(`.day${day - 1}-ability`)
+            .not(`.day${villageData.day}-day`)
+            .not(`.day${villageData.day - 1}-ability.system`)
+            .not(".personal")
+            .not(".wolf-system")
             .remove()
     }
 
-    if (phase == "night" || phase == "ability") {
+    if (phase == "night") {
         $("#discuss tr")
-            .not(".votedetail")
-            .not(`.day${day}-ability`)
-            .not(`.day${day}-night`)
-            .not(`.day${day}-vote`)
+            .not(".eachVote")
+            .not(`.day${villageData.day}.votedetail`)
+            .not(`.day${villageData.day}-night`)
+            .not(`.day${villageData.day}-vote.system`)
             .remove()
     }
 }

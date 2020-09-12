@@ -198,6 +198,10 @@ header h1 {
     background-color: var(--vote-color);
 }
 
+#command-ability {
+    background-color: var(--personal-bg-color);
+}
+
 #command-vote > div,
 #command-ability > div {
     display: inline-block;

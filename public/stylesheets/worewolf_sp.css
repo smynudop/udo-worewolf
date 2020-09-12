@@ -260,8 +260,15 @@ div.alert.hide {
 }
 
 #discuss > tbody > tr > td,
+#discuss > tbody > tr,
+#discuss > tr,
 #discuss > tr > td {
     display: block;
+}
+
+#discuss > tbody > tr,
+#discuss > tr {
+    margin: 2px 0px;
 }
 
 #discuss td.name {
