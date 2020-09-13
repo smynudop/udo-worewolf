@@ -6,8 +6,14 @@
     display: none;
 }
 
-#command-gm {
+#command-gm,
+#command-gm-setWord,
+#command-gm-judge {
     background-color: var(--gm-bg-color);
+}
+
+#command-rm {
+    background-color: lightgreen;
 }
 
 #command-logout {

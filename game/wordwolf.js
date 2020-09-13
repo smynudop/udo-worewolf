@@ -1,365 +1,718 @@
 const moment = require("moment")
+const schema = require("../schema")
+const GameSchema = schema.Wordwolf
+const User = schema.User
 
-class Players{
-	constructor(){
-		this.players = {}
-		this.list = []
-	}
+const PlayerSocket = require("./socket")
 
-	add(id, socket, data){
-		this.players[id] = {
-			id: id,
-			socket: socket,
-			name: data.name,
-			color: data.color,
-			isonline : true,
-			isgm: false,
-			job : "villager",
-			vote: null,
-			votenum: 0
-		}
-		this.list = Object.values(this.players)
-	}
+const Log = require("./word-log")
+const fs = require("fs")
+const ejs = require("ejs")
+const e = require("express")
+const { runInThisContext } = require("vm")
+const { NotImplemented } = require("http-errors")
 
-	leave(id){
-		delete this.players[id]
-		this.list = Object.values(this.players)
-	}
+class Player {
+    constructor(data, manager) {
+        this.no = data.no === undefined ? 997 : data.no
+        this.userid = data.userid || "null"
 
-	pick(id){
-		return this.players[id]
-	}
+        this.cn = data.cn || "kari"
+        this.color = data.color || "red"
+        this.isRM = data.isRM || false
+        this.isNPC = data.isNPC || false
+        this.trip = ""
 
-	in(id){
-		return id in this.players
-	}
+        this.job = ""
+        this.vote = {
+            target: null,
+            targetName: "",
+            get: 0,
+        }
 
-	lot(){
-		return this.list.lot()
-	}
+        this.manager = manager
+        this.log = manager.log
 
-	lotWolf(num){
-		this.list.filter((p) => p.job != "preparer").lot().job = "wolf"
-	}
+        this.socket = new PlayerSocket(data.socket)
+        this.socket.join("player-" + this.no)
 
-	maxers(){
-		var votes = this.list.map((p) => p.votenum)
-		var max = Math.max(...votes)
-		return this.list.filter((p) => p.votenum == max)
-	}
-
-	forSend(){
-		var send = {}
-		for(var player of this){
-			send[player.id]={
-				id : player.id,
-				name: player.name,
-				color: player.color,
-				vote: player.vote,
-				votenum: player.votenum
-			}
-		}
-		return send
-	}
-
-	reset(){
-		for(var player of this){
-			player.job = "villager"
-			player.vote = null
-			player.votenum = null
-		}
-	}
-
-	num(){
-		return this.list.length
-	}
-
-    *[Symbol.iterator]() {
-        yield* this.list;
+        this.getTrip()
     }
 
+    async getTrip() {
+        let user = await User.findOne({ userid: this.userid }).exec()
+        this.trip = user.trip
+    }
+
+    changeVote(target) {
+        if (this.vote.target === target.no) return false
+        if (this.no == target.no) return false
+        if (this.isGM) return false
+
+        this.vote.target = target.no
+        this.vote.targetName = target.cn
+    }
+
+    cancelVote() {
+        this.vote.target = null
+        this.vote.targetName = ""
+    }
+
+    setJob(job) {
+        this.job = job
+    }
+
+    reset() {
+        this.job = ""
+        this.vote = {
+            target: null,
+            targetName: "",
+            get: 0,
+        }
+    }
+
+    forClientSummary() {
+        return {
+            no: this.no,
+            userid: this.userid,
+            trip: this.trip,
+            color: this.color,
+            cn: this.cn,
+            vote: this.vote,
+            isGM: this.isGM,
+        }
+    }
+
+    forClientDetail() {
+        return {
+            no: this.no,
+            userid: this.userid,
+            trip: this.trip,
+            color: this.color,
+            cn: this.cn,
+            job: this.job,
+            vote: this.vote,
+            isRM: this.isRM,
+            isGM: this.isGM,
+        }
+    }
+
+    get isVillager() {
+        return this.job == "villager"
+    }
+
+    get isWolf() {
+        return this.job == "wolf"
+    }
+
+    get isGM() {
+        return this.job == "GM"
+    }
+
+    get hasJob() {
+        return this.job !== ""
+    }
+
+    canJudge() {
+        return this.isGM
+    }
+
+    canSetWord() {
+        return this.isGM
+    }
+
+    hasPermittionOfRMCommand() {
+        return this.isRM
+    }
+
+    update(cn, color) {
+        this.cn = cn
+        this.color = color
+    }
 }
 
-class Game{
-	constructor(io){
-		this.io = io
-		this.players = new Players()
-		this.phases = {
-			"idle":{
-				phase: "idle",
-				phaseinfo: "ゲーム開始までお待ち下さい",
-				sec: null
-			},
-			"set":{
-				phase: "set",
-				phaseinfo: "ワード設定中",
-				sec: 120
-			},
-			"discuss":{
-				phase: "discuss",
-				phaseinfo: "議論中",
-				sec: 120
-			},
-			"inversion":{
-				phase: "inversion",
-				phaseinfo: "狼は村のワードを当ててください",
-				sec: 90
-			}
-		}
-		this.phase = "idle"
-		this.wword = null
-		this.vword = null
-		this.log = []
-		this.limit = null
-		this.limitFlg = null
+class PlayerManager {
+    constructor(game) {
+        this.players = {}
+        this.list = []
+        this.userid2no = {}
+        this.count = 0
+        this.npcNames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
 
-		console.log("open!")
-		this.listen()
-	}
+        this.log = game.log
+    }
 
-	systemMessage(mes){
-		let d = {
-			name : "system",
-			message : mes.trim()	
-		}
+    add(data) {
+        var no = this.count
+        data.no = no
+        var p = new Player(data, this)
 
-		this.log.push(d)
-		this.io.emit("systemMessage", {message: mes})		
-	}
+        var userid = data.userid
 
-	message(plr,mes){
-		let d = {
-			name : plr.name,
-			color : plr.color,
-			message : mes.trim()	
-		}
+        this.userid2no[userid] = no
+        this.players[no] = p
+        this.count++
+        this.refreshList()
 
-		this.log.push(d)
-		this.io.emit('talk', d);
-	}
+        this.log.add("addPlayer", {
+            player: p.cn,
+        })
 
-	emitPlayers(){
-		this.io.emit("player", this.players.forSend())
-	}
+        return p
+    }
 
-	changePhase(phase, data){
-		clearTimeout(this.limitFlg)
-		switch(phase){
+    leave(userid) {
+        var id = this.pick(userid).no
+        var p = this.players[id]
+        p.socket.emit("leaveSuccess")
 
-			case "set":
-				var preparer = this.players.lot()
-				preparer.job = "preparer"
-				preparer.socket.emit("appoPreparer", {message: "あなたは出題者です。ワードを設定してください"})
-				this.systemMessage("ゲーム開始 出題者は" + preparer.name + "さんです")
+        this.log.add("leavePlayer", {
+            player: p.cn,
+        })
+        delete this.players[id]
+        delete this.userid2no[userid]
+        this.refreshList()
+    }
 
-				this.limitFlg = setTimeout(()=>{
-					this.changePhase("cancel")
-				}, this.phases.set.sec * 1000)
-				break
+    kick(target) {
+        if (!(target in this.players)) return false
+        var p = this.pick(target)
 
-			case "discuss":
+        if (p.isRM) return false
 
-				this.players.lotWolf(num)
-				
-				this.systemMessage("議論開始")
+        var userid = p.userid
+        p.socket.emit("leaveSuccess")
 
-				for(var player of this.players){
-					var word
-					switch(player.job){
-						case "villager":
-							word = `お題:${vword}`
-							break
-						case "wolf":
-							word = `お題:${wword}`
-							break
-						case "preparer":
-							word = `出題者も一緒に推理してください。(村:${vword}、狼:${wword})`
-							break
-					}
-					player.socket.emit("yourWord", {message: word})
-				}
-				setTimeout(()=>{
-					this.changePhase("exec")
-				}, this.phases.discuss.sec * 1000)
-				break
+        this.log.add("kick", {
+            player: p.cn,
+        })
+        delete this.players[target]
+        delete this.userid2no[userid]
+        this.refreshList()
+    }
 
-			case "exec":
-				var maxers = this.players.maxers()
-				if(maxers.length == 1){
-					var exec = players[maxers[0]]
+    in(userid) {
+        return userid in this.userid2no
+    }
 
-					if(exec.job == "wolf"){
-						this.changePhase("inversion")					
-					} else {
-						this.systemMessage(exec.name + "さんは村人でした。人狼の勝利です。")	
-						this.changePhase("idle")		
-						return false
-					}
-				} else {
-					this.systemMessage("最多票が複数のため、人狼の勝利です。")
-					this.changePhase("idle")
-					return false
-				}
+    pick(id) {
+        if (typeof id == "string") {
+            if (isNaN(parseInt(id))) {
+                id = this.userid2no[id]
+            } else {
+                id = parseInt(id)
+            }
+        }
+        return this.players[id]
+    }
 
-				break
+    refreshList() {
+        this.list = Object.values(this.players).filter((p) => p.no < 990)
+        this.listAll = Object.values(this.players)
+    }
 
-			case "inversion":
-				this.systemMessage("狼が追放されました。村ワードを当ててください。")
-				setTimeout(()=>{
-					this.systemMessage("時間切れ、村の勝利です。")
-					this.changePhase("idle")
-				},this.phases.inversion.sec * 1000)
-				break
+    forClientSummary() {
+        return this.listAll.map((p) => p.forClientSummary())
+    }
 
-			case "judge":
-				if(data.judge == "correct"){
-					this.systemMessage("人狼の勝利です。")
-				} else {
-					this.systemMessage("村人の勝利です。")
-				}
-				this.changePhase("idle")
-				return false
-				break
+    forClientDetail() {
+        return this.listAll.map((p) => p.forClientDetail())
+    }
 
-			case "idle":
-				this.systemMessage(`村ワードは${this.vword}、狼ワードは${this.wword}でした。`)
-				this.players.reset()
+    reset() {
+        for (var player of this) {
+            player.reset()
+        }
+    }
 
-				break
+    selectGM() {
+        this.reset()
+        let gm = this.list.lot()
+        gm.setJob("GM")
+        this.log.add("selectGM", { gm: gm })
+    }
 
-			case "cancel":
-				phase = "idle"
-				this.systemMessage("キャンセルされました")
-				this.players.reset()
-				break
-		}
-		this.phase = p
-		this.io.emit("changePhase", this.phases[phase])
+    casting(wnum, vword, wword) {
+        let players = this.list.filter((p) => !p.isGM)
+        for (let cnt = 0; cnt < wnum; cnt++) {
+            let i = Math.floor(Math.random() * players.length)
+            players[i].setJob("wolf")
+            players.splice(i, 1)
+        }
 
-		if(game.phases[phase].sec){
-			this.limit = moment().add(game.phases[phase].sec, "seconds").format()
-		} else{
-			this.limit = null
-		}
-	}
+        for (let player of players) {
+            if (!player.hasJob) player.setJob("villager")
+        }
 
-	listen(){
+        this.log.add("discussStart")
 
-		this.io.on("connection", (socket) =>{
+        for (let player of this.list) {
+            if (player.isVillager) {
+                this.log.add("word", { word: vword, player: player })
+            }
+            if (player.isWolf) {
+                this.log.add("word", { word: wword, player: player })
+            }
+            if (player.isGM) {
+                this.log.add("gmword", { vword: vword, wword: wword, player: player })
+            }
+        }
+    }
 
-			var session = socket.request.session
-			var id = session.userid
+    get num() {
+        return this.list.length
+    }
 
-			var idata = {
-				log: this.log,
-				players: this.players.forSend(),
-				phase: this.phases[this.phase]
-			}
+    setRM(rmid) {
+        this.add({
+            userid: rmid,
+            socket: null,
+            cn: "ルームマスター",
+            color: "orange",
+            isRM: true,
+        })
+        return false
+    }
 
-			if(this.limit){
-				idata.phase.sec = moment(limit).diff(moment(), "seconds")
-			}
+    compileVote() {
+        let gets = this.list.map((p) => p.vote.get)
+        console.log(gets)
+        let getmax = Math.max(...gets)
 
-			socket.emit("initialData", idata)
+        let maxGetters = this.list.filter((p) => p.vote.get == getmax)
+        let exec = maxGetters[0]
+        if (maxGetters.length >= 2 || getmax == 0) {
+            exec = null
+        }
+        return {
+            exec: exec,
+        }
+    }
 
-			if(this.players.in(id)){
+    countVote() {
+        for (let player of this) {
+            player.vote.get = 0
+        }
+        for (let player of this) {
+            if (player.vote.target === null) continue
+            let target = this.pick(player.vote.target)
+            target.vote.get++
+        }
+    }
 
-				socket.join("chatroom");
-				socket.emit("loginSuccess")
-
-				var player = this.players.pick(id)
-				player.isonline = true
-				player.socket = socket
-
-				this.emitPlayers()
-
-			}
-
-
-			socket.on('disconnect', (data) => {
-				if(this.players.in(id)){
-					player.isonline = false		
-					this.emitPlayers()					
-				}
-				
-			});
-
-			socket.on("login", (data) => {
-
-				if(this.players.in(id)) return false
-			
-				socket.join("chatroom");
-				socket.emit("loginSuccess")
-
-				this.players.add(id,socket,data)
-
-
-				this.systemMessage(data.name + "さんが入室しました。")
-				this.emitPlayers()
-
-				var player = this.players.pick(id)
-				if(this.players.num() == 1){
-					socket.emit("appoGM")
-					player.isgm = true
-				}
-			})
-
-			socket.on("logout",(data) => {
-
-				socket.leave("chatroom");
-				socket.emit("logoutSuccess");
-
-				this.systemMessage(player.name + "さんが退出しました。")
-				this.players.leave(id)
-				this.emitPlayers()
-			});
-
-			socket.on('talk', (data) => {
-				if(this.players.in(id)){
-					player = this.players.pick(id)
-					this.message(player, data.message)				
-				}
-			});
-
-			socket.on("start", (data) => {
-				if(this.phase != "idle") return false
-				if(this.players.num() >= 4){
-					this.systemMessage("ゲームの開始には最低4人必要です。")
-					return false
-				}
-
-				this.changePhase("set")
-			})
-
-			socket.on("setword",(data) => {
-				if(this.phase != "set") return false
-
-				this.vword = data.vword
-				this.wword = data.wword
-
-				changePhase("discuss")	
-			})
-
-			socket.on("judge", (data) => {
-				if(this.phase != "inversion") return false
-				changePhase("judge", data)
-			})
-
-			socket.on("vote", (data) => {
-				if(this.phase != "discuss") return false
-				if(!this.players.in(id)) return false
-
-				var player = this.players.pick(id)
-				var vote = this.players.pick(data.id)
-
-				if(vote.job == "preparer" || player.job == "preparer") return false
-
-				player.vote = data.id
-				this.players.compileVote()
-				emitPlayers()
-			})
-		})	
-	}
+    *[Symbol.iterator]() {
+        yield* this.list
+    }
 }
 
-module.exports = Game
+class Game {
+    constructor(io, data) {
+        this.io = io
+
+        this.vno = data.vno || 1
+        this.name = data.name || "とある村"
+        this.pr = data.pr || "宣伝文が設定されていません"
+        this.time = data.time || {
+            setWord: 120,
+            discuss: 180,
+            counter: 60,
+        }
+        this.RMid = data.GMid
+        this.phase = "idol"
+
+        this.limit = null
+
+        this.vword = ""
+        this.wword = ""
+        this.wolfNum = 1
+
+        this.log = new Log(io, this.date)
+        this.players = new PlayerManager(this)
+
+        this.timerFlg = null
+
+        this.log.add("vinfo", this.villageInfo())
+
+        this.players.setRM(this.RMid)
+    }
+
+    setLimit(sec) {
+        this.limit = moment().add(sec, "seconds").format()
+    }
+
+    clearLimit() {
+        this.limit = null
+    }
+
+    leftSeconds() {
+        return this.limit ? moment().diff(this.limit, "seconds") * -1 : null
+    }
+
+    fixInfo(data) {
+        for (var key in data) {
+            if (this[key] === undefined) continue
+            this[key] = data[key]
+        }
+
+        GameIO.update(this.vno, data)
+        this.log.add("vinfo", this.villageInfo())
+    }
+
+    fixPersonalInfo(player, data) {
+        var cn = data.cn.trim()
+        if (cn.length == 0 || cn.length > 8) return false
+        player.update(cn, data.color)
+
+        this.emitPlayer()
+    }
+
+    villageInfo() {
+        return {
+            name: this.name,
+            pr: this.pr,
+            no: this.vno,
+            time: this.time,
+            RMid: this.RMid,
+        }
+    }
+
+    emitPlayer() {
+        if (this.phaseIs("discuss")) {
+            this.io.emit("player", this.players.forClientSummary())
+        } else {
+            this.io.emit("player", this.players.forClientDetail())
+        }
+    }
+
+    emitPhase() {
+        this.io.emit("changePhase", {
+            phase: this.phase,
+            villageInfo: this.villageInfo(),
+            targets: {},
+            left: this.leftSeconds(),
+        })
+    }
+
+    talk(player, data) {
+        data.cn = player.cn
+        data.color = player.color
+
+        this.log.add("talk", data)
+    }
+
+    vote(player, data) {
+        if (!player) return false
+        if (!this.phaseIs("discuss")) return false
+
+        if (data.target === null) {
+            player.cancelVote()
+        } else {
+            var target = this.players.pick(data.target)
+            if (!target) return false
+            player.changeVote(target)
+        }
+
+        this.players.countVote()
+        this.emitPlayer()
+    }
+
+    phaseIs(phase) {
+        return this.phase == phase
+    }
+
+    canStart() {
+        return this.players.num >= 4 && this.phaseIs("idol")
+    }
+
+    setWord(data) {
+        if (this.phase != "setWord") return false
+
+        this.vword = data.vword
+        this.wword = data.wword
+        this.wolfNum = data.wolfNum
+
+        if (this.wolfNum >= this.players.num / 2) {
+            this.wolfNum = Math.floor(this.players.num / 2) - 1
+        }
+
+        this.changePhase("discuss")
+    }
+
+    start() {
+        if (!this.canStart()) return false
+        this.changePhase("setWord")
+    }
+
+    casting() {
+        this.players.casting(this.wolfNum, this.vword, this.wword)
+    }
+
+    counter() {
+        this.log.add("counter")
+    }
+
+    finish(side) {
+        this.log.add("release", { vword: this.vword, wword: this.wword })
+        this.log.add("finish", { side: side })
+        this.players.reset()
+
+        this.changePhase("idol")
+    }
+
+    compileVote() {
+        let result = this.players.compileVote()
+        if (result.exec) {
+            this.log.add("exec", { player: result.exec })
+            return result.exec.isWolf
+        } else {
+            this.log.add("noexec")
+            return false
+        }
+    }
+
+    break() {
+        this.log.add("break")
+        this.changePhase("idol")
+    }
+
+    changePhase(phase) {
+        this.phase = phase
+        this.setTimer(phase)
+
+        switch (phase) {
+            case "setWord":
+                this.players.selectGM()
+                this.emitPersonalData()
+                this.emitPlayer()
+                this.emitPhase()
+                break
+            case "discuss":
+                this.casting()
+                this.emitPhase()
+                break
+            case "exec":
+                let isExecutionWolf = this.compileVote()
+                if (isExecutionWolf) {
+                    this.changePhase("counter")
+                    return false
+                } else {
+                    this.changePhase("wolfWin")
+                    return false
+                }
+                break
+            case "counter":
+                this.counter()
+                this.emitPhase()
+                this.emitPlayer()
+                break
+            case "villageWin":
+                this.finish("village")
+                break
+            case "wolfWin":
+                this.finish("wolf")
+                break
+            case "break":
+                this.break()
+                break
+            case "idol":
+                this.emitPhase()
+                this.emitPlayer()
+                break
+        }
+    }
+
+    setTimer(phase) {
+        clearTimeout(this.timerFlg)
+        this.clearLimit()
+
+        switch (phase) {
+            case "setWord":
+                this.timerFlg = setTimeout(() => {
+                    this.changePhase("break")
+                }, this.time.setWord * 1000)
+                this.setLimit(this.time.setWord)
+                break
+
+            case "discuss":
+                this.timerFlg = setTimeout(() => {
+                    this.changePhase("exec")
+                }, this.time.discuss * 1000)
+                this.setLimit(this.time.discuss)
+
+                break
+
+            case "counter":
+                this.timerFlg = setTimeout(() => {
+                    this.changePhase("wolfWin")
+                }, this.time.counter * 1000)
+                this.setLimit(this.time.counter)
+                break
+        }
+    }
+
+    emitPersonalData() {
+        for (var player of this.players) {
+            player.socket.emit("you", player.forClientDetail())
+        }
+    }
+
+    emitInitialLog(userid, socket) {
+        socket.emit("initialLog", this.log.initial())
+    }
+
+    listen() {
+        this.io.on("connection", (socket) => {
+            var session = socket.request.session
+            var userid = session.userid
+            var player = this.nullPlayer
+
+            this.emitPlayer(socket)
+
+            if (this.players.in(userid)) {
+                player = this.players.pick(userid)
+
+                socket.emit("enterSuccess", player.forClientDetail())
+
+                player.socket.updateSocket(socket)
+
+                this.emitPlayer()
+            }
+
+            this.emitPhase(socket)
+            this.emitInitialLog(userid, socket)
+
+            socket.on("enter", (data) => {
+                if (this.players.in(userid)) return false
+                if (this.players.num >= this.capacity) return false
+
+                data.userid = userid
+                data.socket = socket
+                player = this.players.add(data)
+
+                socket.emit("enterSuccess", player.forClientDetail())
+                this.emitPlayer()
+            })
+
+            socket.on("leave", (data) => {
+                if (!player || player.isRM) return false
+                this.players.leave(userid)
+                this.emitPlayer()
+            })
+
+            socket.on("fix-player", (data) => {
+                if (!player) return false
+                this.fixPersonalInfo(player, data)
+            })
+
+            socket.on("talk", (data) => {
+                if (!player) return false
+                this.talk(player, data)
+            })
+
+            socket.on("vote", (data) => {
+                if (!player) return false
+                this.vote(player, data)
+            })
+
+            socket.on("setWord", (data) => {
+                if (!player.canSetWord()) return false
+                this.setWord(data)
+            })
+
+            socket.on("wolfWin", (data) => {
+                if (!player.canJudge()) return false
+                this.changePhase("wolfWin")
+            })
+
+            socket.on("villageWin", (data) => {
+                if (!player.canJudge()) return false
+                this.changePhase("villageWin")
+            })
+
+            socket.on("start", (data) => {
+                if (!player.hasPermittionOfRMCommand) return false
+                this.start()
+            })
+
+            socket.on("kick", (data) => {
+                if (!player.hasPermittionOfRMCommand) return false
+
+                this.players.kick(data.target)
+                this.emitPlayer()
+            })
+
+            socket.on("fix-rm", (data) => {
+                if (!player.hasPermittionOfRMCommand) return false
+
+                this.fixInfo(data)
+            })
+        })
+        this.io.emit("refresh")
+    }
+
+    close() {
+        GameIO.writeHTML(this.log.all(), this.players.list, this.villageInfo())
+        GameIO.update(this.vno, { state: "logged" })
+    }
+}
+
+class GameIO {
+    static writeHTML(log, player, vinfo) {
+        ejs.renderFile(
+            "./views/worewolf_html.ejs",
+            {
+                logs: log,
+                players: player,
+                vinfo: vinfo,
+            },
+            function (err, html) {
+                if (err) console.log(err)
+                html = html.replace(/\n{3,}/, "\n")
+                fs.writeFile("./public/log/" + vinfo.no + ".html", html, "utf8", function (err) {
+                    console.log(err)
+                })
+            }
+        )
+    }
+
+    static update(vno, data) {
+        GameSchema.updateOne({ vno: vno }, { $set: data }, (err) => {
+            if (err) console.log(err)
+        })
+    }
+
+    static find(vno) {
+        return GameSchema.findOne({ vno: vno }).exec()
+    }
+}
+
+class GameManager {
+    constructor(io) {
+        this.io = io
+        this.games = []
+        this.listen()
+    }
+
+    listen() {
+        console.log("listen!")
+        var mgr = this
+
+        var rd = this.io.of(/^\/wordroom-\d+$/).on("connect", async function (socket) {
+            var nsp = socket.nsp
+            var vno = nsp.name.match(/\d+/)[0] - 0
+            if (mgr.games.includes(vno)) return false
+
+            mgr.games.push(vno)
+
+            var result = await GameIO.find(vno)
+
+            if (result) {
+                var village = new Game(nsp, result)
+                village.listen()
+                console.log("listen room-" + vno)
+            }
+        })
+    }
+}
+
+module.exports = GameManager

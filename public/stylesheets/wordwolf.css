@@ -1,0 +1,91 @@
+@import url("./config.css") screen;
+
+#talk {
+    height: 25px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#message,
+#chat {
+    height: 25px;
+}
+#message {
+    width: calc(100% - 60px);
+}
+#chat {
+    width: 60px;
+}
+
+#playerlist li.selected {
+    background-color: pink;
+}
+
+#right li.gm {
+    background-color: var(--gm-bg-color);
+}
+
+#discuss .progress > td,
+#discuss tr.system > td,
+#discuss .personal > td {
+    line-height: 1.5;
+    padding: 5px;
+}
+
+@media screen and (max-width: 768px) {
+    #word-vote {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        font-size: 18px;
+        border-radius: 20px;
+        text-align: center;
+        background-color: gray;
+        color: white;
+        user-select: none;
+    }
+
+    #container {
+        width: 100%;
+        padding: 0px;
+        background-color: white;
+    }
+
+    #content {
+        padding: 10px;
+    }
+
+    #left,
+    #right {
+        padding: 5px;
+    }
+
+    #right {
+        display: block;
+        width: 100%;
+        position: fixed;
+        bottom: 0px;
+        background-color: var(--vote-color);
+    }
+
+    #right > div,
+    #right ul {
+        width: 100%;
+    }
+
+    #playerlist li:last-of-type {
+        border: 0px solid #000;
+    }
+
+    #right li {
+        display: inline-block;
+        width: calc(50% - 10px);
+        margin: 5px;
+        background-color: white;
+        border-radius: 5px;
+    }
+}

@@ -1,104 +1,104 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title><%= vinfo.no %>番 <%= vinfo.name %> - 焼肉鯖</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href="../stylesheets/worewolf.css" />
-    </head>
-    <body>
-        <header>
-            <h1 id="title"><%= vinfo.name %></h1>
-            <%= vinfo.no %>番地
-            <span id="pr"><%= vinfo.pr %></span>
-            <div class="top"><a href="/">トップへ</a></div>
-        </header>
-        <div id="container">
-            <div id="left">
-                <table id="discuss">
-                    <% for(var log of logs.reverse()){ %> <% if(log.type == "wolfNeigh") continue %>
-                    <% if(["system","wolf-system", "progress", "vote", "personal",
-                    "info"].includes(log.type)) { %>
-                    <% var cl = log.class || log.type %>
-                    <tr class="<%= cl %>">
-                        <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
-                    </tr>
-                    <% } else { %>
-                    <tr class="<%= log.type %>">
-                        <td class="name"><span class="<%= log.color %>">◆</span><%= log.cn %></td>
-                        <td class="talk <%= log.size %>">
-                            <%- log.message.replace(/\n/g, "<br />") %>
-                        </td>
-                    </tr>
-                    <% } %> <% } %>
-                </table>
-            </div>
-            <div id="right">
-                <div id="player">
-                    <ul id="playerlist">
-                        <% for (var player of players) { %>
-                        <li class="<% if(player.isAlive) { %>>alive<% } else {%>dead<% } %>">
-                            <%= player.cn %><%if(player.job){%>[<%= player.job.nameja %>]<% }%><br />
-                            <%= player.userid %>
-                        </li>
-                        <% } %>
-                    </ul>
-                </div>
-            </div>
-        </div>
+<head>
+<title><%= vinfo.no %>番 <%= vinfo.name %> - 焼肉鯖</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="../stylesheets/worewolf.css" />
+</head>
+<body>
+<header>
+<h1 id="title"><%= vinfo.name %></h1>
+<%= vinfo.no %>番地
+<span id="pr"><%= vinfo.pr %></span>
+<div class="top"><a href="/">トップへ</a></div>
+</header>
+<div id="container">
+<div id="left">
+<table id="discuss">
+<% for(var log of logs.reverse()){ -%>
+<% if(log.type == "wolfNeigh") continue -%>
+<% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(log.type)) { -%>
+<% var cl = log.class || log.type -%>
+<tr class="<%= cl %>">
+    <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
+</tr>
+<% } else { -%>
+<tr class="<%= log.type %>">
+    <td class="name"><span class="<%= log.color %>">◆</span><%= log.cn %></td>
+    <td class="talk <%= log.size %>"><%- log.message.replace(/\n/g, "<br />") %></td>
+</tr>
+<% } -%>
+<% } -%>
+</table>
+</div>
 
-        <div id="memoButton">memo</div>
-        <div id="memo">
-            <div id="memoClose">×</div>
-            <div id="memoTabs">
-                <div class="memoTab selected" data-name="Discuss">発言ログ</div>
-                <div class="memoTab" data-name="Vote">投票ログ</div>
-                <div class="memoTab" data-name="Free">自由帳</div>
-            </div>
-            <div id="memoBody">
-                <div id="memoDiscuss">
-                    <div id="memoDiscussFilter">
-                        <ul id="memoDiscussPlayer"></ul>
-                        <ul id="memoDiscussDay"></ul>
-                    </div>
-                    <table id="memoDiscussTable">
-                        <% for(var log of logs){ %> <%
-                        if(!["progress","discuss"].includes(log.type)) continue %> <%
-                        if(["system","wolf-system", "progress", "vote", "personal",
-                        "info"].includes(log.type)) { %>
-                        <tr
-                            class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>"
-                        >
-                            <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
-                        </tr>
-                        <% } else { %>
-                        <tr
-                            class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>"
-                        >
-                            <td class="name">
-                                <span class="<%= log.color %>">◆</span><%= log.cn %>
-                            </td>
-                            <td class="talk <%= log.size %>">
-                                <%- log.message.replace(/\n/g, "<br />") %>
-                            </td>
-                        </tr>
-                        <% } %> <% } %>
-                    </table>
-                </div>
-                <div id="memoVote"></div>
-                <div id="memoFree">
-                    <textarea id="memoFreeSpace"></textarea>
-                </div>
-            </div>
-        </div>
-        <ul id="menu-sp">
-            <li id="menu-sp-discuss">発言</li>
-            <li id="menu-sp-player">参加者</li>
-            <li id="menu-sp-memo">メモ</li>
-        </ul>
+<div id="right">
+<div id="player">
+<ul id="playerlist">
+<% for (var player of players) { -%>
+<% var cl = player.isAlive ? "alive" : "dead" -%>
+<% var job = player.status ? "["+player.status.nameja+"]" : "" -%>
+<li class="<%= cl %>">
+    <%= player.cn %><%= job %><br /><%= player.userid %><%= player.trip %>
+</li>
+<% } -%>
+</ul>
+</div>
+</div>
+</div>
 
-        <!-- socket.ioをロードする -->
-        <script src="../javascripts/jquery-3.4.1.min.js"></script>
-        <script src="../javascripts/worewolf-memo.js"></script>
-    </body>
+<div id="memoButton">memo</div>
+<div id="memo">
+<div id="memoClose">×</div>
+<div id="memoTabs">
+<div class="memoTab selected" data-name="Discuss">発言ログ</div>
+<div class="memoTab" data-name="Vote">投票ログ</div>
+<div class="memoTab" data-name="Free">自由帳</div>
+</div>
+
+<div id="memoBody">
+<div id="memoDiscuss">
+
+<div id="memoDiscussFilter">
+<ul id="memoDiscussPlayer"></ul>
+<ul id="memoDiscussDay"></ul>
+</div>
+
+<table id="memoDiscussTable">
+<% for(var log of logs){ -%>
+    <% if(!["progress","discuss"].includes(log.type)) continue -%>
+    <% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(log.type)) { -%>
+<tr class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>">
+    <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
+</tr>
+<% } else { -%>
+<tr class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>">
+    <td class="name"><span class="<%= log.color %>">◆</span><%= log.cn %></td>
+    <td class="talk <%= log.size %>"><%- log.message.replace(/\n/g, "<br />") %></td>
+</tr>
+<% } -%>
+<% } -%>
+</table>
+
+</div>
+
+<div id="memoVote"></div>
+
+<div id="memoFree">
+<textarea id="memoFreeSpace"></textarea>
+</div>
+
+</div>
+</div>
+<ul id="menu-sp">
+    <li id="menu-sp-discuss">発言</li>
+    <li id="menu-sp-player">参加者</li>
+    <li id="menu-sp-memo">メモ</li>
+</ul>
+
+<!-- socket.ioをロードする -->
+<script src="../javascripts/jquery-3.4.1.min.js"></script>
+<script src="../javascripts/worewolf-memo.js"></script>
+</body>
 </html>
