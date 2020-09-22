@@ -39,9 +39,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameManager = void 0;
 var game_1 = require("./game");
 var gameIO_1 = require("./gameIO");
-var e = require("express");
-var runInThisContext = require("vm").runInThisContext;
-var isThisTypeNode = require("typescript").isThisTypeNode;
 var GameManager = /** @class */ (function () {
     function GameManager(io) {
         this.io = io;
