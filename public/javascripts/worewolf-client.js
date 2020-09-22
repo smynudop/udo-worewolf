@@ -292,7 +292,9 @@ function changePhase(data) {
 
 function refresh() {
     $("#command > div").hide()
-    updateCommand(me.status.talkCommand)
+    if (me.status) {
+        updateCommand(me.status.talkCommand)
+    }
 
     if (me.isWatch) {
         if (phase == "prologue") {
@@ -401,6 +403,7 @@ function updateCommand(commands) {
             flg = true
         }
     }
+    if (phase == "day" || phase == "night") flg = false
     select.val(flg ? v : commands[0].type)
 }
 
@@ -470,20 +473,19 @@ function sendMessage() {
 }
 
 function appendTalk(data) {
+    console.log(data)
     var tab = $("#discuss")
     var memo = $("#memoDiscussTable")
 
     var d = "day" + data.day
     var phase = "day" + data.day + "-" + data.phase
-    var cl = data.class || data.type
+    var cl = data.class
 
     var tr = $("<tr></tr>").addClass(d).addClass(phase).addClass(cl)
 
-    if (["system", "wolf-system", "progress", "vote", "personal", "info"].includes(data.type)) {
+    if (data.type == "system") {
         tr.append(`<td colspan="2">${data.message.replace(/\n/g, "<br>")}</td>`)
     } else {
-        if (data.type == "wolfNeigh" && me.isGM) return false
-
         $("<td></td>")
             .addClass("name")
             .html(`<span class="${data.color}">◆</span>${data.cn}`)
@@ -492,7 +494,7 @@ function appendTalk(data) {
             .addClass("talk")
             .addClass(data.size)
             .html(data.message.replace(/\n/g, "<br>"))
-        if (data.type == "discuss") {
+        if (data.class == "discuss") {
             $("<div></div>")
                 .addClass("quote")
                 .data("day", data.day)
@@ -514,6 +516,7 @@ function appendTalk(data) {
 }
 
 function appendTalks(data) {
+    console.log(data)
     for (let t of data) {
         appendTalk(t)
     }
@@ -535,7 +538,7 @@ function slim() {
     if (phase == "night") {
         $("#discuss tr")
             .not(".eachVote")
-            .not(`.day${villageData.day}.votedetail`)
+            .not(`.day${villageData.day}.vote`)
             .not(`.day${villageData.day}-night`)
             .not(`.day${villageData.day}-vote.system`)
             .remove()
