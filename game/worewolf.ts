@@ -1,10 +1,6 @@
 import { Game } from "./game"
 import { GameIO } from "./gameIO"
 
-const e = require("express")
-const { runInThisContext } = require("vm")
-const { isThisTypeNode } = require("typescript")
-
 export class GameManager {
     io: any
     games: number[]
