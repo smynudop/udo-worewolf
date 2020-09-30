@@ -7,30 +7,24 @@
   <body>
 
     <div id="container">
-<%- include("header_login", {title: "ワード人狼ロビー"}) %>
+<%- include("header_word", {title: "ワード人狼ロビー"}) %>
     
     <div id="table_wrap">
-
-    <% if(result.length == 0) {%>
-        現在部屋はありません。<br>
-        <a href="/makeWordroom">新しく部屋を作成</a>
-    <% } else { %>
-        <table id="rooms">
-        <tr><th>番号</th><th>村名</th><th>PR</th><th>時間(昼/投票/夜/能力)</th><th>定員</th><th>状態</th><th>GM</th></tr>
+        現在稼働中の部屋は<%= result.length %>部屋です。
         <% for(var room of result) { %>
-            <tr>
-                <td><%= room.vno %></td>
-                <td><a href="./wordwolf/<%= room.vno %>"><%= room.name %></a></td>
-                <td><%= room.pr %></td>
-                <td><%= room.time.day %>/<%= room.time.vote %>/<%= room.time.night %>/<%= room.time.ability %></td>
-                <td><%= room.capacity %></td>
-                <td><%= room.state %>
-                <td><%= room.GMid %></td>
-            </tr>
+            <div class="village word">
+              <div class="village_title">
+                <%= room.vno %>番 <a href="./wordwolf/<%= room.vno %>"><%= room.name %></a>
+              </div>
+              <div class="village_detail">
+                <%= room.pr %><br>
+                お題設定:<%= room.time.setWord %>秒 議論:<%= room.time.discuss %>秒 逆転:<%= room.time.counter %>秒<br>
+                GM:<%= room.GMid %>
+              </div>
+            </div>
         <% } %>
-        </table>
         <a href="/makeWordroom">新しく部屋を作成</a>
-    <% } %>
+
     </div>
 	</div>
   </body>

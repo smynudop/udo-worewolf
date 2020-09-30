@@ -20,7 +20,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.router = void 0;
-var Express = __importStar(require("express"));
+const Express = __importStar(require("express"));
 exports.router = Express.Router();
 /* GET home page. */
 exports.router.get("/", function (req, res, next) {

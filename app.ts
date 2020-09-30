@@ -97,7 +97,7 @@ app.use(function (err, req, res, next) {
 var Worewolf = require("./game/worewolf")
 var worewolfServer = new Worewolf(io)
 
-var Wordwolf = require("./game/wordwolf")
+var Wordwolf = require("./wordwolf/wordwolf")
 var wordwolfServer = new Wordwolf(io)
 
 module.exports = app

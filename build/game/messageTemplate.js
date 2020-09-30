@@ -66,12 +66,12 @@ exports.messageTemplate = {
         wolfNeigh: "アオォーン・・・",
     },
 };
-var MessageFormat = /** @class */ (function () {
-    function MessageFormat(log) {
+class MessageFormat {
+    constructor(log) {
         this.log = log;
         this.date = log.date;
     }
-    MessageFormat.prototype.htmlEscape = function (text) {
+    htmlEscape(text) {
         text = text
             .replace(/&/g, "&amp;")
             .replace(/"/g, "&quot;")
@@ -79,9 +79,9 @@ var MessageFormat = /** @class */ (function () {
             .replace(/>/g, "&gt;")
             .replace(/'/g, "&#039;");
         return text;
-    };
-    MessageFormat.prototype.format = function (type, detail, option) {
-        var message;
+    }
+    format(type, detail, option) {
+        let message;
         if (detail in exports.messageTemplate[type]) {
             message = exports.messageTemplate[type][detail];
         }
@@ -101,11 +101,11 @@ var MessageFormat = /** @class */ (function () {
             }
         });
         message = message.replace(/\[icon:(.+?)\]/g, function (match, key) {
-            return "<img src='../images/" + key + ".png'/>";
+            return `<img src='../images/${key}.png'/>`;
         });
         return message;
-    };
-    MessageFormat.prototype.findTarget = function (type, detail) {
+    }
+    findTarget(type, detail) {
         switch (type) {
             case "vote":
                 if (detail == "success")
@@ -130,13 +130,13 @@ var MessageFormat = /** @class */ (function () {
                 break;
         }
         return "all";
-    };
-    MessageFormat.prototype.findType = function (type) {
+    }
+    findType(type) {
         if (type == "talk")
             return "talk";
         return "system";
-    };
-    MessageFormat.prototype.findClass = function (type, detail) {
+    }
+    findClass(type, detail) {
         switch (type) {
             case "talk":
                 return detail;
@@ -157,14 +157,14 @@ var MessageFormat = /** @class */ (function () {
                     return "info";
         }
         return "system";
-    };
-    MessageFormat.prototype.makeLog = function (type, detail, option) {
-        var target = this.findTarget(type, detail);
-        var messageType = this.findType(type);
-        var cl = this.findClass(type, detail);
-        var message = this.format(type, detail, option);
-        var no = option.no === undefined ? 999 : option.no;
-        var log = {
+    }
+    makeLog(type, detail, option) {
+        let target = this.findTarget(type, detail);
+        let messageType = this.findType(type);
+        let cl = this.findClass(type, detail);
+        let message = this.format(type, detail, option);
+        let no = option.no === undefined ? 999 : option.no;
+        let log = {
             target: target,
             type: messageType,
             class: cl,
@@ -177,8 +177,7 @@ var MessageFormat = /** @class */ (function () {
             size: option.size || "normal",
         };
         return log;
-    };
-    return MessageFormat;
-}());
+    }
+}
 exports.MessageFormat = MessageFormat;
 //# sourceMappingURL=messageTemplate.js.map

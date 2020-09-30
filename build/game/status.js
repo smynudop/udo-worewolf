@@ -1,21 +1,10 @@
 "use strict";
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Status = void 0;
-var abilityInfo = require("./command").abilityInfo;
-var talkInfo = require("./command").talkInfo;
-var Status = /** @class */ (function () {
-    function Status(player) {
+const abilityInfo = require("./command").abilityInfo;
+const talkInfo = require("./command").talkInfo;
+class Status {
+    constructor(player) {
         this.name = "";
         this.nameja = "";
         this.camp = ""; //陣営
@@ -47,31 +36,30 @@ var Status = /** @class */ (function () {
         this.playerManager = player.manager;
         this.date = player.date;
     }
-    Status.prototype.command = function () {
-        var _this = this;
+    command() {
         return this.ability
-            .map(function (a) {
-            var info = abilityInfo[a];
+            .map((a) => {
+            let info = abilityInfo[a];
             if (!info)
                 return null;
-            info.target = _this.player.manager.makeTargets(info.targetType);
+            info.target = this.player.manager.makeTargets(info.targetType);
             return info;
         })
-            .filter(function (a) { return a !== null; });
-    };
-    Status.prototype.talkCommand = function () {
-        var commands = [];
-        for (var type in talkInfo) {
-            var t = talkInfo[type];
+            .filter((a) => a !== null);
+    }
+    talkCommand() {
+        let commands = [];
+        for (let type in talkInfo) {
+            let t = talkInfo[type];
             if (this.player.canTalkNow({ type: type })) {
                 commands.push(t);
             }
         }
         return commands;
-    };
-    Status.prototype.forClient = function () {
-        var desc = this.desc
-            ? "\u3042\u306A\u305F\u306F\u3010" + this.nameja + "\u3011\u3067\u3059\u3002<br>" + this.desc + this.knowText
+    }
+    forClient() {
+        let desc = this.desc
+            ? `あなたは【${this.nameja}】です。<br>${this.desc}${this.knowText}`
             : "";
         return {
             name: this.name,
@@ -83,8 +71,8 @@ var Status = /** @class */ (function () {
             command: this.command(),
             talkCommand: this.talkCommand(),
         };
-    };
-    Status.prototype.set = function (job) {
+    }
+    set(job) {
         this.name = job.name;
         this.nameja = job.nameja;
         this.camp = job.camp; //陣営
@@ -99,42 +87,34 @@ var Status = /** @class */ (function () {
         this.forever = job.forever;
         this.winCond = job.winCond;
         this.rival = job.rival;
-    };
-    Object.defineProperty(Status.prototype, "isUsedAbility", {
-        get: function () {
-            return this.target !== null;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Status.prototype, "isVote", {
-        get: function () {
-            return this.vote !== null;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Status.prototype.add = function (attr, player) {
+    }
+    get isUsedAbility() {
+        return this.target !== null;
+    }
+    get isVote() {
+        return this.vote !== null;
+    }
+    add(attr, player) {
         this.temporary.push(attr);
         this.limit[attr] = this.date.day;
         if (this.has("standoff") && attr == "bitten" && player) {
             player.status.add("stand");
         }
         if (this.has("standoff") && attr == "maxVoted") {
-            var s = this.player.randomSelectTarget();
+            let s = this.player.randomSelectTarget();
             s.status.add("stand");
         }
-    };
-    Status.prototype.except = function (attr) {
+    }
+    except(attr) {
         if (this.temporary.includes(attr)) {
-            this.temporary = this.temporary.filter(function (a) { return a != attr; });
+            this.temporary = this.temporary.filter((a) => a != attr);
             delete this.limit[attr];
         }
-    };
-    Status.prototype.can = function (ability) {
+    }
+    can(ability) {
         return this.ability.includes(ability);
-    };
-    Status.prototype.canTalk = function (type) {
+    }
+    canTalk(type) {
         switch (type) {
             case "share":
             case "fox":
@@ -148,83 +128,53 @@ var Status = /** @class */ (function () {
             case "gmMessage":
                 return true;
         }
-    };
-    Status.prototype.canWatch = function (type) {
+    }
+    canWatch(type) {
         return this.talk.includes(type) || this.watch.includes(type);
-    };
-    Status.prototype.canKnow = function (job) {
+    }
+    canKnow(job) {
         return this.know.includes(job) || this.watch.includes(job) || this.talk.includes(job);
-    };
-    Status.prototype.has = function (attr) {
+    }
+    has(attr) {
         return this.forever.includes(attr) || this.temporary.includes(attr);
-    };
-    Status.prototype.hasnot = function (attr) {
+    }
+    hasnot(attr) {
         return !this.has(attr);
-    };
-    Status.prototype.winCondhas = function (attr) {
+    }
+    winCondhas(attr) {
         return this.winCond.includes(attr);
-    };
-    Object.defineProperty(Status.prototype, "hasAliveDecoy", {
-        get: function () {
-            return this.player.manager.select(function (p) { return p.status.name == "slave"; }).length > 0;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Status.prototype, "isDead", {
-        get: function () {
-            return !this.isAlive;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Status.prototype.update = function () {
-        var e_1, _a;
-        var newTemporary = [];
-        try {
-            for (var _b = __values(this.temporary), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var attr = _c.value;
-                if (!this.limit[attr])
-                    continue;
-                if (this.limit[attr] >= this.date.day) {
-                    newTemporary.push(attr);
-                }
-                else {
-                    delete this.limit[attr];
-                }
+    }
+    get hasAliveDecoy() {
+        return this.player.manager.select((p) => p.status.name == "slave").length > 0;
+    }
+    get isDead() {
+        return !this.isAlive;
+    }
+    update() {
+        let newTemporary = [];
+        for (let attr of this.temporary) {
+            if (!this.limit[attr])
+                continue;
+            if (this.limit[attr] >= this.date.day) {
+                newTemporary.push(attr);
             }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            else {
+                delete this.limit[attr];
             }
-            finally { if (e_1) throw e_1.error; }
         }
         this.temporary = newTemporary;
-    };
-    Status.prototype.isDeadRival = function () {
-        var e_2, _a;
-        var result = true;
-        try {
-            for (var _b = __values(this.rival), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var rival = _c.value;
-                if (!this.playerManager.isDeadAllJob(rival)) {
-                    result = false;
-                }
+    }
+    isDeadRival() {
+        let result = true;
+        for (let rival of this.rival) {
+            if (!this.playerManager.isDeadAllJob(rival)) {
+                result = false;
             }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_2) throw e_2.error; }
         }
         return result;
-    };
-    Status.prototype.judgeWinOrLose = function (winSide) {
-        var isWin = true;
+    }
+    judgeWinOrLose(winSide) {
+        let isWin = true;
         if (this.winCondhas("winCamp") && this.camp != winSide) {
             isWin = false;
         }
@@ -235,8 +185,7 @@ var Status = /** @class */ (function () {
             isWin = false;
         }
         return isWin;
-    };
-    return Status;
-}());
+    }
+}
 exports.Status = Status;
 //# sourceMappingURL=status.js.map

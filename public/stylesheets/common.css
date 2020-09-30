@@ -12,12 +12,20 @@ body {
     background-image: url(../images/bg_gray.gif);
 }
 
+#container {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
 header {
     width: 100%;
     background-color: orange;
     margin: 0 auto;
     padding: 5px;
     height: 40px;
+}
+
+header.word {
+    background-color: lightgreen;
 }
 
 header div {
@@ -28,7 +36,8 @@ header .title {
     width: 75%;
     font-size: 24px;
     font-weight: bold;
-    line-height: 40px;
+    line-height: 30px;
+    vertical-align: baseline;
 }
 
 header .user {
@@ -38,7 +47,6 @@ header .user {
 
 @media screen and (min-width: 769px) {
     #container {
-        background-color: rgba(255, 255, 255, 0.7);
         width: 800px;
         min-height: 100vh;
         margin: 0 auto;
@@ -62,7 +70,6 @@ header .user {
     #container {
         width: 100%;
         padding: 0px;
-        background-color: white;
     }
 
     #content {

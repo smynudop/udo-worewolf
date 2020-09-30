@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<% var islogin = islogin || false %>
 <html>
   <head>
     <title>オンライン人狼焼肉鯖</title>
@@ -25,13 +26,10 @@
     どなたでもご利用いただけます。<br>
     <br>
     初めての方は、「ルール」と「禁止事項」をご一読ください。
-    </div>
-
-    <% var islogin = islogin || false %>
-
-    <div id="menu">
+    </div><div id="menu">
     <% if(islogin) { %>
-	    <a href="/worewolf"><div class="highlight">人狼を遊ぶ</div></a>
+      <a href="/worewolf"><div class="highlight">人狼ロビー</div></a>
+      <a href="/wordwolf"><div class="highlight">ワード人狼ロビー</div></a>
     <% } else { %>
         <a href="/login"><div class="highlight">ログイン</div></a>
     <% } %>

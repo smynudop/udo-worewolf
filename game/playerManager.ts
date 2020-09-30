@@ -2,6 +2,8 @@ import { Player, Visitor } from "./player"
 import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { castManager } from "./cast"
+import { Game } from "./game"
+
 export class PlayerManager {
     players: { [k: number]: Player }
     list: Player[]
@@ -9,19 +11,16 @@ export class PlayerManager {
     userid2no: { [k: string]: number }
     count: number
     npcNames: string[]
-    nullPlayer: Player
     log: Log
     date: VillageDate
 
-    constructor(game) {
+    constructor(game: Game) {
         this.players = {}
         this.list = []
         this.listAll = []
         this.userid2no = {}
         this.count = 0
         this.npcNames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
-
-        this.nullPlayer = new Player({ no: 997 }, this)
 
         this.log = game.log
         this.date = game.date
@@ -51,7 +50,7 @@ export class PlayerManager {
         return p
     }
 
-    leave(userid) {
+    leave(userid: string) {
         var id = this.pick(userid).no
         var p = this.players[id]
         p.socket.emit("leaveSuccess")
@@ -62,7 +61,7 @@ export class PlayerManager {
         this.refreshList()
     }
 
-    kick(target) {
+    kick(target: string) {
         if (!(target in this.players)) return false
         var p = this.pick(target)
 
@@ -79,7 +78,7 @@ export class PlayerManager {
         this.refreshList()
     }
 
-    in(userid) {
+    in(userid: string) {
         return userid in this.userid2no
     }
 
@@ -142,7 +141,7 @@ export class PlayerManager {
         return this.alive().filter((p) => p.isNPC)
     }
 
-    lot(ignore) {
+    lot(ignore: number) {
         return this.alive()
             .filter((p) => p.no != ignore)
             .lot()
@@ -152,7 +151,7 @@ export class PlayerManager {
         return this.alive().filter((p) => func(p))
     }
 
-    has(attr) {
+    has(attr: string) {
         return this.alive().filter((p) => p.has(attr))
     }
 
@@ -219,7 +218,7 @@ export class PlayerManager {
         return this.select((p) => p.status.species == "fox").length == 0
     }
 
-    isDeadAllJob(job) {
+    isDeadAllJob(job: string) {
         return this.select((p) => p.status.name == job).length == 0
     }
 
@@ -245,7 +244,7 @@ export class PlayerManager {
         })
     }
 
-    setGM(gmid, isKari) {
+    setGM(gmid: string, isKari: boolean) {
         if (isKari) {
             this.add({
                 userid: gmid,
@@ -281,7 +280,7 @@ export class PlayerManager {
         return this.alive().filter((p) => !p.isVote)
     }
 
-    savoAbility(ability) {
+    savoAbility(ability: string) {
         return this.alive().filter((p) => !p.isUsedAbility && p.status.can(ability))
     }
 
@@ -298,14 +297,6 @@ export class PlayerManager {
             }
         }
 
-        return targets
-    }
-
-    makeDeathTargets() {
-        var targets = {}
-        for (var player of this.dead()) {
-            targets[player.no] = player.cn
-        }
         return targets
     }
 

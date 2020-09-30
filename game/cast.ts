@@ -370,9 +370,11 @@ class CastType {
     toJobList(num: number) {
         if (!this.cast[num]) return false
 
+        let cast = this.cast[num]
+
         let jobList: Job[] = []
-        for (let job in this.cast[num]) {
-            for (let cnt = 0; cnt < this.cast[num][job]; cnt++) {
+        for (let job in cast) {
+            for (let cnt = 0; cnt < cast[job]; cnt++) {
                 if (/or/.test(job)) {
                     job = job.split("or").lot()
                 }
@@ -380,11 +382,16 @@ class CastType {
             }
         }
 
+        do {
+            jobList.shuffle()
+            console.log(jobList)
+        } while (jobList[0].onlyNotDamy)
+
         return jobList
     }
 
     castTxt(num: number) {
-        if (!this.cast[num]) return false
+        if (!this.cast[num]) return ""
 
         let txts: string[] = []
         for (let job in this.cast[num]) {
@@ -420,8 +427,8 @@ class CastManager {
         return this.abbr2cast[abbr].toJobList(num)
     }
 
-    makeCastTxt(abbr: string, num: number) {
-        if (!(abbr in this.abbr2cast)) return false
+    makeCastTxt(abbr: string, num: number): string {
+        if (!(abbr in this.abbr2cast)) return ""
         return this.abbr2cast[abbr].castTxt(num)
     }
 

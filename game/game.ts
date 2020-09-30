@@ -26,7 +26,6 @@ export class Game {
     flagManager: FlagManager
     leftVoteNum: number
     win: string
-    nullPlayer: Player
 
     constructor(io, data) {
         this.io = io
@@ -56,8 +55,6 @@ export class Game {
 
         this.win = ""
 
-        this.nullPlayer = this.players.nullPlayer
-
         //this.log.add("system", "vinfo", this.villageInfo())
 
         this.players.summonDamy()
@@ -75,10 +72,6 @@ export class Game {
 
         GameIO.update(this.vno, data)
         //this.log.add("system", "vinfo", this.villageInfo())
-    }
-
-    fixPersonalInfo(player, data) {
-        this.emitPlayerAll()
     }
 
     startRollcall() {
@@ -120,26 +113,21 @@ export class Game {
     }
 
     emitPlayerAll() {
-        var summary = this.players.forClientSummary()
-        var detail = this.players.forClientDetail()
         if (this.date.is("epilogue")) {
-            this.io.emit("player", detail)
+            this.io.emit("player", this.players.forClientDetail())
         } else {
-            this.io.emit("player", summary)
-            this.io.to("gm").to("all").emit("player", detail)
+            this.io.emit("player", this.players.forClientSummary())
+            this.io.to("gm").to("all").emit("player", this.players.forClientDetail())
         }
     }
 
     emitPlayer(socket) {
         if (!socket) return false
 
-        var summary = this.players.forClientSummary()
-        var detail = this.players.forClientDetail()
-
         if (this.date.is("epilogue")) {
-            socket.emit("player", detail)
+            socket.emit("player", this.players.forClientDetail())
         } else {
-            socket.emit("player", summary)
+            socket.emit("player", this.players.forClientSummary())
         }
     }
 
@@ -162,21 +150,16 @@ export class Game {
     casting() {
         var castlist = castManager.jobList(this.casttype, this.players.num)
         if (!castlist) return false
-        var job, i
-        for (var player of this.players) {
-            do {
-                i = Math.floor(Math.random() * castlist.length)
-                job = castlist[i]
-            } while (player.isDamy && job.onlyNotDamy)
 
-            player.status.set(job)
-            castlist.splice(i, 1)
+        for (let i = 0; i < this.players.num; i++) {
+            let player = this.players.list[i]
+            player.status.set(castlist[i])
         }
+
         this.assignRoom()
         this.players.setKnow()
 
         var txt = castManager.makeCastTxt(this.casttype, this.players.num)
-        if (!txt) return false
         this.log.add("system", "cast", { message: txt })
     }
 
@@ -322,11 +305,7 @@ export class Game {
                 this.pass("revote")
 
                 this.flagManager.npcVote()
-
-                if (this.players.isCompleteVote()) {
-                    this.changePhase("night")
-                    return false
-                }
+                this.checkAllVote()
 
                 break
         }
@@ -378,14 +357,14 @@ export class Game {
         }
     }
 
-    emitChangePhase(phase) {
+    emitChangePhase(phase: string) {
         var nsec = phase == "day" && this.time.nsec ? this.time.nsec : null
         this.io.emit("changePhase", {
             phase: phase,
             left: this.time[phase],
             nsec: nsec,
             targets: this.players.makeTargets(),
-            deathTargets: this.players.makeDeathTargets(),
+            deathTargets: this.players.makeTargets("death"),
             day: this.date.day,
         })
     }
@@ -407,7 +386,7 @@ export class Game {
         }
     }
 
-    pass(phase) {
+    pass(phase: string) {
         var next = {
             day: "vote",
             vote: "night",
@@ -436,8 +415,7 @@ export class Game {
 
     listen() {
         this.io.on("connection", (socket) => {
-            var session = socket.request.session
-            var userid = session.userid
+            var userid = socket.request.session.userid
             var player: Visitor
 
             this.emitPlayer(socket)

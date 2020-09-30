@@ -1,35 +1,72 @@
-#table_wrap{
-	width:100%;
-	max-width:100%;
-	overflow:auto;
+#table_wrap {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    overflow: auto;
+    text-align: center;
 }
 
+div.village {
+    width: 600px;
+    max-width: 100%;
 
-
-#rooms{
-	margin: 0 auto;
-	border-collapse: collapse;
+    border-radius: 10px;
+    margin: 10px auto;
+    text-align: left;
 }
 
-#rooms th{
-	text-align: center;
-	font-weight:bold;
+div.village_title {
+    background-color: orange;
+    border-radius: 10px 10px 0px 0px;
+    padding: 10px 10px;
+    height: 45px;
+    line-height: 25px;
+    font-weight: bold;
+    position: relative;
+    width: 100%;
 }
 
-#rooms th,#rooms td{
-	border: 1px solid #666;
-	padding:5px;
+div.village_title:after {
+    position: absolute;
+    width: 50px;
+    height: 22px;
+    border-radius: 3px;
+    font-size: 13px;
+    line-height: 25px;
+    text-align: center;
+    right: 10px;
+    top: 10px;
+}
+div.village_title.recruit:after {
+    background-color: cyan;
+    content: "募集中";
 }
 
+div.village_title.playing:after {
+    background-color: blue;
+    color: white;
+    content: "開始";
+}
 
-@media screen and (max-width:768px){
-	tr{
-		display:block;
-		border:1px solid #666;
-	}
-	#rooms td, #rooms th{
-		display:block;
-		border:0px solid #111;
-		padding:0;
-	}
+div.village_title.finish:after {
+    background-color: purple;
+    color: white;
+    content: "終了";
+}
+
+div.village_detail {
+    border-radius: 0px 0px 10px 10px;
+    padding: 10px 10px 10px;
+    border: 1px solid rgb(0, 99, 0);
+    border-top-width: 0px;
+}
+
+div.word div.village_title {
+    background-color: lightgreen;
+}
+
+@media screen and (max-width: 768px) {
+    div.village_detail {
+        font-size: 90%;
+    }
 }

@@ -1,15 +1,11 @@
 const moment = require("moment")
-const schema = require("../schema")
-const GameSchema = schema.Wordwolf
-const User = schema.User
-
-const PlayerSocket = require("./socket")
 
 import { Log } from "./word-log"
+import { User, Wordwolf as GameSchema } from "../schema"
+import { PlayerSocket } from "./socket"
 
 const fs = require("fs")
 const ejs = require("ejs")
-const e = require("express")
 
 class Player {
     no: number

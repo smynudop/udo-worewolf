@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VillageDate = void 0;
-var moment = require("moment");
-var VillageDate = /** @class */ (function () {
-    function VillageDate(game) {
+const moment = require("moment");
+class VillageDate {
+    constructor(game) {
         this.day = 1;
         this.phase = "prologue";
         this.phaseLimit = null;
@@ -11,31 +11,31 @@ var VillageDate = /** @class */ (function () {
         this.isBanTalk = false;
         this.game = game;
     }
-    VillageDate.prototype.setLimit = function (sec) {
+    setLimit(sec) {
         this.phaseLimit = moment().add(sec, "seconds").format();
-    };
-    VillageDate.prototype.clearLimit = function () {
+    }
+    clearLimit() {
         this.phaseLimit = null;
-    };
-    VillageDate.prototype.leftSeconds = function () {
+    }
+    leftSeconds() {
         return this.phaseLimit ? moment().diff(this.phaseLimit, "seconds") * -1 : null;
-    };
-    VillageDate.prototype.sunrise = function () {
+    }
+    sunrise() {
         this.day++;
-    };
-    VillageDate.prototype.pass = function (phase) {
+    }
+    pass(phase) {
         this.phase = phase;
         if (phase == "day") {
             this.sunrise();
         }
-    };
-    VillageDate.prototype.forLog = function () {
+    }
+    forLog() {
         return { day: this.day, phase: this.phase };
-    };
-    VillageDate.prototype.is = function (phase) {
+    }
+    is(phase) {
         return phase == this.phase;
-    };
-    VillageDate.prototype.canTalk = function (type) {
+    }
+    canTalk(type) {
         switch (type) {
             case "share":
             case "fox":
@@ -47,33 +47,30 @@ var VillageDate = /** @class */ (function () {
             case "tweet":
                 return ["day", "vote", "night", "ability"].includes(this.phase);
         }
-    };
-    VillageDate.prototype.canVote = function () {
+    }
+    canVote() {
         return this.is("day") || this.is("vote");
-    };
-    VillageDate.prototype.canUseAbility = function () {
+    }
+    canUseAbility() {
         return this.is("night") || this.is("ability");
-    };
-    VillageDate.prototype.setNsec = function (sec) {
-        var _this = this;
+    }
+    setNsec(sec) {
         this.isBanTalk = true;
-        setTimeout(function () {
-            _this.isBanTalk = false;
+        setTimeout(() => {
+            this.isBanTalk = false;
         }, sec * 1000);
-    };
-    VillageDate.prototype.setTimer = function (nextPhase, sec) {
-        var _this = this;
+    }
+    setTimer(nextPhase, sec) {
         this.clearTimer();
-        this.timerFlg = setTimeout(function () {
-            _this.game.changePhase(nextPhase);
+        this.timerFlg = setTimeout(() => {
+            this.game.changePhase(nextPhase);
         }, sec * 1000);
         this.setLimit(sec);
-    };
-    VillageDate.prototype.clearTimer = function () {
+    }
+    clearTimer() {
         clearTimeout(this.timerFlg);
         this.clearLimit();
-    };
-    return VillageDate;
-}());
+    }
+}
 exports.VillageDate = VillageDate;
 //# sourceMappingURL=villageDate.js.map

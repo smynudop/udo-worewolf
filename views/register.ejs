@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>ようこそ</title>
-        <%- include("head", { "title": "新規登録""}) %>
+        <%- include("head", { title: "新規登録"}) %>
         <meta charset="utf-8" />
     </head>
     <body>
@@ -16,8 +16,8 @@
                 ユーザーID:スペースを含まない文字列2文字～8文字(日本語可、先頭数字不可)<br />
                 パスワード:英数字とアンダーバーからなる半角文字列<br />
                 <% var error = error || false %> <% if(error) {%>
-                <div style="background-color: red; color: white"><%= error %></div>
-                <% } %>
+                    <div style="background-color: red; color: white"><%= error %></div>
+                    <% } %>
             </form>
         </div>
     </body>

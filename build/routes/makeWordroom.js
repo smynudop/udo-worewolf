@@ -18,22 +18,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.router = void 0;
-var Express = __importStar(require("express"));
+const Express = __importStar(require("express"));
 exports.router = Express.Router();
-var schema_1 = require("../schema");
+const schema_1 = require("../schema");
 /* GET users listing. */
 exports.router.get("/", function (req, res, next) {
     if (!req.session.userid) {
@@ -45,7 +34,6 @@ exports.router.get("/", function (req, res, next) {
     }
 });
 exports.router.post("/", function (req, res, next) {
-    var e_1, _a;
     if (!req.session.userid) {
         req.session.rd = "makeWordroom";
         res.redirect("login");
@@ -72,24 +60,14 @@ exports.router.post("/", function (req, res, next) {
         else if (!pr || pr == "") {
             pr = "PR文が設定されていません";
         }
-        try {
-            for (var _b = __values(["setWord", "discuss", "counter"]), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var t = _c.value;
-                if (!req.body[t] || req.body[t] - 0 > 600) {
-                    res.render("makeWordroom", { userid: userid, error: "時間が不正です" });
-                    return false;
-                }
-                else {
-                    time[t] = req.body[t] - 0;
-                }
+        for (var t of ["setWord", "discuss", "counter"]) {
+            if (!req.body[t] || req.body[t] - 0 > 600) {
+                res.render("makeWordroom", { userid: userid, error: "時間が不正です" });
+                return false;
             }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            else {
+                time[t] = req.body[t] - 0;
             }
-            finally { if (e_1) throw e_1.error; }
         }
         schema_1.Wordwolf.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err, data) {
             if (err)
@@ -100,7 +78,7 @@ exports.router.post("/", function (req, res, next) {
             else {
                 vno = data[0].vno + 1;
             }
-        }).then(function () {
+        }).then(() => {
             var game = new schema_1.Wordwolf();
             game.vno = vno;
             game.name = name;

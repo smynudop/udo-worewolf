@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Wordwolf = exports.Game = exports.User = void 0;
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
-var u = new Schema({
+const u = new Schema({
     userid: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     trip: String,
 });
-var g = new Schema({
+const g = new Schema({
     vno: { type: Number, required: true },
     name: { type: String, required: true },
     pr: { type: String, required: true },
@@ -25,7 +25,7 @@ var g = new Schema({
     state: { type: String },
     kariGM: { type: Boolean },
 });
-var w = new Schema({
+const w = new Schema({
     vno: { type: Number, required: true },
     name: { type: String, required: true },
     pr: { type: String, required: true },

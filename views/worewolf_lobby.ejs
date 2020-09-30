@@ -15,20 +15,19 @@
         現在部屋はありません。<br>
         <a href="/makeroom">新しく部屋を作成</a>
     <% } else { %>
-        <table id="rooms">
-        <tr><th>番号</th><th>村名</th><th>PR</th><th>時間(昼/投票/夜/能力)</th><th>定員</th><th>状態</th><th>GM</th></tr>
         <% for(var room of result) { %>
-            <tr>
-                <td><%= room.vno %></td>
-                <td><a href="./worewolf/<%= room.vno %>"><%= room.name %></a></td>
-                <td><%= room.pr %></td>
-                <td><%= room.time.day %>/<%= room.time.vote %>/<%= room.time.night %>/<%= room.time.ability %></td>
-                <td><%= room.capacity %></td>
-                <td><%= room.state %>
-                <td><%= room.GMid %></td>
-            </tr>
+          <div class="village">
+            <div class="village_title <%= room.state %>">
+              <%= room.vno %>番 <a href="./worewolf/<%= room.vno %>"><%= room.name %></a>
+            </div>
+            <div class="village_detail">
+              <%= room.pr %><br>
+              昼:<%= room.time.day %>秒 投票:<%= room.time.vote %>秒 夜:<%= room.time.night %>秒 能力:<%= room.time.ability %>秒<br>
+              定員:<%= room.capacity %>人<br>
+              GM:<%= room.GMid %>
+            </div>
+          </div>
         <% } %>
-        </table>
         <a href="/makeroom">新しく部屋を作成</a>
     <% } %>
     </div>

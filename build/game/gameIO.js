@@ -1,15 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameIO = void 0;
-var fs = require("fs");
-var ejs = require("ejs");
-var schema = require("../schema");
-var GameSchema = schema.Game;
-var User = schema.User;
-var GameIO = /** @class */ (function () {
-    function GameIO() {
-    }
-    GameIO.writeHTML = function (log, player, vinfo) {
+const fs = require("fs");
+const ejs = require("ejs");
+const schema = require("../schema");
+const GameSchema = schema.Game;
+const User = schema.User;
+class GameIO {
+    static writeHTML(log, player, vinfo) {
         ejs.renderFile("./views/worewolf_html.ejs", {
             logs: log,
             players: player,
@@ -22,17 +20,16 @@ var GameIO = /** @class */ (function () {
                 console.log(err);
             });
         });
-    };
-    GameIO.update = function (vno, data) {
-        GameSchema.updateOne({ vno: vno }, { $set: data }, function (err) {
+    }
+    static update(vno, data) {
+        GameSchema.updateOne({ vno: vno }, { $set: data }, (err) => {
             if (err)
                 console.log(err);
         });
-    };
-    GameIO.find = function (vno) {
+    }
+    static find(vno) {
         return GameSchema.findOne({ vno: vno }).exec();
-    };
-    return GameIO;
-}());
+    }
+}
 exports.GameIO = GameIO;
 //# sourceMappingURL=gameIO.js.map

@@ -62,6 +62,10 @@ header {
     margin: 0 auto;
 }
 
+header.word {
+    background-color: var(--word-header-color);
+}
+
 header .top {
     position: absolute;
     right: 5px;
