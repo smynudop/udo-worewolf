@@ -6,7 +6,6 @@ var logger = require("morgan")
 var session = require("express-session")
 var mongoose = require("mongoose")
 var MongoStore = require("connect-mongo")
-const schema = require("./schema")
 
 var array_proto = require("./array_proto")
 
@@ -46,21 +45,24 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, "../public")))
-var sessionMW = session({
+
+var sessionMiddleWare = session({
     secret: "udo",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoURL }),
+    //store: MongoStore.create({ mongoUrl: mongoURL }),
     cookie: {
         maxAge: 24 * 60 * 60 * 1000,
     },
 })
-app.session = sessionMW
-app.use(sessionMW)
+app.use(sessionMiddleWare)
+
+app.mw = sessionMiddleWare
 
 app.io = io
-io.use(function (socket, next) {
-    sessionMW(socket.request, socket.request.res, next)
+
+io.use(function (socket, next){
+    sessionMiddleWare(socket.request, socket.request.res, next)
 })
 
 app.use("/", indexRouter)
