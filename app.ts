@@ -32,7 +32,7 @@ if (process.env.NODE_ENV == "development") {
     mongoURL = "mongodb://localhost:27017/worewolf"
 } else {
     mongoURL =
-        "mongodb+srv://user-udo:tnxe6sou@cluster0.cidgl.mongodb.net/myFirstDatabase" //?retryWrites=true&w=majority
+        "mongodb+srv://user-udo:tnxe6sou@cluster0.cidgl.mongodb.net/worewolf?retryWrites=true&w=majority"
 }
 mongoose.set("useCreateIndex", true)
 mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
