@@ -7,7 +7,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var session = require("express-session");
 var mongoose = require("mongoose");
-var MongoStore = require("connect-mongo")(session);
+var MongoStore = require("connect-mongo");
 const schema = require("./schema");
 var array_proto = require("./array_proto");
 var io = require("socket.io")();
@@ -46,7 +46,7 @@ var sessionMW = session({
     secret: "udo",
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    store: MongoStore.create({ mongoUrl: mongoURL }),
     cookie: {
         maxAge: 24 * 60 * 60 * 1000,
     },
