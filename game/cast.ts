@@ -1,4 +1,4 @@
-class Job {
+export class Job {
     name: string
     nameja: string
     camp: string
@@ -16,7 +16,7 @@ class Job {
 
     offShowJobDead: boolean
     onlyNotDamy: boolean
-    constructor(name) {
+    constructor(name: string) {
         this.name = name
         this.nameja = ""
         this.camp = "human"
@@ -378,13 +378,13 @@ class CastType {
                 if (/or/.test(job)) {
                     job = job.split("or").lot()
                 }
-                jobList.push(new jobenum[job]())
+                // TODO: 暫定的な処置…
+                jobList.push(new jobenum[job as keyof typeof jobenum]())
             }
         }
 
         do {
             jobList.shuffle()
-            console.log(jobList)
         } while (jobList[0].onlyNotDamy)
 
         return jobList
@@ -413,7 +413,9 @@ class CastManager {
     }
 
     job(name: string) {
-        return new jobenum[name]()
+
+        // TODO: 暫定的な処置…
+        return new jobenum[name as keyof typeof jobenum]()
     }
 
     makeObj() {
@@ -441,7 +443,7 @@ class CastManager {
         return txts.join("<br/>")
     }
 
-    abbr2name(abbr) {
+    abbr2name(abbr: string) {
         if (abbr in this.abbr2cast) {
             return this.abbr2cast[abbr].name
         }

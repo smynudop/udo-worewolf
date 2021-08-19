@@ -14,7 +14,7 @@ class GameManager {
         var mgr = this;
         var rd = this.io.of(/^\/room-\d+$/).on("connect", async function (socket) {
             var nsp = socket.nsp;
-            var vno = nsp.name.match(/\d+/)[0] - 0;
+            var vno = +nsp.name.match(/\d+/)[0];
             if (mgr.games.includes(vno))
                 return false;
             mgr.games.push(vno);

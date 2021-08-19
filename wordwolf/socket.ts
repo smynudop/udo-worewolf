@@ -1,3 +1,5 @@
+import SocketIO from "socket.io"
+
 class SocketLike {
     id: string
     rooms: any
@@ -19,21 +21,21 @@ class SocketLike {
 export class PlayerSocket {
     socket: any
     rooms: Set<string>
-    constructor(socket) {
+    constructor(socket: SocketIO.Socket | null) {
         this.socket = socket || new SocketLike()
         this.rooms = new Set()
     }
 
-    emit(type, data?) {
+    emit(type:string, data?: any) {
         this.socket.emit(type, data)
     }
 
-    join(name) {
+    join(name:string) {
         this.socket.join(name)
         this.rooms.add(name)
     }
 
-    leave(name) {
+    leave(name:string) {
         this.socket.leave(name)
         this.rooms.delete(name)
     }
@@ -44,7 +46,7 @@ export class PlayerSocket {
         }
     }
 
-    updateSocket(socket) {
+    updateSocket(socket:SocketIO.Socket) {
         this.socket = socket
         for (var room of this.rooms) {
             this.join(room)

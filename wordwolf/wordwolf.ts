@@ -1,11 +1,22 @@
 const moment = require("moment")
 
-import { Log } from "./word-log"
+import { ILog, Log } from "./word-log"
 import { User, Wordwolf as GameSchema } from "../schema"
 import { PlayerSocket } from "./socket"
 
 const fs = require("fs")
 const ejs = require("ejs")
+
+interface IPlayer{
+    no?: number
+    userid: string
+    cn?: string
+    color?: string
+    isRM?: boolean
+    isNPC?: boolean
+    trip?: string
+    socket?: any 
+}
 
 class Player {
     no: number
@@ -21,7 +32,7 @@ class Player {
     log: Log
     socket: any
 
-    constructor(data, manager) {
+    constructor(data:IPlayer, manager:PlayerManager) {
         this.no = data.no === undefined ? 997 : data.no
         this.userid = data.userid || "null"
 
@@ -52,7 +63,7 @@ class Player {
         this.trip = user.trip
     }
 
-    changeVote(target) {
+    changeVote(target:Player) {
         if (this.vote.target === target.no) return false
         if (this.no == target.no) return false
         if (this.isGM) return false
@@ -66,7 +77,7 @@ class Player {
         this.vote.targetName = ""
     }
 
-    setJob(job) {
+    setJob(job:string) {
         this.job = job
     }
 
@@ -133,7 +144,7 @@ class Player {
         return this.isRM
     }
 
-    update(cn, color) {
+    update(cn:string, color:string) {
         this.cn = cn
         this.color = color
     }
@@ -147,7 +158,7 @@ class PlayerManager {
     count: number
     npcNames: string[]
     log: Log
-    constructor(game) {
+    constructor(game:Game) {
         this.players = {}
         this.list = []
         this.listAll = []
@@ -158,7 +169,7 @@ class PlayerManager {
         this.log = game.log
     }
 
-    add(data) {
+    add(data:IPlayer) {
         var no = this.count
         data.no = no
         var p = new Player(data, this)
@@ -177,7 +188,7 @@ class PlayerManager {
         return p
     }
 
-    leave(userid) {
+    leave(userid:string) {
         var id = this.pick(userid).no
         var p = this.players[id]
         p.socket.emit("leaveSuccess")
@@ -190,7 +201,7 @@ class PlayerManager {
         this.refreshList()
     }
 
-    kick(target) {
+    kick(target:number) {
         if (!(target in this.players)) return false
         var p = this.pick(target)
 
@@ -207,11 +218,11 @@ class PlayerManager {
         this.refreshList()
     }
 
-    in(userid) {
+    in(userid:string) {
         return userid in this.userid2no
     }
 
-    pick(id) {
+    pick(id:number | string) {
         if (typeof id == "string") {
             if (isNaN(parseInt(id))) {
                 id = this.userid2no[id]
@@ -219,7 +230,7 @@ class PlayerManager {
                 id = parseInt(id)
             }
         }
-        return this.players[id]
+        return this.players[+id]
     }
 
     refreshList() {
@@ -248,7 +259,7 @@ class PlayerManager {
         this.log.add("selectGM", { gm: gm })
     }
 
-    casting(wnum, vword, wword) {
+    casting(wnum:number, vword:string, wword:string) {
         let players = this.list.filter((p) => !p.isGM)
         for (let cnt = 0; cnt < wnum; cnt++) {
             let i = Math.floor(Math.random() * players.length)
@@ -279,7 +290,7 @@ class PlayerManager {
         return this.list.length
     }
 
-    setRM(rmid) {
+    setRM(rmid:string) {
         this.add({
             userid: rmid,
             socket: null,
@@ -321,8 +332,30 @@ class PlayerManager {
     }
 }
 
-class Game {
+interface IGameData{
     io: any
+    vno: number
+    name: string
+    pr: string
+    time: { [key: string]: number }
+    GMid: string
+    limit: any
+    wolfNum: number
+    capacity: number
+}
+
+interface IVoteData{
+    target:number
+}
+
+interface IGMData{
+    wolfNum: number
+    wword: string
+    vword:string
+}
+
+class Game {
+    io: SocketIO.Namespace
     vno: number
     name: string
     pr: string
@@ -338,7 +371,7 @@ class Game {
     timerFlg: any
     capacity: number
 
-    constructor(io, data) {
+    constructor(io:SocketIO.Namespace, data:IGameData) {
         this.io = io
 
         this.vno = data.vno || 1
@@ -369,7 +402,7 @@ class Game {
         this.players.setRM(this.RMid)
     }
 
-    setLimit(sec) {
+    setLimit(sec:number) {
         this.limit = moment().add(sec, "seconds").format()
     }
 
@@ -381,20 +414,24 @@ class Game {
         return this.limit ? moment().diff(this.limit, "seconds") * -1 : null
     }
 
-    fixInfo(data) {
-        for (var key in data) {
-            if (this[key] === undefined) continue
-            this[key] = data[key]
-        }
+    fixInfo(data:IGameData) {
+        this.name = data.name || this.name
+        this.pr = data.pr || this.pr
+        this.time = data.time || data.pr
 
         GameIO.update(this.vno, data)
         this.log.add("vinfo", this.villageInfo())
     }
 
-    fixPersonalInfo(player, data) {
-        var cn = data.cn.trim()
-        if (cn.length == 0 || cn.length > 8) return false
-        player.update(cn, data.color)
+    fixPersonalInfo(player:Player, data:IPlayer) {
+        var cn = data.cn || ""
+        cn = cn.trim()
+        if (cn.length == 0 || cn.length > 8) cn = player.cn
+
+        var color = data.color || player.color
+
+
+        player.update(cn, color)
 
         this.emitPlayer()
     }
@@ -426,14 +463,14 @@ class Game {
         })
     }
 
-    talk(player, data) {
+    talk(player:Player, data:ILog) {
         data.cn = player.cn
         data.color = player.color
 
         this.log.add("talk", data)
     }
 
-    vote(player, data) {
+    vote(player:Player, data:IVoteData) {
         if (!player) return false
         if (!this.phaseIs("discuss")) return false
 
@@ -449,7 +486,7 @@ class Game {
         this.emitPlayer()
     }
 
-    phaseIs(phase) {
+    phaseIs(phase:string) {
         return this.phase == phase
     }
 
@@ -457,7 +494,7 @@ class Game {
         return this.players.num >= 4 && this.phaseIs("idol")
     }
 
-    setWord(data) {
+    setWord(data:IGMData) {
         if (this.phase != "setWord") return false
 
         this.vword = data.vword
@@ -484,7 +521,7 @@ class Game {
         this.log.add("counter")
     }
 
-    finish(side) {
+    finish(side:string) {
         this.log.add("release", { vword: this.vword, wword: this.wword })
         this.log.add("finish", { side: side })
         this.players.reset()
@@ -508,7 +545,7 @@ class Game {
         this.changePhase("idol")
     }
 
-    changePhase(phase) {
+    changePhase(phase:string) {
         this.phase = phase
         this.setTimer(phase)
 
@@ -554,7 +591,7 @@ class Game {
         }
     }
 
-    setTimer(phase) {
+    setTimer(phase:string) {
         clearTimeout(this.timerFlg)
         this.clearLimit()
 
@@ -589,12 +626,12 @@ class Game {
         }
     }
 
-    emitInitialLog(userid, socket) {
+    emitInitialLog(userid:string, socket:SocketIO.Socket) {
         socket.emit("initialLog", this.log.initial())
     }
 
     listen() {
-        this.io.on("connection", (socket) => {
+        this.io.on("connection", (socket:SocketIO.Socket) => {
             var session = socket.request.session
             var userid = session.userid
             var player: Player | null = null
@@ -690,7 +727,7 @@ class Game {
 }
 
 export class GameIO {
-    static writeHTML(log, player, vinfo) {
+    static writeHTML(log:any, player:Player[], vinfo:any) {
         ejs.renderFile(
             "./views/worewolf_html.ejs",
             {
@@ -698,32 +735,32 @@ export class GameIO {
                 players: player,
                 vinfo: vinfo,
             },
-            function (err, html) {
+            function (err:any, html:string) {
                 if (err) console.log(err)
                 html = html.replace(/\n{3,}/, "\n")
-                fs.writeFile("./public/log/" + vinfo.no + ".html", html, "utf8", function (err) {
+                fs.writeFile("./public/log/" + vinfo.no + ".html", html, "utf8", function (err:any) {
                     console.log(err)
                 })
             }
         )
     }
 
-    static update(vno, data) {
-        GameSchema.updateOne({ vno: vno }, { $set: data }, (err) => {
+    static update(vno:number, data:any) {
+        GameSchema.updateOne({ vno: vno }, { $set: data }, (err:any) => {
             if (err) console.log(err)
         })
     }
 
-    static find(vno) {
+    static find(vno:number) {
         return GameSchema.findOne({ vno: vno }).exec()
     }
 }
 
 class GameManager {
-    io: any
+    io: SocketIO.Server
     games: number[]
 
-    constructor(io) {
+    constructor(io:SocketIO.Server) {
         this.io = io
         this.games = []
         this.listen()
@@ -733,9 +770,9 @@ class GameManager {
         console.log("listen!")
         var mgr = this
 
-        var rd = this.io.of(/^\/wordroom-\d+$/).on("connect", async function (socket) {
+        var rd = this.io.of(/^\/wordroom-\d+$/).on("connect", async function (socket:SocketIO.Socket) {
             var nsp = socket.nsp
-            var vno = nsp.name.match(/\d+/)[0] - 0
+            var vno = +nsp.name.match(/\d+/)![0]
             if (mgr.games.includes(vno)) return false
 
             mgr.games.push(vno)

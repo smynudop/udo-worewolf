@@ -10,7 +10,7 @@ export class VillageDate {
     game: Game
     isBanTalk: boolean
 
-    constructor(game) {
+    constructor(game:Game) {
         this.day = 1
         this.phase = "prologue"
         this.phaseLimit = null
@@ -19,7 +19,7 @@ export class VillageDate {
         this.game = game
     }
 
-    setLimit(sec) {
+    setLimit(sec:number) {
         this.phaseLimit = moment().add(sec, "seconds").format()
     }
 
@@ -35,7 +35,7 @@ export class VillageDate {
         this.day++
     }
 
-    pass(phase) {
+    pass(phase:string) {
         this.phase = phase
         if (phase == "day") {
             this.sunrise()
@@ -46,11 +46,11 @@ export class VillageDate {
         return { day: this.day, phase: this.phase }
     }
 
-    is(phase) {
+    is(phase:string) {
         return phase == this.phase
     }
 
-    canTalk(type) {
+    canTalk(type:string) {
         switch (type) {
             case "share":
             case "fox":
@@ -72,14 +72,14 @@ export class VillageDate {
         return this.is("night") || this.is("ability")
     }
 
-    setNsec(sec) {
+    setNsec(sec:number) {
         this.isBanTalk = true
         setTimeout(() => {
             this.isBanTalk = false
         }, sec * 1000)
     }
 
-    setTimer(nextPhase, sec) {
+    setTimer(nextPhase:string, sec:number) {
         this.clearTimer()
         this.timerFlg = setTimeout(() => {
             this.game.changePhase(nextPhase)

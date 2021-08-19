@@ -1,0 +1,188 @@
+@import url("./config.css") screen;
+@import url("./worewolf_sp.css") screen and (max-width: 768px);
+@import url("./worewolf_pc.css") screen and (min-width: 769px);
+
+.debug {
+    display: none;
+}
+
+#command-gm,
+#command-gm-setWord,
+#command-gm-judge {
+    background-color: var(--gm-bg-color);
+}
+
+#command-rm {
+    background-color: lightgreen;
+}
+
+#command-logout {
+    background-color: var(--personal-bg-color);
+}
+
+#pr {
+    display: none;
+}
+
+table.votesummary {
+    margin-left: 37px;
+    line-height: 1.5;
+    font-weight: normal;
+    border-collapse: separate;
+    border-spacing: 0px 0px;
+}
+
+#discuss table.votesummary td {
+    padding: 0;
+}
+
+#discuss td[colspan] {
+    border-right: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+}
+
+#discuss .progress > td,
+#discuss .personal > td,
+#discuss .wolf-system > td {
+    line-height: 32px;
+}
+
+#discuss .progress td {
+    background-color: var(--progress-color);
+}
+
+#discuss td img {
+    display: inline-block;
+    vertical-align: bottom;
+    margin-right: 5px;
+    width: 32px;
+    /*background-color: white;*/
+}
+
+#discuss tr.system > td {
+    background-color: var(--system-color);
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.vote {
+    background-color: var(--vote-color);
+}
+
+.info,
+.votedetail {
+    background-color: var(--system-color);
+}
+
+.tweet td,
+.wolf td,
+.share td,
+.fox td,
+.wolfNeigh td {
+    background-color: var(--night-bg-color);
+    color: white;
+}
+
+.tweet td.talk {
+    color: var(--tweet-color);
+}
+
+.wolf td.talk {
+    color: var(--wolftalk-color);
+}
+
+.wolf-system {
+    background-color: var(--wolf-bg-color);
+    user-select: none;
+}
+
+.share td.talk {
+    color: var(--sharetalk-color);
+}
+
+.fox td.talk {
+    color: var(--foxtalk-color);
+}
+
+.personal {
+    background-color: var(--personal-bg-color);
+    user-select: none;
+}
+
+.grave {
+    background-color: var(--grave-bg-color);
+}
+
+.gmMessage {
+    background-color: var(--gm-bg-color);
+}
+
+.uncall {
+    color: red;
+}
+
+.offline {
+    color: red;
+}
+
+.votenum {
+    background-color: orange;
+    border-radius: 8px;
+    padding: 0px 4px;
+    color: white;
+    font-weight: bold;
+}
+
+#playerlist {
+    margin: 0;
+    padding: 0;
+}
+
+#playerlist li {
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    border-top: 1px solid #999;
+    font-size: 90%;
+    line-height: 1.6;
+}
+
+#playerlist li:last-of-type {
+    border-bottom: 1px solid #999;
+}
+
+#playerlist li.dead {
+    background-color: var(--grave-bg-color);
+    color: black;
+}
+
+.red {
+    color: red;
+}
+.pink {
+    color: pink;
+}
+.orange {
+    color: orange;
+}
+.yellow {
+    color: yellow;
+}
+.green {
+    color: green;
+}
+.skyblue {
+    color: skyblue;
+}
+.blue {
+    color: blue;
+}
+.indigo {
+    color: indigo;
+}
+.purple {
+    color: purple;
+}
+.black {
+    color: black;
+}

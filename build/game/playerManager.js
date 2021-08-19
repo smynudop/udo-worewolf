@@ -42,6 +42,7 @@ class PlayerManager {
         this.refreshList();
     }
     kick(target) {
+        var iTarget = +target;
         if (!(target in this.players))
             return false;
         var p = this.pick(target);
@@ -52,7 +53,7 @@ class PlayerManager {
         this.log.add("player", "kick", {
             player: p.cn,
         });
-        delete this.players[target];
+        delete this.players[iTarget];
         delete this.userid2no[userid];
         this.refreshList();
     }
@@ -73,9 +74,9 @@ class PlayerManager {
         return this.list.length;
     }
     numBySpecies() {
-        var human = this.select((p) => p.status.species == "human").length;
-        var wolf = this.select((p) => p.status.species == "wolf").length;
-        var fox = this.select((p) => p.status.species == "fox").length;
+        var human = this.select((p) => p.status.job.species == "human").length;
+        var wolf = this.select((p) => p.status.job.species == "wolf").length;
+        var fox = this.select((p) => p.status.job.species == "fox").length;
         return {
             human: human,
             wolf: wolf,
@@ -92,13 +93,18 @@ class PlayerManager {
         if (typeof id == "number") {
             return this.players[id];
         }
-        if (isNaN(parseInt(id))) {
-            id = this.userid2no[id];
+        else if (typeof id == "string") {
+            if (isNaN(parseInt(id))) {
+                id = this.userid2no[id];
+            }
+            else {
+                id = parseInt(id);
+            }
+            return this.players[id];
         }
         else {
-            id = parseInt(id);
+            return id;
         }
-        return this.players[id];
     }
     damy() {
         return this.players[0];
@@ -131,7 +137,7 @@ class PlayerManager {
         }
         table += "</tbody></table>";
         var max = Math.max(...Object.values(votes));
-        var maxers = Object.keys(votes).filter((v) => votes[v] == max);
+        var maxers = Object.keys(votes).filter((v) => votes[+v] == max);
         var exec = maxers.length == 1 ? this.pick(maxers[0]) : null;
         return {
             table: table,
@@ -139,19 +145,19 @@ class PlayerManager {
         };
     }
     setKnow() {
-        var wolf = this.select((p) => p.status.species == "wolf")
+        var wolf = this.select((p) => p.status.job.species == "wolf")
             .map((p) => p.cn)
             .join("、");
-        var share = this.select((p) => p.status.name == "share")
+        var share = this.select((p) => p.status.job.name == "share")
             .map((p) => p.cn)
             .join("、");
-        var fox = this.select((p) => p.status.species == "fox")
+        var fox = this.select((p) => p.status.job.species == "fox")
             .map((p) => p.cn)
             .join("、");
-        var noble = this.select((p) => p.status.name == "noble")
+        var noble = this.select((p) => p.status.job.name == "noble")
             .map((p) => p.cn)
             .join("、");
-        let texts = {
+        const texts = {
             wolf: "<br>【能力発動】人狼は" + wolf,
             share: "<br>【能力発動】共有者は" + share,
             fox: "<br>【能力発動】妖狐は" + fox,
@@ -166,10 +172,10 @@ class PlayerManager {
         }
     }
     isDeadAllFox() {
-        return this.select((p) => p.status.species == "fox").length == 0;
+        return this.select((p) => p.status.job.species == "fox").length == 0;
     }
     isDeadAllJob(job) {
-        return this.select((p) => p.status.name == job).length == 0;
+        return this.select((p) => p.status.job.name == job).length == 0;
     }
     summonDamy() {
         this.add({

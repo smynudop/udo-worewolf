@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require("http-errors")
 var express = require("express")
 var path = require("path")
@@ -12,7 +13,6 @@ var array_proto = require("./array_proto")
 var io = require("socket.io")()
 
 import { router as indexRouter } from "./routes/index"
-import { router as chatroomRouter } from "./routes/chatroom"
 import { router as loginRouter } from "./routes/login"
 import { router as logoutRouter } from "./routes/logout"
 import { router as makeroomRouter } from "./routes/makeroom"
@@ -24,6 +24,7 @@ import { router as mypageRouter } from "./routes/mypage"
 
 import { router as makeWordroomRouter } from "./routes/makeWordroom"
 import { router as wordwolfRouter } from "./routes/wordwolf"
+import SocketIO from "socket.io"
 
 var app = express()
 var mongoURL
@@ -36,20 +37,20 @@ mongoose.set("useCreateIndex", true)
 mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // view engine setup
-app.set("views", path.join(__dirname, "../views"))
+app.set("views", path.join(__dirname, "./views"))
 app.set("view engine", "ejs")
 
 app.use(logger("dev"))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
-app.use(express.static(path.join(__dirname, "../public")))
+app.use(express.static(path.join(__dirname, "./public")))
 
 var sessionMiddleWare = session({
     secret: "udo",
     resave: false,
     saveUninitialized: false,
-    //store: MongoStore.create({ mongoUrl: mongoURL }),
+    store: MongoStore.create({ mongoUrl: mongoURL }),
     cookie: {
         maxAge: 24 * 60 * 60 * 1000,
     },
@@ -60,7 +61,7 @@ app.mw = sessionMiddleWare
 
 app.io = io
 
-io.use(function (socket, next){
+io.use(function (socket:SocketIO.Socket, next:any){
     sessionMiddleWare(socket.request, socket.request.res, next)
 })
 
@@ -70,7 +71,6 @@ app.use("/", ruleRouter) // ほぼ静的ファイル
 
 app.use("/login", loginRouter)
 app.use("/logout", logoutRouter)
-app.use("/chatroom", chatroomRouter)
 app.use("/makeroom", makeroomRouter)
 app.use("/worewolf", worewolfRouter)
 app.use("/old", oldRouter)
@@ -80,12 +80,12 @@ app.use("/makeWordroom", makeWordroomRouter)
 app.use("/wordwolf", wordwolfRouter)
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function (req:Express.Request, res:Express.Response, next:any) {
     next(createError(404))
 })
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err:any, req:any, res:any, next:any) {
     // set locals, only providing error in development
     res.locals.message = err.message
     res.locals.error = req.app.get("env") === "development" ? err : {}

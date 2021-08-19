@@ -6,7 +6,17 @@ export const talkTemplate = {
     tweet: ["暇だな", "誰が狼や……", "あ、ヒヒ落ちたw"],
 }
 
-export const abilityInfo = {
+export type ITalkType = keyof typeof talkTemplate
+
+export interface IAbilityDetail{
+    type: string
+    since: number
+    text: string
+    targetType: string
+    target?: Record<number, string>
+}
+
+export const abilityInfo: Record<string, IAbilityDetail> = {
     fortune: {
         type: "fortune",
         since: 1,
@@ -33,7 +43,14 @@ export const abilityInfo = {
     },
 }
 
-export const talkInfo = {
+export type IAbilityType = keyof typeof abilityInfo
+
+export interface ITalkDetail{
+    type:string
+    text:string
+}
+
+export const talkInfo:Record<string, ITalkDetail> = {
     discuss: {
         type: "discuss",
         text: "議論",

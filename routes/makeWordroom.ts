@@ -7,7 +7,7 @@ import { Wordwolf as Game } from "../schema"
 router.get("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeWordroom"
-        res.redirect("login")
+        res.redirect("./login")
     } else {
         res.render("makeWordroom", { userid: req.session.userid })
     }
@@ -16,13 +16,13 @@ router.get("/", function (req, res, next) {
 router.post("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeWordroom"
-        res.redirect("login")
+        res.redirect("./login")
     } else {
         var userid = req.session.userid
-        var vno
+        var vno = 1
         var name = req.body.name
         var pr = req.body.pr
-        var time = {}
+        var time:Record<string, number> = {}
 
         if (!name || name.length >= 24 || name.length == 0) {
             res.render("makeWordroom", {
@@ -49,7 +49,7 @@ router.post("/", function (req, res, next) {
             }
         }
 
-        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err, data) {
+        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err:any, data:any) {
             if (err) console.log(err)
             if (data.length == 0) {
                 vno = 1
@@ -65,9 +65,9 @@ router.post("/", function (req, res, next) {
             game.time = time
             game.state = "recruit"
 
-            game.save(function (err) {
+            game.save(function (err:any) {
                 if (err) console.log(err)
-                res.redirect("/wordwolf")
+                res.redirect("./wordwolf")
             })
         })
     }

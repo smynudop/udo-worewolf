@@ -1,14 +1,14 @@
-import { Player, Visitor } from "./player"
+import { IPlayerData, IVisitorData, Player, Visitor } from "./player"
 import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { castManager } from "./cast"
 import { Game } from "./game"
 
 export class PlayerManager {
-    players: { [k: number]: Player }
+    players: Record<number, Player>
     list: Player[]
     listAll: Player[]
-    userid2no: { [k: string]: number }
+    userid2no: Record<string, number>
     count: number
     npcNames: string[]
     log: Log
@@ -26,12 +26,12 @@ export class PlayerManager {
         this.date = game.date
     }
 
-    newVisitor(data) {
+    newVisitor(data:IVisitorData) {
         let visitor = new Visitor(data, this)
         return visitor
     }
 
-    add(data) {
+    add(data:IPlayerData) {
         var no = this.count
         data.no = no
         var p = new Player(data, this)
@@ -62,6 +62,8 @@ export class PlayerManager {
     }
 
     kick(target: string) {
+        var iTarget = +target
+
         if (!(target in this.players)) return false
         var p = this.pick(target)
 
@@ -73,7 +75,7 @@ export class PlayerManager {
         this.log.add("player", "kick", {
             player: p.cn,
         })
-        delete this.players[target]
+        delete this.players[iTarget]
         delete this.userid2no[userid]
         this.refreshList()
     }
@@ -100,9 +102,9 @@ export class PlayerManager {
     }
 
     numBySpecies() {
-        var human = this.select((p) => p.status.species == "human").length
-        var wolf = this.select((p) => p.status.species == "wolf").length
-        var fox = this.select((p) => p.status.species == "fox").length
+        var human = this.select((p) => p.status.job.species == "human").length
+        var wolf = this.select((p) => p.status.job.species == "wolf").length
+        var fox = this.select((p) => p.status.job.species == "fox").length
 
         return {
             human: human,
@@ -119,18 +121,22 @@ export class PlayerManager {
         return this.list.filter((p) => !p.isAlive)
     }
 
-    pick(id) {
+    pick(id: number | string | Player):Player {
         if (typeof id == "number") {
             return this.players[id]
-        }
-
-        if (isNaN(parseInt(id))) {
-            id = this.userid2no[id]
+        } else if (typeof id == "string"){
+            if (isNaN(parseInt(id))) {
+                id = this.userid2no[id]
+            } else {
+                id = parseInt(id)
+            }
+    
+            return this.players[id]
         } else {
-            id = parseInt(id)
+            return id
         }
 
-        return this.players[id]
+
     }
 
     damy() {
@@ -147,7 +153,7 @@ export class PlayerManager {
             .lot()
     }
 
-    select(func) {
+    select(func: (p:Player) => boolean) {
         return this.alive().filter((p) => func(p))
     }
 
@@ -155,16 +161,16 @@ export class PlayerManager {
         return this.alive().filter((p) => p.has(attr))
     }
 
-    selectAll(func) {
+    selectAll(func: (p:Player) => boolean) {
         return this.list.filter((p) => func(p))
     }
 
     compileVote() {
-        var votes: { [k: number]: number } = {}
+        var votes: Record<number,number> = {}
         var table = `<table class="votesummary"><tbody>`
 
         for (var player of this.alive()) {
-            var target = this.pick(player.status.vote)
+            var target = this.pick(player.status.vote!)
             var get = this.alive().filter((p) => p.status.vote == player.no).length
             votes[player.no] = get
 
@@ -174,7 +180,7 @@ export class PlayerManager {
         table += "</tbody></table>"
 
         var max = Math.max(...Object.values(votes))
-        var maxers = Object.keys(votes).filter((v) => votes[v] == max)
+        var maxers = Object.keys(votes).filter((v) => votes[+v] == max)
 
         var exec = maxers.length == 1 ? this.pick(maxers[0]) : null
 
@@ -185,20 +191,20 @@ export class PlayerManager {
     }
 
     setKnow() {
-        var wolf = this.select((p) => p.status.species == "wolf")
+        var wolf = this.select((p) => p.status.job.species == "wolf")
             .map((p) => p.cn)
             .join("、")
-        var share = this.select((p) => p.status.name == "share")
+        var share = this.select((p) => p.status.job.name == "share")
             .map((p) => p.cn)
             .join("、")
-        var fox = this.select((p) => p.status.species == "fox")
+        var fox = this.select((p) => p.status.job.species == "fox")
             .map((p) => p.cn)
             .join("、")
-        var noble = this.select((p) => p.status.name == "noble")
+        var noble = this.select((p) => p.status.job.name == "noble")
             .map((p) => p.cn)
             .join("、")
 
-        let texts = {
+        const texts:Record<string, string> = {
             wolf: "<br>【能力発動】人狼は" + wolf,
             share: "<br>【能力発動】共有者は" + share,
             fox: "<br>【能力発動】妖狐は" + fox,
@@ -215,11 +221,11 @@ export class PlayerManager {
     }
 
     isDeadAllFox() {
-        return this.select((p) => p.status.species == "fox").length == 0
+        return this.select((p) => p.status.job.species == "fox").length == 0
     }
 
     isDeadAllJob(job: string) {
-        return this.select((p) => p.status.name == job).length == 0
+        return this.select((p) => p.status.job.name == job).length == 0
     }
 
     summonDamy() {
@@ -284,9 +290,9 @@ export class PlayerManager {
         return this.alive().filter((p) => !p.isUsedAbility && p.status.can(ability))
     }
 
-    makeTargets(type?) {
+    makeTargets(type?:string):Record<number, string> {
         type = type || "alive"
-        var targets = {}
+        var targets:Record<number, string> = {}
         if (type == "alive") {
             for (var player of this.alive()) {
                 targets[player.no] = player.cn

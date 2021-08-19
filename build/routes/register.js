@@ -49,7 +49,7 @@ exports.router.post("/", function (req, res, next) {
                 if (err)
                     console.log(err);
                 req.session.userid = userid;
-                res.redirect("/");
+                res.redirect("../");
             });
         }
         else {

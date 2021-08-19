@@ -22,7 +22,7 @@ router.post("/", function (req, res, next) {
         return false
     }
 
-    User.find({ userid: userid }, function (err, result) {
+    User.find({ userid: userid }, function (err:any, result:any) {
         if (err) console.log(err)
 
         if (result.length == 0) {
@@ -31,10 +31,10 @@ router.post("/", function (req, res, next) {
             user.userid = userid
             user.password = password
 
-            user.save(function (err) {
+            user.save(function (err:any) {
                 if (err) console.log(err)
                 req.session.userid = userid
-                res.redirect("/")
+                res.redirect("../")
             })
         } else {
             res.render("register", { error: "このIDは既に使われています" })

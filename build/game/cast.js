@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.castManager = void 0;
+exports.castManager = exports.Job = void 0;
 class Job {
     constructor(name) {
         this.name = name;
@@ -21,6 +21,7 @@ class Job {
         this.rival = [];
     }
 }
+exports.Job = Job;
 class Villager extends Job {
     constructor() {
         super("villager");
@@ -321,12 +322,12 @@ class CastType {
                 if (/or/.test(job)) {
                     job = job.split("or").lot();
                 }
+                // TODO: 暫定的な処置…
                 jobList.push(new jobenum[job]());
             }
         }
         do {
             jobList.shuffle();
-            console.log(jobList);
         } while (jobList[0].onlyNotDamy);
         return jobList;
     }
@@ -347,6 +348,7 @@ class CastManager {
         this.makeObj();
     }
     job(name) {
+        // TODO: 暫定的な処置…
         return new jobenum[name]();
     }
     makeObj() {

@@ -53,6 +53,7 @@ exports.messageTemplate = {
         banTalk: "まだ発言できません。",
         cast: "配役は{message}です。",
         loggedDate: "{message}にhtml化されます。",
+        vinfo: "{message}"
     },
     talk: {
         talk: "{input}",
@@ -175,6 +176,7 @@ class MessageFormat {
             cn: option.cn || "",
             color: option.color || "",
             size: option.size || "normal",
+            quote: ""
         };
         return log;
     }

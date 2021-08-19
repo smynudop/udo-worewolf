@@ -1,4 +1,5 @@
 node_modules
+build/public/log/*
 public/log/*.html
 game_ts
 *.map

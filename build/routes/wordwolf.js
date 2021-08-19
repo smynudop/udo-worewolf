@@ -27,7 +27,7 @@ const schema_1 = require("../schema");
 exports.router.get("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "wordwolf";
-        res.redirect("login");
+        res.redirect("./login");
     }
     else {
         schema_1.Wordwolf.find({ state: { $ne: "logged" } }, function (err, result) {
@@ -40,7 +40,7 @@ exports.router.get("/", function (req, res, next) {
 exports.router.get("/:vno", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "wordwolf";
-        res.redirect("../login");
+        res.redirect("./login");
     }
     else {
         var vno = req.params.vno;
@@ -48,10 +48,10 @@ exports.router.get("/:vno", function (req, res, next) {
             if (err)
                 console.log(err);
             if (!result) {
-                res.redirect("/");
+                res.redirect("./");
             }
             if (result.state == "logged") {
-                res.redirect("/log_word/" + vno + ".html");
+                res.redirect("./log_word/" + vno + ".html");
             }
             else {
                 res.render("wordwolf", { id: req.session.userid, vno: vno });

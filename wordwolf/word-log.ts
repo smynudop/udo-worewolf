@@ -1,8 +1,19 @@
+import SocketIO from "socket.io"
+
+export interface ILog{
+    type: string
+    class?:string
+    message:string
+    color?: string
+    no?:number
+    cn?:string
+}
+
 export class Log {
-    list: any
-    nsp: any
+    list: ILog[]
+    nsp: SocketIO.Namespace
     count: number
-    constructor(nsp) {
+    constructor(nsp:SocketIO.Namespace) {
         this.list = []
         this.nsp = nsp
         this.count = 1
@@ -16,7 +27,7 @@ export class Log {
         return this.list.filter((l) => l.type != "personal")
     }
 
-    escape(text) {
+    escape(text:string) {
         text = text
             .replace(/&/g, "&amp;")
             .replace(/"/g, "&quot;")
@@ -26,8 +37,8 @@ export class Log {
         return text
     }
 
-    add(type, option?) {
-        var data: { [k: string]: string } = {
+    add(type:string, option?:any) {
+        var data: ILog = {
             type: "system",
             message: "このメッセージが出ている場合は分岐に失敗しています",
         }

@@ -97,11 +97,12 @@ class Player extends Visitor {
         return this.status.can(ability);
     }
     update(data) {
-        var cn = data.cn.trim();
+        var cn = data.cn || "";
+        cn = cn.trim();
         if (cn.length == 0 || cn.length > 8)
-            return false;
-        this.cn = cn;
-        this.color = data.color;
+            cn = "";
+        this.cn = cn || this.cn;
+        this.color = data.color || this.color;
     }
     forClientSummary() {
         return {
@@ -198,8 +199,8 @@ class Player extends Visitor {
         this.log.add("ability", data.type, {
             player: this.cn,
             target: target.cn,
-            fortuneResult: target.status.fortuneResult,
-            necroResult: target.status.necroResult,
+            fortuneResult: target.status.job.fortuneResult,
+            necroResult: target.status.job.necroResult,
             isAuto: isAuto,
             no: this.no,
         });
@@ -211,7 +212,7 @@ class Player extends Visitor {
     noticeDamy(damy) {
         this.log.add("ability", "reiko", {
             no: this.no,
-            result: damy.status.nameja,
+            result: damy.status.job.nameja,
         });
     }
     nightTalkType() {

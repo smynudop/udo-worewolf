@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include("head", { "title": "過去ログ"}) %>
+    <link rel='stylesheet' href='../stylesheets/lobby.css' />
+  </head>
+  <body>
+
+    <div id="container"><%- include("header_login", {title: "過去ログ"}) %>
+    
+
+    <table id="old">
+    <tr><th>番号</th><th>村名</th></tr>
+    <% for(var room of result) { %>
+        <tr>
+            <td><%= room.vno %></td>
+            <td><a href="./worewolf/<%= room.vno %>"><%= room.name %></a></td>
+        </tr>
+    <% } %>
+    </table>
+
+	</div>
+  </body>
+</html>

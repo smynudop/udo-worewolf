@@ -24,6 +24,6 @@ const Express = __importStar(require("express"));
 exports.router = Express.Router();
 exports.router.get("/", function (req, res, next) {
     delete req.session.userid;
-    res.redirect("/");
+    res.redirect("./");
 });
 //# sourceMappingURL=logout.js.map

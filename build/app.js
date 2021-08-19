@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+require('dotenv').config();
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -11,7 +12,6 @@ var MongoStore = require("connect-mongo");
 var array_proto = require("./array_proto");
 var io = require("socket.io")();
 const index_1 = require("./routes/index");
-const chatroom_1 = require("./routes/chatroom");
 const login_1 = require("./routes/login");
 const logout_1 = require("./routes/logout");
 const makeroom_1 = require("./routes/makeroom");
@@ -28,24 +28,23 @@ if (process.env.NODE_ENV == "development") {
     mongoURL = "mongodb://localhost:27017/worewolf";
 }
 else {
-    mongoURL =
-        "mongodb+srv://user-udo:tnxe6sou@cluster0.cidgl.mongodb.net/worewolf?retryWrites=true&w=majority";
+    mongoURL = process.env.MONGO_URL;
 }
 mongoose.set("useCreateIndex", true);
 mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true });
 // view engine setup
-app.set("views", path.join(__dirname, "../views"));
+app.set("views", path.join(__dirname, "./views"));
 app.set("view engine", "ejs");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "./public")));
 var sessionMiddleWare = session({
     secret: "udo",
     resave: false,
     saveUninitialized: false,
-    //store: MongoStore.create({ mongoUrl: mongoURL }),
+    store: MongoStore.create({ mongoUrl: mongoURL }),
     cookie: {
         maxAge: 24 * 60 * 60 * 1000,
     },
@@ -60,7 +59,6 @@ app.use("/", index_1.router);
 app.use("/", rule_1.router); // ほぼ静的ファイル
 app.use("/login", login_1.router);
 app.use("/logout", logout_1.router);
-app.use("/chatroom", chatroom_1.router);
 app.use("/makeroom", makeroom_1.router);
 app.use("/worewolf", worewolf_1.router);
 app.use("/old", old_1.router);

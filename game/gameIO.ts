@@ -1,3 +1,7 @@
+import { IVillageSetting } from "./VillageSetting"
+import {eachLog} from "./log"
+import {Player} from "./player"
+
 const fs = require("fs")
 const ejs = require("ejs")
 
@@ -6,7 +10,7 @@ const GameSchema = schema.Game
 const User = schema.User
 
 export class GameIO {
-    static writeHTML(log, player, vinfo) {
+    static writeHTML(log:eachLog[], player:Player[], vinfo:IVillageSetting) {
         ejs.renderFile(
             "./views/worewolf_html.ejs",
             {
@@ -14,23 +18,23 @@ export class GameIO {
                 players: player,
                 vinfo: vinfo,
             },
-            function (err, html) {
+            function (err:number, html:string) {
                 if (err) console.log(err)
                 html = html.replace(/\n{3,}/, "\n")
-                fs.writeFile("./public/log/" + vinfo.no + ".html", html, "utf8", function (err) {
+                fs.writeFile("./public/log/" + vinfo.vno + ".html", html, "utf8", function (err:any) {
                     console.log(err)
                 })
             }
         )
     }
 
-    static update(vno, data) {
-        GameSchema.updateOne({ vno: vno }, { $set: data }, (err) => {
+    static update(vno:number, data:Partial<IVillageSetting>) {
+        GameSchema.updateOne({ vno: vno }, { $set: data }, (err:any) => {
             if (err) console.log(err)
         })
     }
 
-    static find(vno) {
+    static find(vno:number) {
         return GameSchema.findOne({ vno: vno }).exec()
     }
 }

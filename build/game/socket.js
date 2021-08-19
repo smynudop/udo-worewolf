@@ -4,7 +4,7 @@ exports.PlayerSocket = void 0;
 class SocketLike {
     constructor() {
         this.id = "this is not socket";
-        this.rooms = {};
+        this.rooms = new Set();
     }
     emit() {
         return false;

@@ -127,7 +127,7 @@ export class FlagManager {
     guard() {
         if (this.date.day >= 2) {
             for (var player of this.players.select((p) => p.status.can("guard"))) {
-                var target = this.players.pick(player.status.target)
+                var target = this.players.pick(player.status.target!)
                 target.status.add("guarded")
             }
         }
@@ -137,7 +137,7 @@ export class FlagManager {
         for (let player of this.players.select((p) => p.status.can("revive"))) {
             if (!player.isUsedAbility) continue
 
-            let target = this.players.pick(player.status.target)
+            let target = this.players.pick(player.status.target!)
             let threshold = target.isDamy ? 50 : 30
             if (Math.floor(Math.random() * 100) < threshold) {
                 target.status.add("revive")
@@ -151,7 +151,7 @@ export class FlagManager {
 
     attack() {
         for (let player of this.players.has("biter")) {
-            let target = this.players.pick(player.status.target)
+            let target = this.players.pick(player.status.target!)
             target.status.add("bitten", player)
         }
 
@@ -159,7 +159,7 @@ export class FlagManager {
             if (player.has("guarded") || player.has("resistBite")) continue
 
             if (player.has("useDecoy") && player.status.hasAliveDecoy) {
-                for (let decoy of this.players.select((p) => p.status.name == "slave")) {
+                for (let decoy of this.players.select((p) => p.status.job.name == "slave")) {
                     decoy.status.add("stand")
                 }
                 continue
@@ -169,7 +169,7 @@ export class FlagManager {
         }
 
         for (var fortune of this.players.select((p) => p.can("fortune"))) {
-            var target = this.players.pick(fortune.status.target)
+            var target = this.players.pick(fortune.status.target!)
             target.status.add("fortuned")
         }
 

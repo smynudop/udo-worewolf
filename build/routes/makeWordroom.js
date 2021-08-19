@@ -27,7 +27,7 @@ const schema_1 = require("../schema");
 exports.router.get("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeWordroom";
-        res.redirect("login");
+        res.redirect("./login");
     }
     else {
         res.render("makeWordroom", { userid: req.session.userid });
@@ -36,11 +36,11 @@ exports.router.get("/", function (req, res, next) {
 exports.router.post("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeWordroom";
-        res.redirect("login");
+        res.redirect("./login");
     }
     else {
         var userid = req.session.userid;
-        var vno;
+        var vno = 1;
         var name = req.body.name;
         var pr = req.body.pr;
         var time = {};
@@ -89,7 +89,7 @@ exports.router.post("/", function (req, res, next) {
             game.save(function (err) {
                 if (err)
                     console.log(err);
-                res.redirect("/wordwolf");
+                res.redirect("./wordwolf");
             });
         });
     }

@@ -131,7 +131,7 @@ class FlagManager {
             if (player.has("guarded") || player.has("resistBite"))
                 continue;
             if (player.has("useDecoy") && player.status.hasAliveDecoy) {
-                for (let decoy of this.players.select((p) => p.status.name == "slave")) {
+                for (let decoy of this.players.select((p) => p.status.job.name == "slave")) {
                     decoy.status.add("stand");
                 }
                 continue;

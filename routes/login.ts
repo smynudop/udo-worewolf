@@ -11,7 +11,7 @@ router.post("/", function (req, res, next) {
     var userid = req.body.userid
     var password = req.body.password
 
-    User.find({ userid: userid }, function (err, result) {
+    User.find({ userid: userid }, function (err:any, result:any) {
         if (err) console.log(err)
 
         if (result.length == 0) {
@@ -20,10 +20,10 @@ router.post("/", function (req, res, next) {
             user.userid = userid
             user.password = password
 
-            user.save(function (err) {
+            user.save(function (err:any) {
                 if (err) console.log(err)
                 req.session.userid = userid
-                res.redirect("/")
+                res.redirect("./")
             })
         } else {
             if (password == result[0].password) {
@@ -31,9 +31,9 @@ router.post("/", function (req, res, next) {
                 var rd = req.session.rd
                 if (rd) {
                     delete req.session.rd
-                    res.redirect("/" + rd)
+                    res.redirect("./" + rd)
                 } else {
-                    res.redirect("/")
+                    res.redirect("./")
                 }
             } else {
                 res.render("login", { registerflg: "incorrect" })

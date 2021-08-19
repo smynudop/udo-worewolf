@@ -7,7 +7,7 @@ import { Game } from "../schema"
 router.get("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeroom"
-        res.redirect("login")
+        res.redirect("./login")
     } else {
         res.render("makeroom", { userid: req.session.userid })
     }
@@ -16,16 +16,16 @@ router.get("/", function (req, res, next) {
 router.post("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "makeroom"
-        res.redirect("login")
+        res.redirect("./login")
     } else {
         var userid = req.session.userid
-        var vno
+        var vno = 1
         var name = req.body.name
         var pr = req.body.pr
         var casttype = req.body.casttype
         var capacity = req.body.capacity
         var kariGM = req.body.kariGM == "1"
-        var time = {}
+        var time:Record<string,number> = {}
 
         if (!name || name.length >= 24 || name.length == 0) {
             res.render("makeroom", { userid: userid, error: "村名は24文字以内で入力してください" })
@@ -57,7 +57,7 @@ router.post("/", function (req, res, next) {
             }
         }
 
-        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err, data) {
+        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err:any, data:any) {
             if (err) console.log(err)
             if (data.length == 0) {
                 vno = 1
@@ -76,9 +76,9 @@ router.post("/", function (req, res, next) {
             game.state = "recruit"
             game.kariGM = kariGM
 
-            game.save(function (err) {
+            game.save(function (err:any) {
                 if (err) console.log(err)
-                res.redirect("/worewolf")
+                res.redirect("./worewolf")
             })
         })
     }

@@ -1,45 +1,36 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Status = void 0;
-const abilityInfo = require("./command").abilityInfo;
-const talkInfo = require("./command").talkInfo;
+const cast_1 = require("./cast");
+const command_1 = require("./command");
 class Status {
     constructor(player) {
-        this.name = "";
-        this.nameja = "";
-        this.camp = ""; //陣営
-        this.species = ""; //種族(勝敗判定に使う)
+        this.job = new cast_1.Job("damy");
+        this.attributes = [];
         this.isAlive = true;
-        this.fortuneResult = "村人";
-        this.necroResult = "村人";
-        this.desc = "";
         this.knowText = "";
-        //永続の属性(呪殺・噛み耐性など)
-        this.forever = [];
-        //一時的な属性(噛まれた、占われた)
-        this.temporary = [];
-        //窓に発言する
-        this.talk = [];
-        //窓を見る
-        this.watch = [];
-        //能力
-        this.ability = [];
-        //役職を知る
-        this.know = [];
-        //打倒相手
-        this.rival = [];
-        this.winCond = [];
-        this.limit = {};
         this.target = null;
         this.vote = null;
         this.player = player;
         this.playerManager = player.manager;
         this.date = player.date;
     }
+    get isUsedAbility() {
+        return this.target !== null;
+    }
+    get isVote() {
+        return this.vote !== null;
+    }
+    get hasAliveDecoy() {
+        return this.player.manager.select((p) => p.status.job.name == "slave").length > 0;
+    }
+    get isDead() {
+        return !this.isAlive;
+    }
     command() {
-        return this.ability
+        return this.job.ability
             .map((a) => {
-            let info = abilityInfo[a];
+            let info = command_1.abilityInfo[a];
             if (!info)
                 return null;
             info.target = this.player.manager.makeTargets(info.targetType);
@@ -49,8 +40,8 @@ class Status {
     }
     talkCommand() {
         let commands = [];
-        for (let type in talkInfo) {
-            let t = talkInfo[type];
+        for (let type in command_1.talkInfo) {
+            let t = command_1.talkInfo[type];
             if (this.player.canTalkNow({ type: type })) {
                 commands.push(t);
             }
@@ -58,14 +49,14 @@ class Status {
         return commands;
     }
     forClient() {
-        let desc = this.desc
-            ? `あなたは【${this.nameja}】です。<br>${this.desc}${this.knowText}`
+        let desc = this.job.desc
+            ? `あなたは【${this.job.nameja}】です。<br>${this.job.desc}${this.knowText}`
             : "";
         return {
-            name: this.name,
-            nameja: this.nameja,
+            name: this.job.name,
+            nameja: this.job.nameja,
             desc: desc,
-            ability: this.ability,
+            ability: this.job.ability,
             target: this.target,
             vote: this.vote,
             command: this.command(),
@@ -73,30 +64,11 @@ class Status {
         };
     }
     set(job) {
-        this.name = job.name;
-        this.nameja = job.nameja;
-        this.camp = job.camp; //陣営
-        this.species = job.species; //種族(勝敗判定に使う)
-        this.fortuneResult = job.fortuneResult;
-        this.necroResult = job.necroResult;
-        this.desc = job.desc;
-        this.talk = job.talk;
-        this.watch = job.watch;
-        this.ability = job.ability;
-        this.know = job.knowFriend;
-        this.forever = job.forever;
-        this.winCond = job.winCond;
-        this.rival = job.rival;
-    }
-    get isUsedAbility() {
-        return this.target !== null;
-    }
-    get isVote() {
-        return this.vote !== null;
+        this.job = job;
+        this.attributes = job.forever.map((a) => { return { name: a, limit: 999 }; });
     }
     add(attr, player) {
-        this.temporary.push(attr);
-        this.limit[attr] = this.date.day;
+        this.attributes.push({ name: attr, limit: this.date.day });
         if (this.has("standoff") && attr == "bitten" && player) {
             player.status.add("stand");
         }
@@ -106,20 +78,17 @@ class Status {
         }
     }
     except(attr) {
-        if (this.temporary.includes(attr)) {
-            this.temporary = this.temporary.filter((a) => a != attr);
-            delete this.limit[attr];
-        }
+        this.attributes = this.attributes.filter((a) => a.name != attr);
     }
     can(ability) {
-        return this.ability.includes(ability);
+        return this.job.ability.includes(ability);
     }
     canTalk(type) {
         switch (type) {
             case "share":
             case "fox":
             case "wolf":
-                return this.talk.includes(type) && this.isAlive;
+                return this.job.talk.includes(type) && this.isAlive;
             case "discuss":
             case "tweet":
                 return this.isAlive;
@@ -130,52 +99,30 @@ class Status {
         }
     }
     canWatch(type) {
-        return this.talk.includes(type) || this.watch.includes(type);
+        return this.job.talk.includes(type) || this.job.watch.includes(type);
     }
     canKnow(job) {
-        return this.know.includes(job) || this.watch.includes(job) || this.talk.includes(job);
+        return this.job.knowFriend.includes(job) || this.job.watch.includes(job) || this.job.talk.includes(job);
     }
     has(attr) {
-        return this.forever.includes(attr) || this.temporary.includes(attr);
+        return this.attributes.some((a) => a.name == attr);
     }
     hasnot(attr) {
         return !this.has(attr);
     }
     winCondhas(attr) {
-        return this.winCond.includes(attr);
-    }
-    get hasAliveDecoy() {
-        return this.player.manager.select((p) => p.status.name == "slave").length > 0;
-    }
-    get isDead() {
-        return !this.isAlive;
+        return this.job.winCond.includes(attr);
     }
     update() {
-        let newTemporary = [];
-        for (let attr of this.temporary) {
-            if (!this.limit[attr])
-                continue;
-            if (this.limit[attr] >= this.date.day) {
-                newTemporary.push(attr);
-            }
-            else {
-                delete this.limit[attr];
-            }
-        }
-        this.temporary = newTemporary;
+        this.attributes = this.attributes.filter((a) => a.limit >= this.date.day);
     }
     isDeadRival() {
-        let result = true;
-        for (let rival of this.rival) {
-            if (!this.playerManager.isDeadAllJob(rival)) {
-                result = false;
-            }
-        }
+        let result = this.job.rival.every((rival) => this.playerManager.isDeadAllJob(rival));
         return result;
     }
     judgeWinOrLose(winSide) {
         let isWin = true;
-        if (this.winCondhas("winCamp") && this.camp != winSide) {
+        if (this.winCondhas("winCamp") && this.job.camp != winSide) {
             isWin = false;
         }
         if (this.winCondhas("alive") && this.isDead) {

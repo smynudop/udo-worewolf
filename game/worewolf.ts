@@ -1,10 +1,11 @@
+import SocketIO from "socket.io"
 import { Game } from "./game"
 import { GameIO } from "./gameIO"
 
 export class GameManager {
-    io: any
+    io:SocketIO.Server
     games: number[]
-    constructor(io) {
+    constructor(io:SocketIO.Server) {
         this.io = io
         this.games = []
         this.listen()
@@ -14,9 +15,9 @@ export class GameManager {
         console.log("listen!")
         var mgr = this
 
-        var rd = this.io.of(/^\/room-\d+$/).on("connect", async function (socket) {
+        var rd = this.io.of(/^\/room-\d+$/).on("connect", async function (socket: SocketIO.Socket) {
             var nsp = socket.nsp
-            var vno = nsp.name.match(/\d+/)[0] - 0
+            var vno = +nsp.name.match(/\d+/)![0]
             if (mgr.games.includes(vno)) return false
 
             mgr.games.push(vno)

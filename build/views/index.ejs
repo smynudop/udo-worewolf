@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<% var islogin = islogin || false %>
+<html>
+  <head>
+    <title>オンライン人狼焼肉鯖</title>
+    <link rel='stylesheet' href='./stylesheets/common.css' />
+    <link rel='stylesheet' href='./stylesheets/style.css' />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div id="container">
+
+    <div id="logo">
+    <img src="images/logo.png"><br>
+    </div>
+
+    <div id="desc">
+    オンライン人狼焼肉鯖は、
+    <ul>
+    	<li>socket.ioを利用したリアルタイムチャット</li>
+    	<li>議論を便利にするパワフルな発言ログ・引用機能</li>
+    	<li>ワード人狼専用部屋も搭載</li>
+    </ul>
+    などを特徴とする予定の、製作中のサーバーです。<br>
+    どなたでもご利用いただけます。<br>
+    <br>
+    初めての方は、「ルール」と「禁止事項」をご一読ください。
+    </div><div id="menu">
+    <% if(islogin) { %>
+      <a href="./worewolf"><div class="highlight">人狼ロビー</div></a>
+      <a href="./wordwolf"><div class="highlight">ワード人狼ロビー</div></a>
+    <% } else { %>
+        <a href="./login"><div class="highlight">ログイン</div></a>
+    <% } %>
+        <a href="./rule"><div>人狼のルール</div></a>
+        <a href="./prohibited"><div>禁止事項</div></a>
+        <a href="./usage"><div>鯖の使い方</div></a>
+        <a href="./cast"><div>配役一覧</div></a>
+        <a href="./old"><div>過去ログ</div></a>
+
+	</div>
+
+	<div id="user">
+    <% if(islogin) { %>
+    <p><%= userid %>でログイン中 <a href="./mypage">マイページ</a></p>
+    <% } %>
+    </div>
+	</div>
+  </body>
+</html>

@@ -27,7 +27,7 @@ const schema_1 = require("../schema");
 exports.router.use("/", async function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "mypage";
-        res.redirect("login");
+        res.redirect("./login");
     }
     else {
         let user = await schema_1.User.findOne({ userid: req.session.userid }).exec();
@@ -44,19 +44,19 @@ exports.router.post("/set_trip", function (req, res, next) {
     schema_1.User.update({ userid: req.session.userid }, { $set: { trip: trip } }, function (err) {
         if (err)
             console.log(err);
-        res.redirect("/mypage?mes=success_set_trip");
+        res.redirect("/?mes=success_set_trip");
     });
 });
 exports.router.post("/change_password", function (req, res, next) {
     let new1 = req.body.new;
     let new2 = req.body.new2;
     if (req.user.password != req.body.now || !/^\w+$/.test(new1) || new1 != new2) {
-        return res.redirect("/mypage?mes=failed_change_password");
+        return res.redirect("/?mes=failed_change_password");
     }
     schema_1.User.update({ userid: req.session.userid }, { $set: { password: new1 } }, function (err) {
         if (err)
             console.log(err);
-        res.redirect("/mypage?mes=success_change_password");
+        res.redirect("/?mes=success_change_password");
     });
 });
 //# sourceMappingURL=mypage.js.map

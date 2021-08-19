@@ -1,5 +1,7 @@
+import SocketIO from "socket.io"
 import { messageTemplate, MessageFormat, messageOption } from "./messageTemplate"
 import { Visitor } from "./player"
+import {VillageDate} from "./villageDate"
 
 export interface eachLog {
     target: string
@@ -9,7 +11,7 @@ export interface eachLog {
     phase: string
     resno?: number
     anchor?: string
-    quote?: string
+    quote: string
     message: string
     class?: string
     cn?: string
@@ -19,13 +21,13 @@ export interface eachLog {
 
 export class Log {
     list: eachLog[]
-    nsp: any
-    date: any
+    nsp: SocketIO.Namespace
+    date: VillageDate
     count: number
 
     formatter: MessageFormat
 
-    constructor(nsp, date) {
+    constructor(nsp:SocketIO.Namespace, date:VillageDate) {
         this.list = []
         this.nsp = nsp
         this.date = date
@@ -60,14 +62,14 @@ export class Log {
         this.count = 1
     }
 
-    quoteDiscuss(anchor) {
+    quoteDiscuss(anchor:string) {
         var logs = this.list.filter((log) => log.anchor == anchor)
         return logs.length ? logs[0] : null
     }
 
-    replaceQuote(txt, num) {
+    replaceQuote(txt:string, num:number) {
         let cnt = 0
-        txt = txt.replace(/&gt;&gt;\d{1,2}-\d{1,3}/g, (match) => {
+        txt = txt.replace(/&gt;&gt;\d{1,2}-\d{1,3}/g, (match:string) => {
             if (cnt >= num) return match
             cnt++
             var q = this.quoteDiscuss(match)

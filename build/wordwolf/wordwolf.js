@@ -169,7 +169,7 @@ class PlayerManager {
                 id = parseInt(id);
             }
         }
-        return this.players[id];
+        return this.players[+id];
     }
     refreshList() {
         this.list = Object.values(this.players).filter((p) => p.no < 990);
@@ -291,19 +291,19 @@ class Game {
         return this.limit ? moment().diff(this.limit, "seconds") * -1 : null;
     }
     fixInfo(data) {
-        for (var key in data) {
-            if (this[key] === undefined)
-                continue;
-            this[key] = data[key];
-        }
+        this.name = data.name || this.name;
+        this.pr = data.pr || this.pr;
+        this.time = data.time || data.pr;
         GameIO.update(this.vno, data);
         this.log.add("vinfo", this.villageInfo());
     }
     fixPersonalInfo(player, data) {
-        var cn = data.cn.trim();
+        var cn = data.cn || "";
+        cn = cn.trim();
         if (cn.length == 0 || cn.length > 8)
-            return false;
-        player.update(cn, data.color);
+            cn = player.cn;
+        var color = data.color || player.color;
+        player.update(cn, color);
         this.emitPlayer();
     }
     villageInfo() {
@@ -601,7 +601,7 @@ class GameManager {
         var mgr = this;
         var rd = this.io.of(/^\/wordroom-\d+$/).on("connect", async function (socket) {
             var nsp = socket.nsp;
-            var vno = nsp.name.match(/\d+/)[0] - 0;
+            var vno = +nsp.name.match(/\d+/)[0];
             if (mgr.games.includes(vno))
                 return false;
             mgr.games.push(vno);

@@ -16,7 +16,7 @@ class GameIO {
             if (err)
                 console.log(err);
             html = html.replace(/\n{3,}/, "\n");
-            fs.writeFile("./public/log/" + vinfo.no + ".html", html, "utf8", function (err) {
+            fs.writeFile("./public/log/" + vinfo.vno + ".html", html, "utf8", function (err) {
                 console.log(err);
             });
         });

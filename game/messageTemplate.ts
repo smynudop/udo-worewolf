@@ -1,7 +1,7 @@
 import { VillageDate } from "./villageDate"
 import { Log, eachLog } from "./log"
 
-export const messageTemplate = {
+export const messageTemplate: Record<string, Record<string, string>> = {
     vote: {
         success: "{player}さんが{target}さんに投票しました。",
         summary: "[icon:voteResult]{day}日目 投票結果。<br>{message}",
@@ -54,6 +54,7 @@ export const messageTemplate = {
         banTalk: "まだ発言できません。",
         cast: "配役は{message}です。",
         loggedDate: "{message}にhtml化されます。",
+        vinfo: "{message}"
     },
     talk: {
         talk: "{input}",
@@ -93,7 +94,7 @@ type messageType = keyof typeof messageTemplate
 export class MessageFormat {
     log: Log
     date: VillageDate
-    constructor(log) {
+    constructor(log:Log) {
         this.log = log
         this.date = log.date
     }
@@ -121,9 +122,9 @@ export class MessageFormat {
             option.input = this.htmlEscape(option.input)
         }
 
-        message = message.replace(/\{([^\}]+?)\}/g, function (match, key) {
+        message = message.replace(/\{([^\}]+?)\}/g, function (match, key:string) {
             if (key in option) {
-                return option[key]
+                return option[key as keyof typeof option] as string
             } else {
                 return match
             }
@@ -200,6 +201,7 @@ export class MessageFormat {
             cn: option.cn || "",
             color: option.color || "",
             size: option.size || "normal",
+            quote: ""
         }
 
         return log

@@ -27,7 +27,7 @@ const schema_1 = require("../schema");
 exports.router.get("/", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "worewolf";
-        res.redirect("login");
+        res.redirect("./login");
     }
     else {
         schema_1.Game.find({ state: { $ne: "logged" } }, function (err, result) {
@@ -40,7 +40,7 @@ exports.router.get("/", function (req, res, next) {
 exports.router.get("/:vno", function (req, res, next) {
     if (!req.session.userid) {
         req.session.rd = "worewolf";
-        res.redirect("../login");
+        res.redirect("./login");
     }
     else {
         var vno = req.params.vno;
@@ -48,10 +48,10 @@ exports.router.get("/:vno", function (req, res, next) {
             if (err)
                 console.log(err);
             if (!result) {
-                res.redirect("/");
+                res.redirect("./");
             }
             if (result.state == "logged") {
-                res.redirect("/log/" + vno + ".html");
+                res.redirect("./log/" + vno + ".html");
             }
             else {
                 res.render("worewolf", { id: req.session.userid, vno: vno });

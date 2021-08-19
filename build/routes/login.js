@@ -40,7 +40,7 @@ exports.router.post("/", function (req, res, next) {
                 if (err)
                     console.log(err);
                 req.session.userid = userid;
-                res.redirect("/");
+                res.redirect("./");
             });
         }
         else {
@@ -49,10 +49,10 @@ exports.router.post("/", function (req, res, next) {
                 var rd = req.session.rd;
                 if (rd) {
                     delete req.session.rd;
-                    res.redirect("/" + rd);
+                    res.redirect("./" + rd);
                 }
                 else {
-                    res.redirect("/");
+                    res.redirect("./");
                 }
             }
             else {

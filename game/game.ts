@@ -6,19 +6,14 @@ import { VillageDate } from "./villageDate"
 import { GameIO } from "./gameIO"
 import { talkTemplate } from "./command"
 import { castManager } from "./cast"
+import {IVillageSetting, VillageSetting} from "./VillageSetting"
+import SocketIO from "socket.io"
 
 const moment = require("moment")
 
 export class Game {
-    io: any
-    vno: number
-    name: string
-    pr: string
-    casttype: string
-    time: { [k: string]: number }
-    GMid: string
-    capacity: number
-    isShowJobDead: boolean
+    io: SocketIO.Namespace
+    villageSetting: VillageSetting
     isKariGM: boolean
     date: VillageDate
     log: Log
@@ -27,24 +22,11 @@ export class Game {
     leftVoteNum: number
     win: string
 
-    constructor(io, data) {
+    constructor(io: SocketIO.Namespace, data:IVillageSetting) {
         this.io = io
 
-        this.vno = data.vno || 1
-        this.name = data.name || "とある村"
-        this.pr = data.pr || "宣伝文が設定されていません"
-        this.casttype = data.casttype || "Y"
-        this.time = data.time || {
-            day: 285,
-            vote: 150,
-            night: 180,
-            ability: 120,
-            nsec: 15,
-        }
-        this.GMid = data.GMid
-        this.capacity = data.capacity || 17
-        this.isShowJobDead = data.isShowJobDead || true
-        this.isKariGM = data.kariGM
+        this.villageSetting = new VillageSetting(data)
+        this.isKariGM = data.kariGM || false
 
         this.date = new VillageDate(this)
         this.log = new Log(io, this.date)
@@ -55,7 +37,7 @@ export class Game {
 
         this.win = ""
 
-        //this.log.add("system", "vinfo", this.villageInfo())
+        this.log.add("system", "vinfo", {message: this.villageSetting.text()})
 
         this.players.summonDamy()
 
@@ -64,14 +46,10 @@ export class Game {
         this.listen()
     }
 
-    fixInfo(data) {
-        for (var key in data) {
-            if (this[key] === undefined) continue
-            this[key] = data[key]
-        }
-
-        GameIO.update(this.vno, data)
-        //this.log.add("system", "vinfo", this.villageInfo())
+    fixInfo(data:IVillageSetting) {
+        this.villageSetting.update(data)
+        GameIO.update(this.villageSetting.vno, data)
+        this.log.add("system", "vinfo", {message: this.villageSetting.text()})
     }
 
     startRollcall() {
@@ -81,12 +59,12 @@ export class Game {
     }
 
     assignRoom() {
-        this.flagManager.assignRoom(this.isShowJobDead)
+        this.flagManager.assignRoom(this.villageSetting.isShowJobDead)
     }
 
     npcTalk() {
         for (var player of this.players.NPC()) {
-            let talkType = player.nightTalkType()
+            let talkType = this.date.is("day") ? "discuss" : player.nightTalkType()
             var data = {
                 no: player.no,
                 cn: player.cn,
@@ -99,19 +77,6 @@ export class Game {
         }
     }
 
-    villageInfo() {
-        return {
-            name: this.name,
-            pr: this.pr,
-            no: this.vno,
-            time: this.time,
-            GMid: this.GMid,
-            capacity: this.capacity,
-            casttype: this.casttype,
-            isShowJobDead: this.isShowJobDead,
-        }
-    }
-
     emitPlayerAll() {
         if (this.date.is("epilogue")) {
             this.io.emit("player", this.players.forClientDetail())
@@ -121,7 +86,7 @@ export class Game {
         }
     }
 
-    emitPlayer(socket) {
+    emitPlayer(socket:SocketIO.Socket) {
         if (!socket) return false
 
         if (this.date.is("epilogue")) {
@@ -138,7 +103,7 @@ export class Game {
     start() {
         if (!this.canStart()) return false
 
-        GameIO.update(this.vno, { state: "playing" })
+        GameIO.update(this.villageSetting.vno, { state: "playing" })
 
         this.date.pass("vote") // これをやらないとログが出ない
         this.casting()
@@ -148,7 +113,7 @@ export class Game {
     }
 
     casting() {
-        var castlist = castManager.jobList(this.casttype, this.players.num)
+        var castlist = castManager.jobList(this.villageSetting.casttype, this.players.num)
         if (!castlist) return false
 
         for (let i = 0; i < this.players.num; i++) {
@@ -159,7 +124,7 @@ export class Game {
         this.assignRoom()
         this.players.setKnow()
 
-        var txt = castManager.makeCastTxt(this.casttype, this.players.num)
+        var txt = castManager.makeCastTxt(this.villageSetting.casttype, this.players.num)
         this.log.add("system", "cast", { message: txt })
     }
 
@@ -229,8 +194,8 @@ export class Game {
     }
 
     setnsec() {
-        if (!this.time.nsec) return false
-        this.date.setNsec(this.time.nsec)
+        if (!this.villageSetting.time.nsec) return false
+        this.date.setNsec(this.villageSetting.time.nsec)
     }
 
     checkAllVote() {
@@ -239,7 +204,7 @@ export class Game {
         }
     }
 
-    changePhase(phase) {
+    changePhase(phase:string) {
         switch (phase) {
             case "night":
                 this.date.pass("vote")
@@ -258,7 +223,7 @@ export class Game {
                 this.pass("night")
 
                 this.flagManager.useNightAbility()
-                this.npcTalk()
+                //this.npcTalk()
 
                 break
 
@@ -275,6 +240,7 @@ export class Game {
                 this.morningReset()
 
                 this.setnsec()
+                this.npcTalk()
 
                 break
 
@@ -334,7 +300,7 @@ export class Game {
         this.emitPlayerAll()
         this.emitAllLog()
 
-        GameIO.update(this.vno, { state: "finish" })
+        GameIO.update(this.villageSetting.vno, { state: "finish" })
 
         var logtime = moment().add(10, "minute").format("YYYY/MM/DD HH:mm:ss")
         this.log.add("system", "loggedDate", { message: logtime })
@@ -358,10 +324,10 @@ export class Game {
     }
 
     emitChangePhase(phase: string) {
-        var nsec = phase == "day" && this.time.nsec ? this.time.nsec : null
+        var nsec = phase == "day" && this.villageSetting.time.nsec ? this.villageSetting.time.nsec : null
         this.io.emit("changePhase", {
             phase: phase,
-            left: this.time[phase],
+            left: this.villageSetting.time[phase],
             nsec: nsec,
             targets: this.players.makeTargets(),
             deathTargets: this.players.makeTargets("death"),
@@ -369,14 +335,14 @@ export class Game {
         })
     }
 
-    emitInitialPhase(socket) {
+    emitInitialPhase(socket:SocketIO.Socket) {
         var time = this.date.leftSeconds()
         socket.emit("changePhase", {
             phase: this.date.phase,
             left: time,
             targets: this.players.makeTargets(),
             day: this.date.day,
-            villageInfo: this.villageInfo(),
+            villageInfo: this.villageSetting.villageInfo(),
         })
     }
 
@@ -406,7 +372,7 @@ export class Game {
         this.emitPlayerAll()
         this.emitChangePhase(phase)
 
-        this.date.setTimer(next[phase], this.time[phase])
+        this.date.setTimer(next[phase as keyof typeof next], this.villageSetting.time[phase])
     }
 
     emitAllLog() {
@@ -414,7 +380,7 @@ export class Game {
     }
 
     listen() {
-        this.io.on("connection", (socket) => {
+        this.io.on("connection", (socket:SocketIO.Socket) => {
             var userid = socket.request.session.userid
             var player: Visitor
 
@@ -439,7 +405,7 @@ export class Game {
 
             socket.on("enter", (data) => {
                 if (this.players.in(userid)) return false
-                if (this.players.num >= this.capacity) return false
+                if (this.players.num >= this.villageSetting.capacity) return false
 
                 data.userid = userid
                 data.socket = socket
@@ -471,7 +437,6 @@ export class Game {
             })
 
             socket.on("ability", (data) => {
-                player.useAbility(data)
                 switch (data.type) {
                     case "bite":
                         for (var biter of this.players.has("biter")) {
@@ -481,6 +446,7 @@ export class Game {
                         this.io.to("wolf").emit("useAbilitySuccess")
                         break
                 }
+                player.useAbility(data)
             })
 
             socket.on("rollcall", (data) => {
@@ -521,7 +487,7 @@ export class Game {
     }
 
     close() {
-        GameIO.writeHTML(this.log.all(), this.players.list, this.villageInfo())
-        GameIO.update(this.vno, { state: "logged" })
+        GameIO.writeHTML(this.log.all(), this.players.list, this.villageSetting.villageInfo())
+        GameIO.update(this.villageSetting.vno, { state: "logged" })
     }
 }
