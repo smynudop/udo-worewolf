@@ -20,7 +20,7 @@
         "moment": "^2.29.1",
         "mongoose": "^5.12.3",
         "morgan": "~1.10.0",
-        "socket.io": "^2.4.1",
+        "socket.io": "^2.5.0",
         "tripcode": "^1.3.4",
         "utf-8-validate": "^5.0.4"
     },
