@@ -18,7 +18,7 @@
         "fs": "0.0.1-security",
         "http-errors": "~1.8.0",
         "moment": "^2.29.1",
-        "mongoose": "^5.12.3",
+        "mongoose": "^5.13.15",
         "morgan": "~1.10.0",
         "socket.io": "^2.4.1",
         "tripcode": "^1.3.4",
