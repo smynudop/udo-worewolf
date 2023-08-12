@@ -1,7 +1,5 @@
-import {Client} from "./worewolf-client"
+import { Client2 } from "./worewolf-client"
 
 $(function () {
-
-    var client = new Client()
-
+  const client = new Client2()
 })

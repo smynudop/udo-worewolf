@@ -25,7 +25,7 @@ export interface IStatusForClient {
   ability: string[]
   target: number | null
   vote: number | null
-  command: IAbilityDetail[]
+  command: ICommand[]
   talkCommand: ITalkDetail[]
 }
 
