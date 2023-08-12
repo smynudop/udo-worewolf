@@ -215,8 +215,7 @@ export class Game {
       case "night":
         this.date.pass("vote")
 
-        const isExec = this.compileVote()
-        if (!isExec) {
+        if (!this.compileVote()) {
           this.changePhase("revote")
           return false
         }
