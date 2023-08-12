@@ -23,10 +23,10 @@ const npcNames = [
 ]
 
 export class PlayerManager {
-  players: Record<number, Player>
+  players: { [key in number]: Player }
   list: Player[]
   listAll: Player[]
-  userid2no: Record<string, number>
+  userid2no: { [key in string]: number }
   count: number
   log: Log
   date: VillageDate

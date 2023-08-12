@@ -6,9 +6,9 @@ import { IStatusForClient, StatusManager } from "./statusManager"
 
 import { User } from "../schema"
 import { messageOption } from "./messageTemplate"
-import { ITalkType } from "./command"
+import { ITalkType } from "./constants"
 import SocketIO from "socket.io"
-import { IAbility } from "./status"
+import { IAbility, IPassiveAbilities } from "./status"
 
 export interface IVisitorData {
   userid: string
@@ -66,7 +66,7 @@ interface voteData {
 
 interface abilityData {
   target: Player | number | string
-  type: IAbility
+  type: IAbility | IPassiveAbilities
 }
 
 interface ITalkData {
@@ -371,15 +371,15 @@ export class Player extends Visitor {
     )
   }
 
-  canTalkNow(data: Pick<ITalkData, "type">) {
+  canTalkNow(talkType: ITalkType) {
     if (this.isNull) return false
     const date = this.date
-    const hasStatus = this.status.canTalk(data.type)
+    const hasStatus = this.status.canTalk(talkType)
 
-    switch (data.type) {
+    switch (talkType) {
       case "discuss":
         return (
-          (date.canTalk(data.type) && this.isAlive && !this.isGM) ||
+          (date.canTalk(talkType) && this.isAlive && !this.isGM) ||
           date.is("epilogue") ||
           date.is("prologue")
         )
@@ -388,7 +388,7 @@ export class Player extends Visitor {
       case "share":
       case "fox":
       case "wolf":
-        return date.canTalk(data.type) && hasStatus
+        return date.canTalk(talkType) && hasStatus
 
       case "grave":
         return hasStatus || this.isGM

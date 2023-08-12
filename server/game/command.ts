@@ -1,22 +1,24 @@
-export const talkTemplate = {
+import { ITalkType } from "./constants"
+import { IAbility } from "./status"
+
+export const talkTemplate: { [key in ITalkType]: string[] } = {
   discuss: ["おはよ", "おはようこ", "おはよー", "おはようございます"],
   wolf: ["誰噛む？", "よろしく", "騙ります 即抜き"],
   share: ["誰吊る？", "怪しいとこあった？", "霊能COしていい？"],
   fox: ["占いは嫌だ", "コンコン", "特攻いくかｗ"],
   tweet: ["暇だな", "誰が狼や……", "あ、ヒヒ落ちたw"],
+  gmMessage: [],
+  grave: [],
 }
-
-export type ITalkType = keyof typeof talkTemplate
 
 export interface IAbilityDetail {
   type: string
   since: number
   text: string
-  targetType: string
-  target?: Record<number, string>
+  targetType: "alive" | "death"
 }
 
-export const abilityInfo: Record<string, IAbilityDetail> = {
+export const abilityInfo: { [key in IAbility]: IAbilityDetail } = {
   fortune: {
     type: "fortune",
     since: 1,
@@ -46,11 +48,11 @@ export const abilityInfo: Record<string, IAbilityDetail> = {
 export type IAbilityType = keyof typeof abilityInfo
 
 export interface ITalkDetail {
-  type: string
+  type: ITalkType
   text: string
 }
 
-export const talkInfo: Record<string, ITalkDetail> = {
+export const talkInfo: { [key in ITalkType]: ITalkDetail } = {
   discuss: {
     type: "discuss",
     text: "議論",
@@ -80,4 +82,4 @@ export const talkInfo: Record<string, ITalkDetail> = {
     type: "tweet",
     text: "独り言",
   },
-}
+} as const

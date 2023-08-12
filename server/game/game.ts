@@ -10,6 +10,7 @@ import { IVillageSetting, VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
 
 import moment from "moment"
+import { IPhase } from "./constants"
 
 export class Game {
   io: SocketIO.Namespace
@@ -363,7 +364,7 @@ export class Game {
     }
   }
 
-  pass(phase: string) {
+  pass(phase: IPhase | "revote") {
     const next = {
       day: "vote",
       vote: "night",

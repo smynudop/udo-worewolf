@@ -14,7 +14,9 @@ import {
   IStatus,
   IAbility,
   ITemporaryuStatus as ITemporaryStatus,
+  IPassiveAbilities,
 } from "./status"
+import { keyof } from "../common/utilities"
 
 export interface IStatusForClient {
   name: string
@@ -30,6 +32,10 @@ export interface IStatusForClient {
 export interface IStatusAttribute {
   name: IStatus | IAbility | ITemporaryStatus
   limit: number
+}
+
+type ICommand = IAbilityDetail & {
+  target: { [key in number]: string }
 }
 
 export class StatusManager {
@@ -80,22 +86,22 @@ export class StatusManager {
     return !this.isAlive
   }
 
-  command(): IAbilityDetail[] {
+  command(): ICommand[] {
     return this.job.ability
       .map((a) => {
-        const info = abilityInfo[a as keyof typeof abilityInfo]
+        const info = abilityInfo[a]
         if (!info) return null
-        info.target = this.player.manager.makeTargets(info.targetType)
-        return info
+        const target = this.player.manager.makeTargets(info.targetType)
+        return { ...info, target }
       })
-      .filter((a) => a !== null) as IAbilityDetail[]
+      .filter((a): a is ICommand => a !== null)
   }
 
   talkCommand(): ITalkDetail[] {
     const commands: ITalkDetail[] = []
-    for (const type in talkInfo) {
+    for (const type of keyof(talkInfo)) {
       const t = talkInfo[type]
-      if (this.player.canTalkNow({ type: type })) {
+      if (this.player.canTalkNow(type)) {
         commands.push(t)
       }
     }
@@ -141,8 +147,11 @@ export class StatusManager {
     this.attributes = this.attributes.filter((a) => a.name != attr)
   }
 
-  can(ability: IAbility) {
-    return this.job.ability.includes(ability)
+  can(ability: IAbility | IPassiveAbilities) {
+    return (
+      this.job.ability.includes(ability as IAbility) ||
+      this.job.passiveAbility.includes(ability as IPassiveAbilities)
+    )
   }
 
   canTalk(type: string) {

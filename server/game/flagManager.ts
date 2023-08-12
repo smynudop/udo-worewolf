@@ -1,7 +1,7 @@
 import { PlayerManager } from "./playerManager"
 import { VillageDate } from "./villageDate"
 import { Log } from "./log"
-import { Status, TemporaryStatus, Abilities } from "./status"
+import { Status, TemporaryStatus, Abilities, PassiveAbilities } from "./status"
 
 export class FlagManager {
   players: PlayerManager
@@ -59,7 +59,7 @@ export class FlagManager {
       damy.status.add(TemporaryStatus.bitten)
       this.log.add("ability", "bite", { player: "狼", target: damy.cn })
 
-      for (const reiko of this.players.has(Status.knowdamy)) {
+      for (const reiko of this.players.has(PassiveAbilities.knowdamy)) {
         reiko.noticeDamy(damy)
       }
     }
@@ -72,9 +72,9 @@ export class FlagManager {
     if (!exec) return false
 
     for (const player of this.players.select((p) =>
-      p.status.can(Abilities.necro)
+      p.status.can(PassiveAbilities.necro)
     )) {
-      player.useAbility({ type: Abilities.necro, target: exec })
+      player.useAbility({ type: PassiveAbilities.necro, target: exec })
     }
   }
 

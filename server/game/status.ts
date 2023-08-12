@@ -2,9 +2,6 @@ export const Abilities = {
   /** 占い師の占い能力です。 */
   fortune: "fortune",
 
-  /** 霊能者の霊能能力です。 */
-  necro: "necro",
-
   /** 狩人の護衛能力です。 */
   guard: "guard",
 
@@ -13,8 +10,17 @@ export const Abilities = {
 
   /** 狼の襲撃能力 */
   bite: "bite",
-} as const satisfies Record<string, string>
+} as const
 export type IAbility = keyof typeof Abilities
+
+export const PassiveAbilities = {
+  /** 霊能者の霊能能力です。 */
+  necro: "necro",
+
+  /** 初日犠牲者の役職を知ることができる */
+  knowdamy: "knowdamy",
+} as const
+export type IPassiveAbilities = keyof typeof PassiveAbilities
 
 export const Status = {
   /** 占われると無惨死体になる */
@@ -38,12 +44,9 @@ export const Status = {
   /** 生存している妖狐がいなくなったとき、後追いする */
   fellowFox: "fellowFox",
 
-  /** 初日犠牲者の役職を知ることができる */
-  knowdamy: "knowdamy",
-
   /** 人狼に襲撃されても死なず、狼の襲撃対象から除外される */
   notBitten: "notBitten",
-} as const satisfies Record<string, string>
+} as const
 export type IStatus = keyof typeof Status
 
 export const TemporaryStatus = {
@@ -67,6 +70,6 @@ export const TemporaryStatus = {
 
   /** 襲撃された(bittenとどう違うんだっけ……) */
   eaten: "eaten",
-} as const satisfies Record<string, string>
+} as const
 
 export type ITemporaryuStatus = keyof typeof TemporaryStatus

@@ -1,4 +1,4 @@
-import { IStatus, IAbility } from "./status"
+import { IStatus, IAbility, IPassiveAbilities } from "./status"
 
 export class Job {
   /** 一位な名前です。 */
@@ -20,10 +20,11 @@ export class Job {
   knowFriend: string[]
   watch: string[]
   /** 能力を表します。 */
-  ability: IAbility[]
+  ability: IAbility[] = []
+  passiveAbility: IPassiveAbilities[] = []
   /** 受動的な能力を表します */
-  forever: IStatus[]
-  rival: string[]
+  forever: IStatus[] = []
+  rival: string[] = []
   winCond: string[]
 
   offShowJobDead: boolean
@@ -39,7 +40,6 @@ export class Job {
     this.offShowJobDead = false
     this.onlyNotDamy = false
 
-    this.ability = []
     this.knowFriend = []
     this.talk = []
     this.watch = []
@@ -71,7 +71,7 @@ class Necro extends Job {
     super("necro")
     this.nameja = "霊能者"
     this.desc = "前の日に処刑された人が、人狼かどうかがわかります。"
-    this.ability = ["necro"]
+    this.passiveAbility = ["necro"]
   }
 }
 
@@ -168,7 +168,8 @@ class NecroFox extends Job {
     this.species = "fox"
     this.onlyNotDamy = true
 
-    this.forever = ["melt", "resistBite", "knowdamy"]
+    this.forever = ["melt", "resistBite"]
+    this.passiveAbility = ["knowdamy"]
     this.knowFriend = ["fox"]
     this.talk = ["fox"]
   }

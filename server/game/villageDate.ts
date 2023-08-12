@@ -1,11 +1,12 @@
 import moment from "moment"
 
 import { Game } from "./game"
+import { IPhase, ITalkType } from "./constants"
 
 export class VillageDate {
   day: number
-  phase: string
-  phaseLimit: any
+  phase: IPhase
+  phaseLimit: string | null
   timerFlg: any
   game: Game
   isBanTalk: boolean
@@ -37,7 +38,7 @@ export class VillageDate {
     this.day++
   }
 
-  pass(phase: string) {
+  pass(phase: IPhase) {
     this.phase = phase
     if (phase == "day") {
       this.sunrise()
@@ -48,11 +49,11 @@ export class VillageDate {
     return { day: this.day, phase: this.phase }
   }
 
-  is(phase: string) {
+  is(phase: IPhase) {
     return phase == this.phase
   }
 
-  canTalk(type: string) {
+  canTalk(type: ITalkType): boolean {
     switch (type) {
       case "share":
       case "fox":
@@ -64,6 +65,8 @@ export class VillageDate {
       case "tweet":
         return ["day", "vote", "night", "ability"].includes(this.phase)
     }
+
+    return false
   }
 
   canVote() {
