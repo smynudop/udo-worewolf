@@ -1,3 +1,4 @@
+import { ISide, ISpecies } from "./constants"
 import { IStatus, IAbility, IPassiveAbilities } from "./status"
 
 export class Job {
@@ -6,9 +7,9 @@ export class Job {
   /** 日本語の役職名です。 */
   nameja: string
   /** 勝敗を決めるときの陣営を表します。 */
-  camp: "human" | "wolf" | "fox"
+  camp: ISide
   /** 終了判定などに使用する種族を表します。 */
-  species: "human" | "wolf" | "fox"
+  species: ISpecies
   /** 占いの結果です。 */
   fortuneResult: "村人" | "人狼"
   /** 霊能の結果です。 */

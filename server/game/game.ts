@@ -11,7 +11,7 @@ import SocketIO from "socket.io"
 import { GameNsManager } from "./GameNsManager"
 
 import moment from "moment"
-import { IPhase } from "./constants"
+import { IPhase, IResult } from "./constants"
 
 export type IChangePhaseInfo = {
   phase: IPhase
@@ -31,7 +31,7 @@ export class Game {
   players: PlayerManager
   flagManager: FlagManager
   leftVoteNum: number
-  win: string
+  win: IResult | null = null
 
   constructor(io: SocketIO.Namespace, data: IVillageSetting) {
     this.io = new GameNsManager(io)
@@ -45,8 +45,6 @@ export class Game {
     this.flagManager = new FlagManager(this.players)
 
     this.leftVoteNum = 4
-
-    this.win = ""
 
     this.log.add("system", "vinfo", { message: this.villageSetting.text() })
 
@@ -294,14 +292,14 @@ export class Game {
   }
 
   finish() {
-    const sides: { [k: string]: string } = {
+    const sides: { [k in IResult]: string } = {
       human: "村人",
       wolf: "人狼",
       fox: "妖狐",
       draw: "引き分け",
     }
     if (this.win != "draw") {
-      this.log.add("gameend", "win", { side: sides[this.win] })
+      this.log.add("gameend", "win", { side: sides[this.win!] })
     } else {
       this.log.add("gameend", "draw")
     }
@@ -338,7 +336,7 @@ export class Game {
     }
 
     for (const player of this.players) {
-      player.judgeWinOrLose(this.win)
+      player.judgeWinOrLose(this.win!)
     }
   }
 
