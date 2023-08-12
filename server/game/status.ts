@@ -1,11 +1,11 @@
 import { Player } from "./player"
 import { PlayerManager } from "./playerManager"
 import { VillageDate } from "./villageDate"
-import {Job} from "./cast"
-import {abilityInfo, talkInfo, ITalkDetail, IAbilityDetail, IAbilityType} from "./command"
+import { Job, JobName } from "./job"
+import { abilityInfo, talkInfo, ITalkDetail, IAbilityDetail, IAbilityType } from "./command"
 
 
-export interface IStatusForClient{
+export interface IStatusForClient {
     name: string
     nameja: string
     desc: string
@@ -16,7 +16,7 @@ export interface IStatusForClient{
     talkCommand: ITalkDetail[]
 }
 
-export interface IStatusAttribute{
+export interface IStatusAttribute {
     name: string
     limit: number
 }
@@ -34,7 +34,7 @@ export class Status {
     target: number | null
     vote: number | null
 
-    constructor(player:Player) {
+    constructor(player: Player) {
 
         this.job = new Job("damy")
 
@@ -79,7 +79,7 @@ export class Status {
             .filter((a) => a !== null) as IAbilityDetail[]
     }
 
-    talkCommand():ITalkDetail[] {
+    talkCommand(): ITalkDetail[] {
         let commands: ITalkDetail[] = []
         for (let type in talkInfo) {
             let t = talkInfo[type]
@@ -90,7 +90,7 @@ export class Status {
         return commands
     }
 
-    forClient():IStatusForClient {
+    forClient(): IStatusForClient {
         let desc = this.job.desc
             ? `あなたは【${this.job.nameja}】です。<br>${this.job.desc}${this.knowText}`
             : ""
@@ -106,15 +106,15 @@ export class Status {
         }
     }
 
-    set(job:Job) {
+    set(job: Job) {
         this.job = job
-        this.attributes = job.forever.map((a) => {return {name: a, limit: 999}})
+        this.attributes = job.forever.map((a) => { return { name: a, limit: 999 } })
     }
 
 
-    add(attr:string, player?:Player) {
+    add(attr: string, player?: Player) {
 
-        this.attributes.push({name:attr, limit: this.date.day})
+        this.attributes.push({ name: attr, limit: this.date.day })
 
         if (this.has("standoff") && attr == "bitten" && player) {
             player.status.add("stand")
@@ -125,15 +125,15 @@ export class Status {
         }
     }
 
-    except(attr:string) {
+    except(attr: string) {
         this.attributes = this.attributes.filter((a) => a.name != attr)
     }
 
-    can(ability:string) {
+    can(ability: string) {
         return this.job.ability.includes(ability)
     }
 
-    canTalk(type:string) {
+    canTalk(type: string) {
         switch (type) {
             case "share":
             case "fox":
@@ -152,23 +152,23 @@ export class Status {
         }
     }
 
-    canWatch(type:string) {
+    canWatch(type: string) {
         return this.job.talk.includes(type) || this.job.watch.includes(type)
     }
 
-    canKnow(job:string) {
+    canKnow(job: string) {
         return this.job.knowFriend.includes(job) || this.job.watch.includes(job) || this.job.talk.includes(job)
     }
 
-    has(attr:string) {
+    has(attr: string) {
         return this.attributes.some((a) => a.name == attr)
     }
 
-    hasnot(attr:string) {
+    hasnot(attr: string) {
         return !this.has(attr)
     }
 
-    winCondhas(attr:string) {
+    winCondhas(attr: string) {
         return this.job.winCond.includes(attr)
     }
 
@@ -181,7 +181,7 @@ export class Status {
         return result
     }
 
-    judgeWinOrLose(winSide:string) {
+    judgeWinOrLose(winSide: string) {
         let isWin = true
         if (this.winCondhas("winCamp") && this.job.camp != winSide) {
             isWin = false
