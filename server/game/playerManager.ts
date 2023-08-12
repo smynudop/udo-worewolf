@@ -5,13 +5,14 @@ import { castManager } from "./cast"
 import { Game } from "./game"
 import { IAbility } from "./status"
 
+const npcNames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
+
 export class PlayerManager {
     players: Record<number, Player>
     list: Player[]
     listAll: Player[]
     userid2no: Record<string, number>
     count: number
-    npcNames: string[]
     log: Log
     date: VillageDate
 
@@ -21,7 +22,6 @@ export class PlayerManager {
         this.listAll = []
         this.userid2no = {}
         this.count = 0
-        this.npcNames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
 
         this.log = game.log
         this.date = game.date
@@ -241,7 +241,7 @@ export class PlayerManager {
     }
 
     summonNPC() {
-        var cn = this.npcNames.shift()
+        var cn = npcNames.shift()
         this.add({
             userid: "damy-" + cn,
             socket: null,

@@ -1,7 +1,10 @@
 // 拡張メソッドの定義
 declare global {
     interface Array<T> {
+
+        /** 配列の中からランダムに1つ選んで返します。 **/
         lot(): T
+        /** 配列をシャッフルします。破壊的なメソッドです。 */
         shuffle(): void
     }
 }
