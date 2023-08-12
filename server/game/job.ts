@@ -1,16 +1,28 @@
+import { IStatus, IAbility } from "./status"
+
 export class Job {
+    /** 一位な名前です。 */
     name: string
+    /** 日本語の役職名です。 */
     nameja: string
-    camp: string
-    species: string
-    fortuneResult: string
-    necroResult: string
+    /** 勝敗を決めるときの陣営を表します。 */
+    camp: "human" | "wolf" | "fox"
+    /** 終了判定などに使用する種族を表します。 */
+    species: "human" | "wolf" | "fox"
+    /** 占いの結果です。 */
+    fortuneResult: "村人" | "人狼"
+    /** 霊能の結果です。 */
+    necroResult: "村人" | "人狼"
+    /** 役職の説明文 */
     desc: string
-    forever: string[]
+    /** 種類です。 */
     talk: string[]
     knowFriend: string[]
     watch: string[]
-    ability: string[]
+    /** 能力を表します。 */
+    ability: IAbility[]
+    /** 受動的な能力を表します */
+    forever: IStatus[]
     rival: string[]
     winCond: string[]
 

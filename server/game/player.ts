@@ -2,14 +2,15 @@ import { PlayerManager } from "./playerManager"
 import { PlayerSocket } from "./socket"
 import { Log } from "./log"
 import { VillageDate } from "./villageDate"
-import { IStatusForClient, Status } from "./status"
+import { IStatusForClient, StatusManager } from "./statusManager"
 
 import { User } from "../schema"
 import { messageOption } from "./messageTemplate"
 import { ITalkType } from "./command"
 import SocketIO from "socket.io"
+import { IAbility } from "./status"
 
-export interface IVisitorData{
+export interface IVisitorData {
     userid: string
     socket: SocketIO.Socket | null
 }
@@ -45,13 +46,13 @@ export class Visitor {
         this.socket.emit("enterSuccess", this.forClientDetail())
     }
 
-    talk(data:any) {}
+    talk(data: any) { }
 
-    vote(target:any) {}
+    vote(target: any) { }
 
-    update(data:any) {}
+    update(data: any) { }
 
-    useAbility(data:any, isAuto?: false) {}
+    useAbility(data: any, isAuto?: false) { }
 
     emitInitialLog() {
         var logs = this.log.initial(this)
@@ -65,18 +66,18 @@ interface voteData {
 
 interface abilityData {
     target: Player | number | string
-    type: string
+    type: IAbility
 }
 
-interface ITalkData{
-    cn:string,
-    color:string,
+interface ITalkData {
+    cn: string,
+    color: string,
     size: string,
     type: string,
     message: string
 }
 
-export interface IPlayerData{
+export interface IPlayerData {
     userid: string
     socket: SocketIO.Socket | null
 
@@ -92,7 +93,7 @@ export interface IPlayerData{
     trip?: string
 }
 
-export interface IPlayerforClient{
+export interface IPlayerforClient {
     type?: string
     no?: number
     userid: string
@@ -103,7 +104,7 @@ export interface IPlayerforClient{
     isGM?: boolean
     isKariGM?: boolean
     isAlive?: boolean
-    vote?:number | null
+    vote?: number | null
     ability?: number | null
     waitCall?: boolean
     isWatch?: boolean
@@ -124,9 +125,9 @@ export class Player extends Visitor {
     manager: PlayerManager
     log: Log
     date: VillageDate
-    status: Status
+    status: StatusManager
     socket: PlayerSocket
-    constructor(data:IPlayerData, manager:PlayerManager) {
+    constructor(data: IPlayerData, manager: PlayerManager) {
         super(data, manager)
         this.no = data.no === undefined ? 997 : data.no
         this.userid = data.userid || "null"
@@ -145,7 +146,7 @@ export class Player extends Visitor {
         this.log = manager.log
         this.date = manager.date
 
-        this.status = new Status(this)
+        this.status = new StatusManager(this)
         this.socket = new PlayerSocket(data.socket)
 
         this.getTrip()
@@ -185,27 +186,27 @@ export class Player extends Visitor {
         return this.status.isVote
     }
 
-    has(attr:string) {
+    has(attr: string) {
         return this.status.has(attr)
     }
 
-    hasnot(attr:string) {
+    hasnot(attr: string) {
         return this.status.hasnot(attr)
     }
 
-    winCondhas(attr:string) {
+    winCondhas(attr: string) {
         return this.status.winCondhas(attr)
     }
 
-    except(attr:string) {
+    except(attr: string) {
         this.status.except(attr)
     }
 
-    can(ability:string) {
+    can(ability: IAbility) {
         return this.status.can(ability)
     }
 
-    update(data:IPlayerData) {
+    update(data: IPlayerData) {
         var cn = data.cn || ""
         cn = cn.trim()
         if (cn.length == 0 || cn.length > 8) cn = ""
@@ -225,7 +226,7 @@ export class Player extends Visitor {
         }
     }
 
-    forClientDetail():IPlayerforClient {
+    forClientDetail(): IPlayerforClient {
         return {
             type: "detail",
             no: this.no,
@@ -247,7 +248,7 @@ export class Player extends Visitor {
         this.socket.emit("enterSuccess", this.forClientDetail())
     }
 
-    talk(data:ITalkData) {
+    talk(data: ITalkData) {
         if (data.type == "discuss" && this.date.isBanTalk) {
             this.log.add("system", "banTalk")
             this.socket.emit("banTalk")
@@ -296,7 +297,7 @@ export class Player extends Visitor {
         this.status.target = target.no
     }
 
-    kill(reason:string) {
+    kill(reason: string) {
         this.status.isAlive = false
         this.log.add("death", reason, {
             player: this.cn,
@@ -316,7 +317,7 @@ export class Player extends Visitor {
         this.status.target = null
     }
 
-    useAbility(data: abilityData, isAuto?:boolean) {
+    useAbility(data: abilityData, isAuto?: boolean) {
         isAuto = isAuto || false
 
         let target = this.pick(data.target)
@@ -360,7 +361,7 @@ export class Player extends Visitor {
         this.vote({ target: this.randomSelectTarget() })
     }
 
-    randomUseAbility(type: string) {
+    randomUseAbility(type: IAbility) {
         this.useAbility(
             {
                 type: type,
@@ -370,7 +371,7 @@ export class Player extends Visitor {
         )
     }
 
-    canTalkNow(data:Pick<ITalkData,"type">) {
+    canTalkNow(data: Pick<ITalkData, "type">) {
         if (this.isNull) return false
         let date = this.date
         let hasStatus = this.status.canTalk(data.type)
@@ -398,7 +399,7 @@ export class Player extends Visitor {
         return false
     }
 
-    canVote(data:voteData) {
+    canVote(data: voteData) {
         if (this.isNull) return false
 
         if (!this.date.canVote()) return false
@@ -410,7 +411,7 @@ export class Player extends Visitor {
         return true
     }
 
-    canUseAbility(data:abilityData) {
+    canUseAbility(data: abilityData) {
         if (this.isNull) return false
 
         if (!this.date.canUseAbility()) return false
@@ -448,7 +449,7 @@ export class Player extends Visitor {
         this.waitCall = false
     }
 
-    judgeWinOrLose(winSide:string) {
+    judgeWinOrLose(winSide: string) {
         let isWin = this.status.judgeWinOrLose(winSide)
         let result = isWin ? "win" : "lose"
         this.log.add("result", result, {

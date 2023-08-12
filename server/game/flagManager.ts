@@ -1,6 +1,7 @@
 import { PlayerManager } from "./playerManager"
 import { VillageDate } from "./villageDate"
 import { Log } from "./log"
+import { Status, TemporaryStatus, Abilities } from "./status"
 
 export class FlagManager {
     players: PlayerManager
@@ -55,21 +56,21 @@ export class FlagManager {
     useNightAbility() {
         if (this.date.day == 1) {
             var damy = this.players.damy()
-            damy.status.add("bitten")
+            damy.status.add(TemporaryStatus.bitten)
             this.log.add("ability", "bite", { player: "狼", target: damy.cn })
 
-            for (var reiko of this.players.has("knowdamy")) {
+            for (var reiko of this.players.has(Status.knowdamy)) {
                 reiko.noticeDamy(damy)
             }
         }
 
         if (this.date.day < 2) return false
 
-        let exec = this.players.selectAll((p) => p.has("executed"))[0]
+        let exec = this.players.selectAll((p) => p.has(TemporaryStatus.executed))[0]
         if (!exec) return false
 
-        for (var player of this.players.select((p) => p.status.can("necro"))) {
-            player.useAbility({ type: "necro", target: exec })
+        for (var player of this.players.select((p) => p.status.can(Abilities.necro))) {
+            player.useAbility({ type: Abilities.necro, target: exec })
         }
     }
 

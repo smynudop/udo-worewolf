@@ -3,6 +3,7 @@ import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { castManager } from "./cast"
 import { Game } from "./game"
+import { IAbility } from "./status"
 
 export class PlayerManager {
     players: Record<number, Player>
@@ -26,12 +27,12 @@ export class PlayerManager {
         this.date = game.date
     }
 
-    newVisitor(data:IVisitorData) {
+    newVisitor(data: IVisitorData) {
         let visitor = new Visitor(data, this)
         return visitor
     }
 
-    add(data:IPlayerData) {
+    add(data: IPlayerData) {
         var no = this.count
         data.no = no
         var p = new Player(data, this)
@@ -121,16 +122,16 @@ export class PlayerManager {
         return this.list.filter((p) => !p.isAlive)
     }
 
-    pick(id: number | string | Player):Player {
+    pick(id: number | string | Player): Player {
         if (typeof id == "number") {
             return this.players[id]
-        } else if (typeof id == "string"){
+        } else if (typeof id == "string") {
             if (isNaN(parseInt(id))) {
                 id = this.userid2no[id]
             } else {
                 id = parseInt(id)
             }
-    
+
             return this.players[id]
         } else {
             return id
@@ -153,7 +154,7 @@ export class PlayerManager {
             .lot()
     }
 
-    select(func: (p:Player) => boolean) {
+    select(func: (p: Player) => boolean) {
         return this.alive().filter((p) => func(p))
     }
 
@@ -161,12 +162,12 @@ export class PlayerManager {
         return this.alive().filter((p) => p.has(attr))
     }
 
-    selectAll(func: (p:Player) => boolean) {
+    selectAll(func: (p: Player) => boolean) {
         return this.list.filter((p) => func(p))
     }
 
     compileVote() {
-        var votes: Record<number,number> = {}
+        var votes: Record<number, number> = {}
         var table = `<table class="votesummary"><tbody>`
 
         for (var player of this.alive()) {
@@ -204,7 +205,7 @@ export class PlayerManager {
             .map((p) => p.cn)
             .join("、")
 
-        const texts:Record<string, string> = {
+        const texts: Record<string, string> = {
             wolf: "<br>【能力発動】人狼は" + wolf,
             share: "<br>【能力発動】共有者は" + share,
             fox: "<br>【能力発動】妖狐は" + fox,
@@ -286,13 +287,13 @@ export class PlayerManager {
         return this.alive().filter((p) => !p.isVote)
     }
 
-    savoAbility(ability: string) {
+    savoAbility(ability: IAbility) {
         return this.alive().filter((p) => !p.isUsedAbility && p.status.can(ability))
     }
 
-    makeTargets(type?:string):Record<number, string> {
+    makeTargets(type?: string): Record<number, string> {
         type = type || "alive"
-        var targets:Record<number, string> = {}
+        var targets: Record<number, string> = {}
         if (type == "alive") {
             for (var player of this.alive()) {
                 targets[player.no] = player.cn
