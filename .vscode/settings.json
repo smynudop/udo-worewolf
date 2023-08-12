@@ -1,7 +1,8 @@
 {
   "search.exclude": {
     "**/package-lock.json": true,
-    "build/*": true
+    "build/*": true,
+    "public/**/*.js": true
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

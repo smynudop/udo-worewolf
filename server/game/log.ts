@@ -6,6 +6,7 @@ import {
 } from "./messageTemplate"
 import { Visitor } from "./player"
 import { VillageDate } from "./villageDate"
+import { GameNsManager } from "./GameNsManager"
 
 export interface eachLog {
   target: string
@@ -25,15 +26,15 @@ export interface eachLog {
 
 export class Log {
   list: eachLog[]
-  nsp: SocketIO.Namespace
+  io: GameNsManager
   date: VillageDate
   count: number
 
   formatter: MessageFormat
 
-  constructor(nsp: SocketIO.Namespace, date: VillageDate) {
+  constructor(nsp: GameNsManager, date: VillageDate) {
     this.list = []
-    this.nsp = nsp
+    this.io = nsp
     this.date = date
     this.count = 1
 
@@ -51,7 +52,8 @@ export class Log {
     for (const log of this.list) {
       const canWatchAllLog = rooms.has("gm") || rooms.has("all")
       const isTarget = rooms.has(log.target)
-      const isPersonal = log.target == "personal" && rooms.has("player-" + log.no)
+      const isPersonal =
+        log.target == "personal" && rooms.has("player-" + log.no)
       const isGlobal = log.target == "all"
 
       if (canWatchAllLog || isTarget || isPersonal || isGlobal) {
@@ -102,26 +104,22 @@ export class Log {
 
     switch (log.target) {
       case "all":
-        this.nsp.emit("talk", log)
+        this.io.emit("talk", log)
         break
       case "wolf":
-        this.nsp.to("wolf").to("gm").to("all").emit("talk", log)
+        this.io.emitRoom("talk", log, "wolf")
         break
       case "personal":
-        this.nsp
-          .to("player-" + log.no)
-          .to("gm")
-          .to("all")
-          .emit("talk", log)
+        this.io.emitPersonal("talk", log, log.no!)
         break
       case "share":
-        this.nsp.to("share").to("gm").to("all").emit("talk", log)
+        this.io.emitRoom("talk", log, "share")
         break
       case "fox":
-        this.nsp.to("fox").to("gm").to("all").emit("talk", log)
+        this.io.emitRoom("talk", log, "fox")
         break
       case "grave":
-        this.nsp.to("grave").to("gm").to("all").emit("talk", log)
+        this.io.emitRoom("talk", log, "grave")
         break
     }
   }

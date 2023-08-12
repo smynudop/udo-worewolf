@@ -8,12 +8,22 @@ import { talkTemplate } from "./command"
 import { castManager } from "./cast"
 import { IVillageSetting, VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
+import { GameNsManager } from "./GameNsManager"
 
 import moment from "moment"
 import { IPhase } from "./constants"
 
+export type IChangePhaseInfo = {
+  phase: IPhase
+  left: number
+  nsec: number | null
+  targets: Record<number, string>
+  deathTargets: Record<number, string>
+  day: number
+}
+
 export class Game {
-  io: SocketIO.Namespace
+  io: GameNsManager
   villageSetting: VillageSetting
   isKariGM: boolean
   date: VillageDate
@@ -24,13 +34,13 @@ export class Game {
   win: string
 
   constructor(io: SocketIO.Namespace, data: IVillageSetting) {
-    this.io = io
+    this.io = new GameNsManager(io)
 
     this.villageSetting = new VillageSetting(data)
     this.isKariGM = data.kariGM || false
 
     this.date = new VillageDate(this)
-    this.log = new Log(io, this.date)
+    this.log = new Log(this.io, this.date)
     this.players = new PlayerManager(this)
     this.flagManager = new FlagManager(this.players)
 
@@ -83,7 +93,7 @@ export class Game {
       this.io.emit("player", this.players.forClientDetail())
     } else {
       this.io.emit("player", this.players.forClientSummary())
-      this.io.to("gm").to("all").emit("player", this.players.forClientDetail())
+      this.io.emitPlayer("player", this.players.forClientDetail())
     }
   }
 
@@ -332,7 +342,7 @@ export class Game {
     }
   }
 
-  emitChangePhase(phase: string) {
+  emitChangePhase(phase: IPhase) {
     const nsec =
       phase == "day" && this.villageSetting.time.nsec
         ? this.villageSetting.time.nsec
@@ -395,7 +405,7 @@ export class Game {
   }
 
   listen() {
-    this.io.on("connection", (socket: SocketIO.Socket) => {
+    this.io.listen((socket: SocketIO.Socket) => {
       // @ts-ignore
       const userid = socket.request.session.userid
       let player: Visitor
@@ -459,7 +469,7 @@ export class Game {
               biter.except("biter")
             }
 
-            this.io.to("wolf").emit("useAbilitySuccess")
+            this.io.emitRoom("useAbilitySuccess", true, "wolf")
             break
         }
         player.useAbility(data)
@@ -499,7 +509,7 @@ export class Game {
         this.fixInfo(data)
       })
     })
-    this.io.emit("refresh")
+    this.io.emit("refresh", true)
   }
 
   close() {

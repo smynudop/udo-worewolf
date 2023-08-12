@@ -93,22 +93,32 @@ export interface IPlayerData {
   trip?: string
 }
 
-export interface IPlayerforClient {
-  type?: string
-  no?: number
-  userid: string
-  trip?: string
-  cn?: string
-  color?: string
-  status?: IStatusForClient
-  isGM?: boolean
-  isKariGM?: boolean
-  isAlive?: boolean
-  vote?: number | null
-  ability?: number | null
-  waitCall?: boolean
-  isWatch?: boolean
+export type IPlayerForVisitor = {
+  type: "summary"
+  no: number
+  cn: string
+  color: string
+  isAlive: boolean
+  waitCall: boolean
 }
+
+export type IPlayerforPlayer = {
+  type: "detail"
+  no: number
+  userid: string
+  trip: string
+  cn: string
+  color: string
+  status: IStatusForClient
+  isGM: boolean
+  isKariGM: boolean
+  isAlive: boolean
+  vote: number | null
+  ability: number | null
+  waitCall: boolean
+}
+
+export type IPlayerForClient = IPlayerForVisitor | IPlayerforPlayer
 
 export class Player extends Visitor {
   no: number
@@ -215,7 +225,7 @@ export class Player extends Visitor {
     this.color = data.color || this.color
   }
 
-  forClientSummary() {
+  forClientSummary(): IPlayerForVisitor {
     return {
       type: "summary",
       no: this.no,
@@ -226,7 +236,7 @@ export class Player extends Visitor {
     }
   }
 
-  forClientDetail(): IPlayerforClient {
+  forClientDetail(): IPlayerforPlayer {
     return {
       type: "detail",
       no: this.no,
