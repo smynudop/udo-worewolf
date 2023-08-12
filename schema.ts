@@ -1,13 +1,38 @@
-var mongoose = require("mongoose")
-var Schema = mongoose.Schema
+import * as Mongoose from "mongoose"
 
-const u = new Schema({
+type IUser = {
+    userid: string,
+    password: string,
+    trip: string
+}
+
+export const UserSchema = new Mongoose.Schema<IUser>({
     userid: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     trip: String,
 })
 
-const g = new Schema({
+type ITime = {
+    day: number
+    vote: number
+    night: number
+    ability: number
+    nsec: number
+}
+
+type IGame = {
+    vno: number
+    name: string,
+    pr: string
+    casttype: string
+    time: ITime,
+    capacity: number,
+    GMid: string,
+    state: string,
+    kariGM: boolean
+}
+
+export const GameSchema = new Mongoose.Schema<IGame>({
     vno: { type: Number, required: true },
     name: { type: String, required: true },
     pr: { type: String, required: true },
@@ -24,8 +49,21 @@ const g = new Schema({
     state: { type: String },
     kariGM: { type: Boolean },
 })
+type IWordWolfTime = {
+    setWord: number
+    discuss: number
+    counter: number
+}
+type IWordWolf = {
+    vno: number
+    name: string
+    pr: string
+    time: IWordWolfTime
+    GMid: string
+    state: string
+}
 
-const w = new Schema({
+export const WordwolfSchema = new Mongoose.Schema<IWordWolf>({
     vno: { type: Number, required: true },
     name: { type: String, required: true },
     pr: { type: String, required: true },
@@ -38,6 +76,6 @@ const w = new Schema({
     state: { type: String },
 })
 
-export const User = mongoose.model("User", u)
-export const Game = mongoose.model("Game", g)
-export const Wordwolf = mongoose.model("Wordwolf", w)
+export const User = Mongoose.model("User", UserSchema)
+export const Game = Mongoose.model("Game", GameSchema)
+export const Wordwolf = Mongoose.model("Wordwolf", WordwolfSchema)

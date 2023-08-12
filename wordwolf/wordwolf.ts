@@ -1,12 +1,12 @@
-const moment = require("moment")
+import moment from "moment"
 
 import { ILog, Log } from "./word-log"
 import { User, Wordwolf as GameSchema } from "../schema"
 import { PlayerSocket } from "./socket"
 import type * as SocketIO from "socket.io"
 
-const fs = require("fs")
-const ejs = require("ejs")
+import fs from "fs"
+import ejs from "ejs"
 
 interface IPlayer {
     no?: number
@@ -748,7 +748,7 @@ export class GameIO {
     }
 
     static update(vno: number, data: any) {
-        GameSchema.updateOne({ vno: vno }, { $set: data }, (err: any) => {
+        GameSchema.updateOne({ vno: vno }, { $set: data }, undefined, (err: any) => {
             if (err) console.log(err)
         })
     }

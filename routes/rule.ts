@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 
 /* GET home page. */
 router.get("/rule", function (req, res, next) {
@@ -17,3 +17,5 @@ router.get("/prohibited", function (req, res, next) {
 router.get("/cast", function (req, res, next) {
     res.render("cast")
 })
+
+export default router

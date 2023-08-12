@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 
 import { Wordwolf as Game } from "../schema"
 
@@ -22,7 +22,7 @@ router.post("/", function (req, res, next) {
         var vno = 1
         var name = req.body.name
         var pr = req.body.pr
-        var time:Record<string, number> = {}
+        var time: Record<string, number> = {}
 
         if (!name || name.length >= 24 || name.length == 0) {
             res.render("makeWordroom", {
@@ -49,7 +49,7 @@ router.post("/", function (req, res, next) {
             }
         }
 
-        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err:any, data:any) {
+        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err: any, data: any) {
             if (err) console.log(err)
             if (data.length == 0) {
                 vno = 1
@@ -65,10 +65,12 @@ router.post("/", function (req, res, next) {
             game.time = time
             game.state = "recruit"
 
-            game.save(function (err:any) {
+            game.save(function (err: any) {
                 if (err) console.log(err)
                 res.redirect("./wordwolf")
             })
         })
     }
 })
+
+export default router

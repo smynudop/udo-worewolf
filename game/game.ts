@@ -9,7 +9,7 @@ import { castManager } from "./cast"
 import { IVillageSetting, VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
 
-const moment = require("moment")
+import moment from "moment"
 
 export class Game {
     io: SocketIO.Namespace
@@ -381,7 +381,7 @@ export class Game {
 
     listen() {
         this.io.on("connection", (socket: SocketIO.Socket) => {
-            //@ts-ignore
+            // @ts-ignore
             var userid = socket.request.session.userid
             var player: Visitor
 

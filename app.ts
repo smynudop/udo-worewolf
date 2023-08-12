@@ -1,38 +1,43 @@
-require('dotenv').config();
-var createError = require("http-errors")
+import dotenv from "dotenv"
+import createError from "http-errors";
 import express from "express"
-var path = require("path")
-var cookieParser = require("cookie-parser")
-var logger = require("morgan")
-var session = require("express-session")
-var mongoose = require("mongoose")
-var MongoStore = require("connect-mongo")
+import path from "path"
+import cookieParser from "cookie-parser"
+import session from "express-session"
+import { Mongoose } from "mongoose";
+import MongoStore from "connect-mongo"
+import { Server, Socket } from "socket.io"
 
-var array_proto = require("./array_proto")
-
-import { Server } from "socket.io"
-
-import { router as indexRouter } from "./routes/index"
-import { router as loginRouter } from "./routes/login"
-import { router as logoutRouter } from "./routes/logout"
-import { router as makeroomRouter } from "./routes/makeroom"
+// Router 
+import indexRouter from "./routes/index"
+import loginRouter from "./routes/login"
+import logoutRouter from "./routes/logout"
+import makeroomRouter from "./routes/makeroom"
 import worewolfRouter from "./routes/worewolf"
-import { router as ruleRouter } from "./routes/rule"
-import { router as oldRouter } from "./routes/old"
-import { router as registerRouter } from "./routes/register"
-import { router as mypageRouter } from "./routes/mypage"
+import ruleRouter from "./routes/rule"
+import oldRouter from "./routes/old"
+import registerRouter from "./routes/register"
+import mypageRouter from "./routes/mypage"
 
-import { router as makeWordroomRouter } from "./routes/makeWordroom"
-import { router as wordwolfRouter } from "./routes/wordwolf"
-import SocketIO from "socket.io"
+import makeWordroomRouter from "./routes/makeWordroom"
+import wordwolfRouter from "./routes/wordwolf"
 
-var app = express()
-var mongoURL
+import setArrayExtension from "./array_proto";
+
+import WoreWolf from "./game/worewolf"
+import { GameManager as Wordwolf } from "./wordwolf/wordwolf";
+setArrayExtension()
+
+dotenv.config()
+
+const app = express()
+let mongoURL: string
 if (process.env.NODE_ENV == "development") {
     mongoURL = "mongodb://localhost:27017/worewolf"
 } else {
-    mongoURL = process.env.MONGO_URL
+    mongoURL = process.env.MONGO_URL as string
 }
+const mongoose = new Mongoose()
 mongoose.set("useCreateIndex", true)
 mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
 
@@ -40,7 +45,6 @@ mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
 app.set("views", path.join(__dirname, "./views"))
 app.set("view engine", "ejs")
 
-app.use(logger("dev"))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
@@ -56,17 +60,16 @@ var sessionMiddleWare = session({
     },
 })
 app.use(sessionMiddleWare)
-
 // @ts-ignore
 app.mw = sessionMiddleWare
 
 
 const io = new Server()
-//  @ts-ignore
+// @ts-ignore
 app.io = io
 
-io.use(function (socket: SocketIO.Socket, next: any) {
-    //@ts-ignore
+io.use(function (socket: Socket, next: any) {
+    // @ts-ignore
     sessionMiddleWare(socket.request, socket.request.res, next)
 })
 
@@ -100,10 +103,7 @@ app.use(function (err: any, req: any, res: any, next: any) {
     res.render("error")
 })
 
-var Worewolf = require("./game/worewolf")
-var worewolfServer = new Worewolf(io)
-
-var Wordwolf = require("./wordwolf/wordwolf")
+var worewolfServer = new WoreWolf(io)
 var wordwolfServer = new Wordwolf(io)
 
 module.exports = app

@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -9,3 +9,5 @@ router.get("/", function (req, res, next) {
         res.render("index", { islogin: false })
     }
 })
+
+export default router

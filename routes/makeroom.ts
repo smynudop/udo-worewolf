@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 
 import { Game } from "../schema"
 
@@ -25,7 +25,7 @@ router.post("/", function (req, res, next) {
         var casttype = req.body.casttype
         var capacity = req.body.capacity
         var kariGM = req.body.kariGM == "1"
-        var time:Record<string,number> = {}
+        var time: Record<string, number> = {}
 
         if (!name || name.length >= 24 || name.length == 0) {
             res.render("makeroom", { userid: userid, error: "村名は24文字以内で入力してください" })
@@ -57,7 +57,7 @@ router.post("/", function (req, res, next) {
             }
         }
 
-        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err:any, data:any) {
+        Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }, function (err: any, data: any) {
             if (err) console.log(err)
             if (data.length == 0) {
                 vno = 1
@@ -76,10 +76,12 @@ router.post("/", function (req, res, next) {
             game.state = "recruit"
             game.kariGM = kariGM
 
-            game.save(function (err:any) {
+            game.save(function (err: any) {
                 if (err) console.log(err)
                 res.redirect("./worewolf")
             })
         })
     }
 })
+
+export default router

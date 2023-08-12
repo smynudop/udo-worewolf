@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 import { Wordwolf as Game } from "../schema"
 
 /* GET home page. */
@@ -9,7 +9,7 @@ router.get("/", function (req, res, next) {
         req.session.rd = "wordwolf"
         res.redirect("./login")
     } else {
-        Game.find({ state: { $ne: "logged" } }, function (err:any, result:any) {
+        Game.find({ state: { $ne: "logged" } }, function (err: any, result: any) {
             if (err) console.log(err)
             res.render("wordwolf_lobby", { result: result, userid: req.session.userid })
         })
@@ -21,8 +21,8 @@ router.get("/:vno", function (req, res, next) {
         req.session.rd = "wordwolf"
         res.redirect("./login")
     } else {
-        var vno = req.params.vno
-        Game.findOne({ vno: vno }, function (err:any, result:any) {
+        var vno = +(req.params.vno!)
+        Game.findOne({ vno: vno }, function (err: any, result: any) {
             if (err) console.log(err)
             if (!result) {
                 res.redirect("./")
@@ -36,3 +36,5 @@ router.get("/:vno", function (req, res, next) {
         })
     }
 })
+
+export default router

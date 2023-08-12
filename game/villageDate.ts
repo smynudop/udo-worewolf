@@ -1,4 +1,4 @@
-const moment = require("moment")
+import moment from "moment"
 
 import { Game } from "./game"
 
@@ -10,7 +10,7 @@ export class VillageDate {
     game: Game
     isBanTalk: boolean
 
-    constructor(game:Game) {
+    constructor(game: Game) {
         this.day = 1
         this.phase = "prologue"
         this.phaseLimit = null
@@ -19,7 +19,7 @@ export class VillageDate {
         this.game = game
     }
 
-    setLimit(sec:number) {
+    setLimit(sec: number) {
         this.phaseLimit = moment().add(sec, "seconds").format()
     }
 
@@ -35,7 +35,7 @@ export class VillageDate {
         this.day++
     }
 
-    pass(phase:string) {
+    pass(phase: string) {
         this.phase = phase
         if (phase == "day") {
             this.sunrise()
@@ -46,11 +46,11 @@ export class VillageDate {
         return { day: this.day, phase: this.phase }
     }
 
-    is(phase:string) {
+    is(phase: string) {
         return phase == this.phase
     }
 
-    canTalk(type:string) {
+    canTalk(type: string) {
         switch (type) {
             case "share":
             case "fox":
@@ -72,14 +72,14 @@ export class VillageDate {
         return this.is("night") || this.is("ability")
     }
 
-    setNsec(sec:number) {
+    setNsec(sec: number) {
         this.isBanTalk = true
         setTimeout(() => {
             this.isBanTalk = false
         }, sec * 1000)
     }
 
-    setTimer(nextPhase:string, sec:number) {
+    setTimer(nextPhase: string, sec: number) {
         this.clearTimer()
         this.timerFlg = setTimeout(() => {
             this.game.changePhase(nextPhase)

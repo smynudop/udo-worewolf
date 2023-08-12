@@ -3,9 +3,9 @@ import { Game } from "./game"
 import { GameIO } from "./gameIO"
 
 export class GameManager {
-    io:SocketIO.Server
+    io: SocketIO.Server
     games: number[]
-    constructor(io:SocketIO.Server) {
+    constructor(io: SocketIO.Server) {
         this.io = io
         this.games = []
         this.listen()
@@ -32,4 +32,4 @@ export class GameManager {
     }
 }
 
-module.exports = GameManager
+export default GameManager

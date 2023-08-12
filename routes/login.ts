@@ -1,5 +1,5 @@
 import * as Express from "express"
-export const router = Express.Router()
+const router = Express.Router()
 
 import { User } from "../schema"
 
@@ -11,7 +11,7 @@ router.post("/", function (req, res, next) {
     var userid = req.body.userid
     var password = req.body.password
 
-    User.find({ userid: userid }, function (err:any, result:any) {
+    User.find({ userid: userid }, function (err: any, result: any) {
         if (err) console.log(err)
 
         if (result.length == 0) {
@@ -20,7 +20,7 @@ router.post("/", function (req, res, next) {
             user.userid = userid
             user.password = password
 
-            user.save(function (err:any) {
+            user.save(function (err: any) {
                 if (err) console.log(err)
                 req.session.userid = userid
                 res.redirect("./")
@@ -43,3 +43,5 @@ router.post("/", function (req, res, next) {
 
     /*処理を書く*/
 })
+
+export default router
