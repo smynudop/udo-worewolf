@@ -6,7 +6,7 @@ import { VillageDate } from "./villageDate"
 import { GameIO } from "./gameIO"
 import { talkTemplate } from "./command"
 import { castManager } from "./cast"
-import {IVillageSetting, VillageSetting} from "./VillageSetting"
+import { IVillageSetting, VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
 
 const moment = require("moment")
@@ -22,7 +22,7 @@ export class Game {
     leftVoteNum: number
     win: string
 
-    constructor(io: SocketIO.Namespace, data:IVillageSetting) {
+    constructor(io: SocketIO.Namespace, data: IVillageSetting) {
         this.io = io
 
         this.villageSetting = new VillageSetting(data)
@@ -37,7 +37,7 @@ export class Game {
 
         this.win = ""
 
-        this.log.add("system", "vinfo", {message: this.villageSetting.text()})
+        this.log.add("system", "vinfo", { message: this.villageSetting.text() })
 
         this.players.summonDamy()
 
@@ -46,10 +46,10 @@ export class Game {
         this.listen()
     }
 
-    fixInfo(data:IVillageSetting) {
+    fixInfo(data: IVillageSetting) {
         this.villageSetting.update(data)
         GameIO.update(this.villageSetting.vno, data)
-        this.log.add("system", "vinfo", {message: this.villageSetting.text()})
+        this.log.add("system", "vinfo", { message: this.villageSetting.text() })
     }
 
     startRollcall() {
@@ -86,7 +86,7 @@ export class Game {
         }
     }
 
-    emitPlayer(socket:SocketIO.Socket) {
+    emitPlayer(socket: SocketIO.Socket) {
         if (!socket) return false
 
         if (this.date.is("epilogue")) {
@@ -204,7 +204,7 @@ export class Game {
         }
     }
 
-    changePhase(phase:string) {
+    changePhase(phase: string) {
         switch (phase) {
             case "night":
                 this.date.pass("vote")
@@ -335,7 +335,7 @@ export class Game {
         })
     }
 
-    emitInitialPhase(socket:SocketIO.Socket) {
+    emitInitialPhase(socket: SocketIO.Socket) {
         var time = this.date.leftSeconds()
         socket.emit("changePhase", {
             phase: this.date.phase,
@@ -380,7 +380,8 @@ export class Game {
     }
 
     listen() {
-        this.io.on("connection", (socket:SocketIO.Socket) => {
+        this.io.on("connection", (socket: SocketIO.Socket) => {
+            //@ts-ignore
             var userid = socket.request.session.userid
             var player: Visitor
 

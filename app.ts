@@ -1,6 +1,6 @@
 require('dotenv').config();
 var createError = require("http-errors")
-var express = require("express")
+import express from "express"
 var path = require("path")
 var cookieParser = require("cookie-parser")
 var logger = require("morgan")
@@ -10,13 +10,13 @@ var MongoStore = require("connect-mongo")
 
 var array_proto = require("./array_proto")
 
-var io = require("socket.io")()
+import { Server } from "socket.io"
 
 import { router as indexRouter } from "./routes/index"
 import { router as loginRouter } from "./routes/login"
 import { router as logoutRouter } from "./routes/logout"
 import { router as makeroomRouter } from "./routes/makeroom"
-import { router as worewolfRouter } from "./routes/worewolf"
+import worewolfRouter from "./routes/worewolf"
 import { router as ruleRouter } from "./routes/rule"
 import { router as oldRouter } from "./routes/old"
 import { router as registerRouter } from "./routes/register"
@@ -57,11 +57,16 @@ var sessionMiddleWare = session({
 })
 app.use(sessionMiddleWare)
 
+// @ts-ignore
 app.mw = sessionMiddleWare
 
+
+const io = new Server()
+//  @ts-ignore
 app.io = io
 
-io.use(function (socket:SocketIO.Socket, next:any){
+io.use(function (socket: SocketIO.Socket, next: any) {
+    //@ts-ignore
     sessionMiddleWare(socket.request, socket.request.res, next)
 })
 
@@ -80,12 +85,12 @@ app.use("/makeWordroom", makeWordroomRouter)
 app.use("/wordwolf", wordwolfRouter)
 
 // catch 404 and forward to error handler
-app.use(function (req:Express.Request, res:Express.Response, next:any) {
+app.use(function (req: Express.Request, res: Express.Response, next: any) {
     next(createError(404))
 })
 
 // error handler
-app.use(function (err:any, req:any, res:any, next:any) {
+app.use(function (err: any, req: any, res: any, next: any) {
     // set locals, only providing error in development
     res.locals.message = err.message
     res.locals.error = req.app.get("env") === "development" ? err : {}
