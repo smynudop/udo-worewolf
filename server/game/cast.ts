@@ -24,9 +24,9 @@ class CastType {
   toJobList(num: number): Job[] | undefined {
     if (!this.cast[num]) return undefined
 
-    let cast = this.cast[num]
+    const cast = this.cast[num]
 
-    let jobList: Job[] = []
+    const jobList: Job[] = []
     for (let job in cast) {
       for (let cnt = 0; cnt < cast[job]; cnt++) {
         if (/or/.test(job)) {
@@ -48,8 +48,8 @@ class CastType {
     if (!this.cast[num]) return ""
     const cast = this.cast[num]
 
-    let txts: string[] = []
-    for (let job in cast) {
+    const txts: string[] = []
+    for (const job in cast) {
       txts.push(`${job}${cast[job]}`)
     }
 
@@ -73,7 +73,7 @@ class CastManager {
   }
 
   makeObj() {
-    for (let casttype of this.list) {
+    for (const casttype of this.list) {
       this.abbr2cast[casttype.abbr] = casttype
     }
   }
@@ -91,9 +91,9 @@ class CastManager {
   }
 
   makeCastTxtAll(num: number) {
-    let txts: string[] = []
-    for (let casttype of this.list) {
-      let txt = casttype.castTxt(num)
+    const txts: string[] = []
+    for (const casttype of this.list) {
+      const txt = casttype.castTxt(num)
       if (txt) txts.push(txt)
     }
     return txts.join("<br/>")

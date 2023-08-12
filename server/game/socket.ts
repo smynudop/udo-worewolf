@@ -23,14 +23,14 @@ export class PlayerSocket {
   }
 
   leaveAll() {
-    for (var room of this.rooms) {
+    for (const room of this.rooms) {
       this.leave(room)
     }
   }
 
   updateSocket(socket: SocketIO.Socket) {
     this.socket = socket
-    for (var room of this.rooms) {
+    for (const room of this.rooms) {
       this.join(room)
     }
   }

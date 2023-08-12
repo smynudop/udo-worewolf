@@ -60,7 +60,7 @@ class Player {
   }
 
   async getTrip() {
-    let user = await User.findOne({ userid: this.userid }).exec()
+    const user = await User.findOne({ userid: this.userid }).exec()
     this.trip = user.trip
   }
 
@@ -186,11 +186,11 @@ class PlayerManager {
   }
 
   add(data: IPlayer) {
-    var no = this.count
+    const no = this.count
     data.no = no
-    var p = new Player(data, this)
+    const p = new Player(data, this)
 
-    var userid = data.userid
+    const userid = data.userid
 
     this.userid2no[userid] = no
     this.players[no] = p
@@ -205,8 +205,8 @@ class PlayerManager {
   }
 
   leave(userid: string) {
-    var id = this.pick(userid).no
-    var p = this.players[id]
+    const id = this.pick(userid).no
+    const p = this.players[id]
     p.socket.emit("leaveSuccess")
 
     this.log.add("leavePlayer", {
@@ -219,11 +219,11 @@ class PlayerManager {
 
   kick(target: number) {
     if (!(target in this.players)) return false
-    var p = this.pick(target)
+    const p = this.pick(target)
 
     if (p.isRM) return false
 
-    var userid = p.userid
+    const userid = p.userid
     p.socket.emit("leaveSuccess")
 
     this.log.add("kick", {
@@ -263,33 +263,33 @@ class PlayerManager {
   }
 
   reset() {
-    for (var player of this) {
+    for (const player of this) {
       player.reset()
     }
   }
 
   selectGM() {
     this.reset()
-    let gm = this.list.lot()
+    const gm = this.list.lot()
     gm.setJob("GM")
     this.log.add("selectGM", { gm: gm })
   }
 
   casting(wnum: number, vword: string, wword: string) {
-    let players = this.list.filter((p) => !p.isGM)
+    const players = this.list.filter((p) => !p.isGM)
     for (let cnt = 0; cnt < wnum; cnt++) {
-      let i = Math.floor(Math.random() * players.length)
+      const i = Math.floor(Math.random() * players.length)
       players[i].setJob("wolf")
       players.splice(i, 1)
     }
 
-    for (let player of players) {
+    for (const player of players) {
       if (!player.hasJob) player.setJob("villager")
     }
 
     this.log.add("discussStart")
 
-    for (let player of this.list) {
+    for (const player of this.list) {
       if (player.isVillager) {
         this.log.add("word", { word: vword, player: player })
       }
@@ -318,11 +318,11 @@ class PlayerManager {
   }
 
   compileVote() {
-    let gets = this.list.map((p) => p.vote.get)
+    const gets = this.list.map((p) => p.vote.get)
     console.log(gets)
-    let getmax = Math.max(...gets)
+    const getmax = Math.max(...gets)
 
-    let maxGetters = this.list.filter((p) => p.vote.get == getmax)
+    const maxGetters = this.list.filter((p) => p.vote.get == getmax)
     let exec: Player | null = maxGetters[0]
     if (maxGetters.length >= 2 || getmax == 0) {
       exec = null
@@ -333,12 +333,12 @@ class PlayerManager {
   }
 
   countVote() {
-    for (let player of this) {
+    for (const player of this) {
       player.vote.get = 0
     }
-    for (let player of this) {
+    for (const player of this) {
       if (player.vote.target === null) continue
-      let target = this.pick(player.vote.target)
+      const target = this.pick(player.vote.target)
       target.vote.get++
     }
   }
@@ -440,11 +440,11 @@ class Game {
   }
 
   fixPersonalInfo(player: Player, data: IPlayer) {
-    var cn = data.cn || ""
+    let cn = data.cn || ""
     cn = cn.trim()
     if (cn.length == 0 || cn.length > 8) cn = player.cn
 
-    var color = data.color || player.color
+    const color = data.color || player.color
 
     player.update(cn, color)
 
@@ -492,7 +492,7 @@ class Game {
     if (data.target === null) {
       player.cancelVote()
     } else {
-      var target = this.players.pick(data.target)
+      const target = this.players.pick(data.target)
       if (!target) return false
       player.changeVote(target)
     }
@@ -545,7 +545,7 @@ class Game {
   }
 
   compileVote() {
-    let result = this.players.compileVote()
+    const result = this.players.compileVote()
     if (result.exec) {
       this.log.add("exec", { player: result.exec })
       return result.exec.isWolf
@@ -576,8 +576,7 @@ class Game {
         this.emitPhase()
         break
       case "exec":
-        let isExecutionWolf = this.compileVote()
-        if (isExecutionWolf) {
+        if (this.compileVote()) {
           this.changePhase("counter")
           return false
         } else {
@@ -636,7 +635,7 @@ class Game {
   }
 
   emitPersonalData() {
-    for (var player of this.players) {
+    for (const player of this.players) {
       player.socket.emit("you", player.forClientDetail())
     }
   }
@@ -648,9 +647,9 @@ class Game {
   listen() {
     this.io.on("connection", (socket: SocketIO.Socket) => {
       //@ts-ignore
-      var session = socket.request.session
-      var userid = session.userid
-      var player: Player | null = null
+      const session = socket.request.session
+      const userid = session.userid
+      let player: Player | null = null
 
       this.emitPlayer()
 
@@ -794,21 +793,20 @@ export class GameManager {
 
   listen() {
     console.log("listen!")
-    var mgr = this
 
-    var rd = this.io
+    const rd = this.io
       .of(/^\/wordroom-\d+$/)
-      .on("connect", async function (socket: SocketIO.Socket) {
-        var nsp = socket.nsp
-        var vno = +nsp.name.match(/\d+/)![0]
-        if (mgr.games.includes(vno)) return false
+      .on("connect", async (socket: SocketIO.Socket) => {
+        const nsp = socket.nsp
+        const vno = +nsp.name.match(/\d+/)![0]
+        if (this.games.includes(vno)) return false
 
-        mgr.games.push(vno)
+        this.games.push(vno)
 
-        var result = await GameIO.find(vno)
+        const result = await GameIO.find(vno)
 
         if (result) {
-          var village = new Game(nsp, result)
+          const village = new Game(nsp, result)
           village.listen()
           console.log("listen room-" + vno)
         }

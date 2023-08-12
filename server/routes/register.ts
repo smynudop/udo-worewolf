@@ -9,8 +9,8 @@ router.get("/", function (req, res, next) {
 })
 
 router.post("/", function (req, res, next) {
-  var userid = req.body.userid.trim()
-  var password = req.body.password.trim()
+  const userid = req.body.userid.trim()
+  const password = req.body.password.trim()
 
   if (!/^[^\d\s]\S+$/.test(userid)) {
     res.render("register", { error: "IDが不正です" })
@@ -26,7 +26,7 @@ router.post("/", function (req, res, next) {
     if (err) console.log(err)
 
     if (result.length == 0) {
-      var user = new User()
+      const user = new User()
 
       user.userid = userid
       user.password = password

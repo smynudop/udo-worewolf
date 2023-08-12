@@ -14,25 +14,25 @@ export class FlagManager {
   }
 
   reset() {
-    for (var player of this.players) {
+    for (const player of this.players) {
       player.reset()
     }
   }
 
   updateStatus() {
-    for (let player of this.players) {
+    for (const player of this.players) {
       player.status.update()
     }
   }
 
   resetVote() {
-    for (var player of this.players) {
+    for (const player of this.players) {
       player.status.vote = null
     }
   }
 
   npcVote() {
-    for (var npc of this.players.NPC()) {
+    for (const npc of this.players.NPC()) {
       npc.randomVote()
     }
   }
@@ -55,21 +55,23 @@ export class FlagManager {
 
   useNightAbility() {
     if (this.date.day == 1) {
-      var damy = this.players.damy()
+      const damy = this.players.damy()
       damy.status.add(TemporaryStatus.bitten)
       this.log.add("ability", "bite", { player: "狼", target: damy.cn })
 
-      for (var reiko of this.players.has(Status.knowdamy)) {
+      for (const reiko of this.players.has(Status.knowdamy)) {
         reiko.noticeDamy(damy)
       }
     }
 
     if (this.date.day < 2) return false
 
-    let exec = this.players.selectAll((p) => p.has(TemporaryStatus.executed))[0]
+    const exec = this.players.selectAll((p) =>
+      p.has(TemporaryStatus.executed)
+    )[0]
     if (!exec) return false
 
-    for (var player of this.players.select((p) =>
+    for (const player of this.players.select((p) =>
       p.status.can(Abilities.necro)
     )) {
       player.useAbility({ type: Abilities.necro, target: exec })
@@ -77,28 +79,28 @@ export class FlagManager {
   }
 
   execution() {
-    for (let player of this.players.has("maxVoted")) {
+    for (const player of this.players.has("maxVoted")) {
       player.kill("exec")
       player.status.add("executed")
     }
   }
 
   killStandoff() {
-    for (let player of this.players.has("stand")) {
+    for (const player of this.players.has("stand")) {
       player.kill("standoff")
     }
   }
 
   fellow() {
     if (this.players.isDeadAllFox()) {
-      for (var imo of this.players.has("fellowFox")) {
+      for (const imo of this.players.has("fellowFox")) {
         imo.kill("fellow")
       }
     }
   }
 
   killStand() {
-    for (var stand of this.players.has("stand")) {
+    for (const stand of this.players.has("stand")) {
       stand.kill("bite")
     }
   }
@@ -106,63 +108,63 @@ export class FlagManager {
   autoUseAbility() {
     /*自動噛み処理*/
 
-    let biter = this.players.has("biter")
+    const biter = this.players.has("biter")
     if (!biter.length && this.date.day >= 2) {
-      var autobiter = this.players.select((p) => p.status.can("bite")).lot()
-      var target = this.players.select((p) => !p.status.can("bite")).lot()
+      const autobiter = this.players.select((p) => p.status.can("bite")).lot()
+      const target = this.players.select((p) => !p.status.can("bite")).lot()
 
       autobiter.useAbility({ type: "bite", target: target }, true)
     }
 
     /*自動占い*/
-    for (var player of this.players.savoAbility("fortune")) {
+    for (const player of this.players.savoAbility("fortune")) {
       player.randomUseAbility("fortune")
     }
 
     /*自動護衛*/
     if (this.date.day < 2) return false
 
-    for (var player of this.players.savoAbility("guard")) {
+    for (const player of this.players.savoAbility("guard")) {
       player.randomUseAbility("guard")
     }
   }
 
   guard() {
     if (this.date.day >= 2) {
-      for (var player of this.players.select((p) => p.status.can("guard"))) {
-        var target = this.players.pick(player.status.target!)
+      for (const player of this.players.select((p) => p.status.can("guard"))) {
+        const target = this.players.pick(player.status.target!)
         target.status.add("guarded")
       }
     }
   }
 
   revive() {
-    for (let player of this.players.select((p) => p.status.can("revive"))) {
+    for (const player of this.players.select((p) => p.status.can("revive"))) {
       if (!player.isUsedAbility) continue
 
-      let target = this.players.pick(player.status.target!)
-      let threshold = target.isDamy ? 50 : 30
+      const target = this.players.pick(player.status.target!)
+      const threshold = target.isDamy ? 50 : 30
       if (Math.floor(Math.random() * 100) < threshold) {
         target.status.add("revive")
       }
     }
 
-    for (let player of this.players.has("revive")) {
+    for (const player of this.players.has("revive")) {
       player.revive()
     }
   }
 
   attack() {
-    for (let player of this.players.has("biter")) {
-      let target = this.players.pick(player.status.target!)
+    for (const player of this.players.has("biter")) {
+      const target = this.players.pick(player.status.target!)
       target.status.add("bitten", player)
     }
 
-    for (let player of this.players.has("bitten")) {
+    for (const player of this.players.has("bitten")) {
       if (player.has("guarded") || player.has("resistBite")) continue
 
       if (player.has("useDecoy") && player.status.hasAliveDecoy) {
-        for (let decoy of this.players.select(
+        for (const decoy of this.players.select(
           (p) => p.status.job.name == "slave"
         )) {
           decoy.status.add("stand")
@@ -173,31 +175,31 @@ export class FlagManager {
       player.status.add("eaten")
     }
 
-    for (var fortune of this.players.select((p) => p.can("fortune"))) {
-      var target = this.players.pick(fortune.status.target!)
+    for (const fortune of this.players.select((p) => p.can("fortune"))) {
+      const target = this.players.pick(fortune.status.target!)
       target.status.add("fortuned")
     }
 
-    for (var fortuned of this.players.has("fortuned")) {
+    for (const fortuned of this.players.has("fortuned")) {
       if (fortuned.has("melt")) {
         fortuned.status.add("eaten")
       }
     }
 
-    for (var eaten of this.players.has("eaten")) {
+    for (const eaten of this.players.has("eaten")) {
       eaten.kill("bite")
     }
   }
   startRollcall() {
-    for (let player of this.players) {
+    for (const player of this.players) {
       if (player.isBot) continue
       player.startRollcall()
     }
   }
 
   assignRoom(isShowJobDead: boolean) {
-    for (let player of this.players.listAll) {
-      var socket = player.socket
+    for (const player of this.players.listAll) {
+      const socket = player.socket
 
       socket.join("player-" + player.no)
 

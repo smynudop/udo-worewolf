@@ -50,7 +50,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, "./public")))
 
-var sessionMiddleWare = session({
+const sessionMiddleWare = session({
   secret: "udo",
   resave: false,
   saveUninitialized: false,
@@ -102,7 +102,7 @@ app.use(function (err: any, req: any, res: any, next: any) {
   res.render("error")
 })
 
-var worewolfServer = new WoreWolf(io)
-var wordwolfServer = new Wordwolf(io)
+const worewolfServer = new WoreWolf(io)
+const wordwolfServer = new Wordwolf(io)
 
 module.exports = app

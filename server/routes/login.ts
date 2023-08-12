@@ -8,14 +8,14 @@ router.get("/", function (req, res, next) {
 })
 
 router.post("/", function (req, res, next) {
-  var userid = req.body.userid
-  var password = req.body.password
+  const userid = req.body.userid
+  const password = req.body.password
 
   User.find({ userid: userid }, function (err: any, result: any) {
     if (err) console.log(err)
 
     if (result.length == 0) {
-      var user = new User()
+      const user = new User()
 
       user.userid = userid
       user.password = password
@@ -28,7 +28,7 @@ router.post("/", function (req, res, next) {
     } else {
       if (password == result[0].password) {
         req.session.userid = userid
-        var rd = req.session.rd
+        const rd = req.session.rd
         if (rd) {
           req.session.rd = undefined
           res.redirect("./" + rd)

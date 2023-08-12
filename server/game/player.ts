@@ -55,7 +55,7 @@ export class Visitor {
   useAbility(data: any, isAuto?: false) {}
 
   emitInitialLog() {
-    var logs = this.log.initial(this)
+    const logs = this.log.initial(this)
     this.socket.emit("initialLog", logs)
   }
 }
@@ -154,7 +154,7 @@ export class Player extends Visitor {
 
   async getTrip() {
     if (this.isBot) return false
-    let user = await User.findOne({ userid: this.userid }).exec()
+    const user = await User.findOne({ userid: this.userid }).exec()
     this.trip = user.trip
   }
 
@@ -207,7 +207,7 @@ export class Player extends Visitor {
   }
 
   update(data: IPlayerData) {
-    var cn = data.cn || ""
+    let cn = data.cn || ""
     cn = cn.trim()
     if (cn.length == 0 || cn.length > 8) cn = ""
 
@@ -262,7 +262,7 @@ export class Player extends Visitor {
     data.cn = this.cn
     data.color = this.color
 
-    let option: messageOption = {
+    const option: messageOption = {
       cn: this.cn,
       color: this.color,
       size: data.size,
@@ -274,7 +274,7 @@ export class Player extends Visitor {
   }
 
   vote(data: voteData) {
-    var target = this.pick(data.target)
+    const target = this.pick(data.target)
 
     if (this.status.vote == target.no) return
     this.status.vote = target.no
@@ -320,7 +320,7 @@ export class Player extends Visitor {
   useAbility(data: abilityData, isAuto?: boolean) {
     isAuto = isAuto || false
 
-    let target = this.pick(data.target)
+    const target = this.pick(data.target)
 
     this.setTarget(target)
     this.log.add("ability", data.type, {
@@ -373,8 +373,8 @@ export class Player extends Visitor {
 
   canTalkNow(data: Pick<ITalkData, "type">) {
     if (this.isNull) return false
-    let date = this.date
-    let hasStatus = this.status.canTalk(data.type)
+    const date = this.date
+    const hasStatus = this.status.canTalk(data.type)
 
     switch (data.type) {
       case "discuss":
@@ -416,7 +416,7 @@ export class Player extends Visitor {
 
     if (!this.date.canUseAbility()) return false
 
-    var target = this.manager.pick(data.target)
+    const target = this.manager.pick(data.target)
     if (!target) return false
 
     if (!this.status.can(data.type)) return false
@@ -450,8 +450,8 @@ export class Player extends Visitor {
   }
 
   judgeWinOrLose(winSide: string) {
-    let isWin = this.status.judgeWinOrLose(winSide)
-    let result = isWin ? "win" : "lose"
+    const isWin = this.status.judgeWinOrLose(winSide)
+    const result = isWin ? "win" : "lose"
     this.log.add("result", result, {
       player: this.cn,
     })

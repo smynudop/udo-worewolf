@@ -83,7 +83,7 @@ export class StatusManager {
   command(): IAbilityDetail[] {
     return this.job.ability
       .map((a) => {
-        let info = abilityInfo[a as keyof typeof abilityInfo]
+        const info = abilityInfo[a as keyof typeof abilityInfo]
         if (!info) return null
         info.target = this.player.manager.makeTargets(info.targetType)
         return info
@@ -92,9 +92,9 @@ export class StatusManager {
   }
 
   talkCommand(): ITalkDetail[] {
-    let commands: ITalkDetail[] = []
-    for (let type in talkInfo) {
-      let t = talkInfo[type]
+    const commands: ITalkDetail[] = []
+    for (const type in talkInfo) {
+      const t = talkInfo[type]
       if (this.player.canTalkNow({ type: type })) {
         commands.push(t)
       }
@@ -103,7 +103,7 @@ export class StatusManager {
   }
 
   forClient(): IStatusForClient {
-    let desc = this.job.desc
+    const desc = this.job.desc
       ? `あなたは【${this.job.nameja}】です。<br>${this.job.desc}${this.knowText}`
       : ""
     return {
@@ -132,7 +132,7 @@ export class StatusManager {
       player.status.add("stand")
     }
     if (this.has("standoff") && attr == "maxVoted") {
-      let s = this.player.randomSelectTarget()
+      const s = this.player.randomSelectTarget()
       s.status.add("stand")
     }
   }
@@ -193,7 +193,7 @@ export class StatusManager {
   }
 
   isDeadRival() {
-    let result = this.job.rival.every((rival) =>
+    const result = this.job.rival.every((rival) =>
       this.playerManager.isDeadAllJob(rival)
     )
     return result

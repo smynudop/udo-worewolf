@@ -63,9 +63,9 @@ export class Game {
   }
 
   npcTalk() {
-    for (var player of this.players.NPC()) {
-      let talkType = this.date.is("day") ? "discuss" : player.nightTalkType()
-      var data = {
+    for (const player of this.players.NPC()) {
+      const talkType = this.date.is("day") ? "discuss" : player.nightTalkType()
+      const data = {
         no: player.no,
         cn: player.cn,
         color: player.color,
@@ -113,21 +113,21 @@ export class Game {
   }
 
   casting() {
-    var castlist = castManager.jobList(
+    const castlist = castManager.jobList(
       this.villageSetting.casttype,
       this.players.num
     )
     if (!castlist) return false
 
     for (let i = 0; i < this.players.num; i++) {
-      let player = this.players.list[i]
+      const player = this.players.list[i]
       player.status.set(castlist[i])
     }
 
     this.assignRoom()
     this.players.setKnow()
 
-    var txt = castManager.makeCastTxt(
+    const txt = castManager.makeCastTxt(
       this.villageSetting.casttype,
       this.players.num
     )
@@ -137,14 +137,14 @@ export class Game {
   checkCast() {
     if (!this.canStart()) return false
 
-    var txt = castManager.makeCastTxtAll(this.players.num)
+    const txt = castManager.makeCastTxtAll(this.players.num)
     if (!txt) return false
     this.log.add("system", "info", { message: txt })
   }
 
   endCheck() {
-    var alives = this.players.numBySpecies()
-    var human = alives.human,
+    const alives = this.players.numBySpecies()
+    const human = alives.human,
       wolf = alives.wolf,
       fox = alives.fox
 
@@ -169,11 +169,11 @@ export class Game {
   compileVote() {
     if (this.date.day == 1) return true
 
-    for (var player of this.players.savoVote()) {
+    for (const player of this.players.savoVote()) {
       player.randomVote()
     }
 
-    var voteResult = this.players.compileVote()
+    const voteResult = this.players.compileVote()
 
     this.log.add("vote", "summary", {
       message: voteResult.table,
@@ -215,7 +215,7 @@ export class Game {
       case "night":
         this.date.pass("vote")
 
-        let isExec = this.compileVote()
+        const isExec = this.compileVote()
         if (!isExec) {
           this.changePhase("revote")
           return false
@@ -284,7 +284,7 @@ export class Game {
   }
 
   finish() {
-    var sides: { [k: string]: string } = {
+    const sides: { [k: string]: string } = {
       human: "村人",
       wolf: "人狼",
       fox: "妖狐",
@@ -308,7 +308,7 @@ export class Game {
 
     GameIO.update(this.villageSetting.vno, { state: "finish" })
 
-    var logtime = moment().add(10, "minute").format("YYYY/MM/DD HH:mm:ss")
+    const logtime = moment().add(10, "minute").format("YYYY/MM/DD HH:mm:ss")
     this.log.add("system", "loggedDate", { message: logtime })
 
     setTimeout(
@@ -321,19 +321,19 @@ export class Game {
 
   emitResult() {
     if (this.win == "draw") {
-      for (let player of this.players) {
+      for (const player of this.players) {
         this.log.add("result", "draw", { player: player.cn })
       }
       return false
     }
 
-    for (let player of this.players) {
+    for (const player of this.players) {
       player.judgeWinOrLose(this.win)
     }
   }
 
   emitChangePhase(phase: string) {
-    var nsec =
+    const nsec =
       phase == "day" && this.villageSetting.time.nsec
         ? this.villageSetting.time.nsec
         : null
@@ -348,7 +348,7 @@ export class Game {
   }
 
   emitInitialPhase(socket: SocketIO.Socket) {
-    var time = this.date.leftSeconds()
+    const time = this.date.leftSeconds()
     socket.emit("changePhase", {
       phase: this.date.phase,
       left: time,
@@ -359,13 +359,13 @@ export class Game {
   }
 
   emitPersonalData() {
-    for (var player of this.players.listAll) {
+    for (const player of this.players.listAll) {
       player.socket.emit("you", player.forClientDetail())
     }
   }
 
   pass(phase: string) {
-    var next = {
+    const next = {
       day: "vote",
       vote: "night",
       night: "ability",
@@ -397,8 +397,8 @@ export class Game {
   listen() {
     this.io.on("connection", (socket: SocketIO.Socket) => {
       // @ts-ignore
-      var userid = socket.request.session.userid
-      var player: Visitor
+      const userid = socket.request.session.userid
+      let player: Visitor
 
       this.emitPlayer(socket)
 
@@ -412,7 +412,7 @@ export class Game {
 
         this.emitPlayerAll()
       } else {
-        let data = { userid: userid, socket: socket }
+        const data = { userid: userid, socket: socket }
         player = this.players.newVisitor(data)
       }
 
@@ -455,7 +455,7 @@ export class Game {
       socket.on("ability", (data) => {
         switch (data.type) {
           case "bite":
-            for (var biter of this.players.has("biter")) {
+            for (const biter of this.players.has("biter")) {
               biter.except("biter")
             }
 

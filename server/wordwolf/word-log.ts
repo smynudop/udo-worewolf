@@ -38,7 +38,7 @@ export class Log {
   }
 
   add(type: string, option?: any) {
-    var data: ILog = {
+    let data: ILog = {
       type: "system",
       message: "このメッセージが出ている場合は分岐に失敗しています",
     }

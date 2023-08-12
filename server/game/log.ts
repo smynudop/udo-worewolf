@@ -45,14 +45,14 @@ export class Log {
   }
 
   initial(visitor: Visitor) {
-    var logs: eachLog[] = []
-    var rooms = visitor.socket.rooms
+    const logs: eachLog[] = []
+    const rooms = visitor.socket.rooms
 
-    for (var log of this.list) {
-      let canWatchAllLog = rooms.has("gm") || rooms.has("all")
-      let isTarget = rooms.has(log.target)
-      let isPersonal = log.target == "personal" && rooms.has("player-" + log.no)
-      let isGlobal = log.target == "all"
+    for (const log of this.list) {
+      const canWatchAllLog = rooms.has("gm") || rooms.has("all")
+      const isTarget = rooms.has(log.target)
+      const isPersonal = log.target == "personal" && rooms.has("player-" + log.no)
+      const isGlobal = log.target == "all"
 
       if (canWatchAllLog || isTarget || isPersonal || isGlobal) {
         logs.push(log)
@@ -67,7 +67,7 @@ export class Log {
   }
 
   quoteDiscuss(anchor: string) {
-    var logs = this.list.filter((log) => log.anchor == anchor)
+    const logs = this.list.filter((log) => log.anchor == anchor)
     return logs.length ? logs[0] : null
   }
 
@@ -76,7 +76,7 @@ export class Log {
     txt = txt.replace(/&gt;&gt;\d{1,2}-\d{1,3}/g, (match: string) => {
       if (cnt >= num) return match
       cnt++
-      var q = this.quoteDiscuss(match)
+      const q = this.quoteDiscuss(match)
       return q ? q.quote : match
     })
     return txt
@@ -87,7 +87,7 @@ export class Log {
     detail: string,
     option: messageOption = {}
   ) {
-    let log: eachLog = this.formatter.makeLog(type, detail, option)
+    const log: eachLog = this.formatter.makeLog(type, detail, option)
 
     if (log.type == "talk" && log.class == "discuss") {
       log.resno = this.count

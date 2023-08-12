@@ -18,11 +18,11 @@ router.post("/", function (req, res, next) {
     req.session.rd = "makeWordroom"
     res.redirect("./login")
   } else {
-    var userid = req.session.userid
-    var vno = 1
-    var name = req.body.name
-    var pr = req.body.pr
-    var time: Record<string, number> = {}
+    const userid = req.session.userid
+    let vno = 1
+    let name = req.body.name
+    let pr = req.body.pr
+    const time: Record<string, number> = {}
 
     if (!name || name.length >= 24 || name.length == 0) {
       res.render("makeWordroom", {
@@ -40,7 +40,7 @@ router.post("/", function (req, res, next) {
       pr = "PR文が設定されていません"
     }
 
-    for (var t of ["setWord", "discuss", "counter"]) {
+    for (const t of ["setWord", "discuss", "counter"]) {
       if (!req.body[t] || req.body[t] - 0 > 600) {
         res.render("makeWordroom", { userid: userid, error: "時間が不正です" })
         return false
@@ -62,7 +62,7 @@ router.post("/", function (req, res, next) {
         }
       }
     ).then(() => {
-      var game = new Game()
+      const game = new Game()
       game.vno = vno
       game.name = name
       game.pr = pr

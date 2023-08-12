@@ -13,21 +13,20 @@ export class GameManager {
 
   listen() {
     console.log("listen!")
-    var mgr = this
 
-    var rd = this.io
+    const rd = this.io
       .of(/^\/room-\d+$/)
-      .on("connect", async function (socket: SocketIO.Socket) {
-        var nsp = socket.nsp
-        var vno = +nsp.name.match(/\d+/)![0]
-        if (mgr.games.includes(vno)) return false
+      .on("connect", async (socket: SocketIO.Socket) => {
+        const nsp = socket.nsp
+        const vno = +nsp.name.match(/\d+/)![0]
+        if (this.games.includes(vno)) return false
 
-        mgr.games.push(vno)
+        this.games.push(vno)
 
-        var result = await GameIO.find(vno)
+        const result = await GameIO.find(vno)
 
         if (result) {
-          var village = new Game(nsp, result)
+          const village = new Game(nsp, result)
           console.log("listen room-" + vno)
         }
       })

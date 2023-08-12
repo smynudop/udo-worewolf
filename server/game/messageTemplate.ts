@@ -124,7 +124,7 @@ export class MessageFormat {
       option.input = this.htmlEscape(option.input)
     }
 
-    message = message.replace(/\{([^\}]+?)\}/g, function (match, key: string) {
+    message = message.replace(/\{([^}]+?)\}/g, function (match, key: string) {
       if (key in option) {
         return option[key as keyof typeof option] as string
       } else {
@@ -185,14 +185,14 @@ export class MessageFormat {
   }
 
   makeLog(type: messageType, detail: string, option: messageOption) {
-    let target = this.findTarget(type, detail)
-    let messageType = this.findType(type)
-    let cl = this.findClass(type, detail)
-    let message = this.format(type, detail, option)
+    const target = this.findTarget(type, detail)
+    const messageType = this.findType(type)
+    const cl = this.findClass(type, detail)
+    const message = this.format(type, detail, option)
 
-    let no = option.no === undefined ? 999 : option.no
+    const no = option.no === undefined ? 999 : option.no
 
-    let log: eachLog = {
+    const log: eachLog = {
       target: target,
       type: messageType,
       class: cl,

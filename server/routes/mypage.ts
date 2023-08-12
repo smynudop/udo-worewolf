@@ -10,7 +10,7 @@ router.use("/", async function (req, res, next) {
     req.session.rd = "mypage"
     res.redirect("./login")
   } else {
-    let user = await User.findOne({ userid: req.session.userid }).exec()
+    const user = await User.findOne({ userid: req.session.userid }).exec()
     req.user = user
     next()
   }
@@ -22,7 +22,7 @@ router.get("/", async function (req, res, next) {
 })
 
 router.post("/set_trip", function (req, res, next) {
-  let trip = "◆" + tripcode(req.body.key)
+  const trip = "◆" + tripcode(req.body.key)
   User.updateOne(
     { userid: req.session.userid },
     { $set: { trip: trip } },
@@ -35,8 +35,8 @@ router.post("/set_trip", function (req, res, next) {
 })
 
 router.post("/change_password", function (req, res, next) {
-  let new1 = req.body.new
-  let new2 = req.body.new2
+  const new1 = req.body.new
+  const new2 = req.body.new2
 
   if (
     req.user.password != req.body.now ||

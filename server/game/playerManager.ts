@@ -43,16 +43,16 @@ export class PlayerManager {
   }
 
   newVisitor(data: IVisitorData) {
-    let visitor = new Visitor(data, this)
+    const visitor = new Visitor(data, this)
     return visitor
   }
 
   add(data: IPlayerData) {
-    var no = this.count
+    const no = this.count
     data.no = no
-    var p = new Player(data, this)
+    const p = new Player(data, this)
 
-    var userid = data.userid
+    const userid = data.userid
 
     this.userid2no[userid] = no
     this.players[no] = p
@@ -67,8 +67,8 @@ export class PlayerManager {
   }
 
   leave(userid: string) {
-    var id = this.pick(userid).no
-    var p = this.players[id]
+    const id = this.pick(userid).no
+    const p = this.players[id]
     p.socket.emit("leaveSuccess")
 
     this.log.add("player", "leave", { player: p.cn })
@@ -78,14 +78,14 @@ export class PlayerManager {
   }
 
   kick(target: string) {
-    var iTarget = +target
+    const iTarget = +target
 
     if (!(target in this.players)) return false
-    var p = this.pick(target)
+    const p = this.pick(target)
 
     if (p.isGM || p.isKariGM || p.isDamy) return false
 
-    var userid = p.userid
+    const userid = p.userid
     p.socket.emit("leaveSuccess")
 
     this.log.add("player", "kick", {
@@ -118,9 +118,9 @@ export class PlayerManager {
   }
 
   numBySpecies() {
-    var human = this.select((p) => p.status.job.species == "human").length
-    var wolf = this.select((p) => p.status.job.species == "wolf").length
-    var fox = this.select((p) => p.status.job.species == "fox").length
+    const human = this.select((p) => p.status.job.species == "human").length
+    const wolf = this.select((p) => p.status.job.species == "wolf").length
+    const fox = this.select((p) => p.status.job.species == "fox").length
 
     return {
       human: human,
@@ -180,12 +180,12 @@ export class PlayerManager {
   }
 
   compileVote() {
-    var votes: Record<number, number> = {}
-    var table = `<table class="votesummary"><tbody>`
+    const votes: Record<number, number> = {}
+    let table = `<table class="votesummary"><tbody>`
 
-    for (var player of this.alive()) {
-      var target = this.pick(player.status.vote!)
-      var get = this.alive().filter((p) => p.status.vote == player.no).length
+    for (const player of this.alive()) {
+      const target = this.pick(player.status.vote!)
+      const get = this.alive().filter((p) => p.status.vote == player.no).length
       votes[player.no] = get
 
       table += `<tr class="eachVote"><td>${player.cn}</td><td>(${get})</td><td>→</td><td>${target.cn}</td></tr>`
@@ -193,10 +193,10 @@ export class PlayerManager {
 
     table += "</tbody></table>"
 
-    var max = Math.max(...Object.values(votes))
-    var maxers = Object.keys(votes).filter((v) => votes[+v] == max)
+    const max = Math.max(...Object.values(votes))
+    const maxers = Object.keys(votes).filter((v) => votes[+v] == max)
 
-    var exec = maxers.length == 1 ? this.pick(maxers[0]) : null
+    const exec = maxers.length == 1 ? this.pick(maxers[0]) : null
 
     return {
       table: table,
@@ -205,16 +205,16 @@ export class PlayerManager {
   }
 
   setKnow() {
-    var wolf = this.select((p) => p.status.job.species == "wolf")
+    const wolf = this.select((p) => p.status.job.species == "wolf")
       .map((p) => p.cn)
       .join("、")
-    var share = this.select((p) => p.status.job.name == "share")
+    const share = this.select((p) => p.status.job.name == "share")
       .map((p) => p.cn)
       .join("、")
-    var fox = this.select((p) => p.status.job.species == "fox")
+    const fox = this.select((p) => p.status.job.species == "fox")
       .map((p) => p.cn)
       .join("、")
-    var noble = this.select((p) => p.status.job.name == "noble")
+    const noble = this.select((p) => p.status.job.name == "noble")
       .map((p) => p.cn)
       .join("、")
 
@@ -225,8 +225,8 @@ export class PlayerManager {
       noble: "<br>【能力発動】貴族は" + noble,
     }
 
-    for (var player of this) {
-      for (let job in texts) {
+    for (const player of this) {
+      for (const job in texts) {
         if (player.status.canKnow(job)) {
           player.status.knowText += texts[job]
         }
@@ -254,7 +254,7 @@ export class PlayerManager {
   }
 
   summonNPC() {
-    var cn = npcNames.shift()
+    const cn = npcNames.shift()
     this.add({
       userid: "damy-" + cn,
       socket: null,
@@ -275,7 +275,7 @@ export class PlayerManager {
       })
       return false
     }
-    var gm = new Player(
+    const gm = new Player(
       {
         userid: gmid,
         socket: null,
@@ -306,13 +306,13 @@ export class PlayerManager {
 
   makeTargets(type?: string): Record<number, string> {
     type = type || "alive"
-    var targets: Record<number, string> = {}
+    const targets: Record<number, string> = {}
     if (type == "alive") {
-      for (var player of this.alive()) {
+      for (const player of this.alive()) {
         targets[player.no] = player.cn
       }
     } else {
-      for (var player of this.dead()) {
+      for (const player of this.dead()) {
         targets[player.no] = player.cn
       }
     }

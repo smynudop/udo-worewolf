@@ -24,7 +24,7 @@ router.get("/:vno", function (req, res, next) {
     req.session.rd = "wordwolf"
     res.redirect("./login")
   } else {
-    var vno = +req.params.vno!
+    const vno = +req.params.vno!
     Game.findOne({ vno: vno }, function (err: any, result: any) {
       if (err) console.log(err)
       if (!result) {

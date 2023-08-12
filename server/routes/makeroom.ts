@@ -18,14 +18,14 @@ router.post("/", function (req, res, next) {
     req.session.rd = "makeroom"
     res.redirect("./login")
   } else {
-    var userid = req.session.userid
-    var vno = 1
-    var name = req.body.name
-    var pr = req.body.pr
-    var casttype = req.body.casttype
-    var capacity = req.body.capacity
-    var kariGM = req.body.kariGM == "1"
-    var time: Record<string, number> = {}
+    const userid = req.session.userid
+    let vno = 1
+    let name = req.body.name
+    let pr = req.body.pr
+    let casttype = req.body.casttype
+    let capacity = req.body.capacity
+    const kariGM = req.body.kariGM == "1"
+    const time: Record<string, number> = {}
 
     if (!name || name.length >= 24 || name.length == 0) {
       res.render("makeroom", {
@@ -51,7 +51,7 @@ router.post("/", function (req, res, next) {
       capacity = 20
     }
 
-    for (var t of ["day", "vote", "night", "ability", "nsec"]) {
+    for (const t of ["day", "vote", "night", "ability", "nsec"]) {
       if (!req.body[t] || req.body[t] - 0 > 600) {
         res.render("makeroom", { userid: userid, error: "時間が不正です" })
         return false
@@ -73,7 +73,7 @@ router.post("/", function (req, res, next) {
         }
       }
     ).then(() => {
-      var game = new Game()
+      const game = new Game()
       game.vno = vno
       game.name = name
       game.pr = pr
