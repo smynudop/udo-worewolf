@@ -30,7 +30,7 @@ router.post("/", function (req, res, next) {
                 req.session.userid = userid
                 var rd = req.session.rd
                 if (rd) {
-                    delete req.session.rd
+                    req.session.rd = undefined
                     res.redirect("./" + rd)
                 } else {
                     res.redirect("./")

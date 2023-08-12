@@ -2,7 +2,7 @@ declare global {
     namespace Express {
         interface Request {
             // 拡張される何かのパラメーター
-            session: { userid: string, rd: string } // TODO
+            session: { userid: string | undefined, rd: string | undefined } // TODO
             user?: any // TODO
         }
 
