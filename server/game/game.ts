@@ -11,7 +11,7 @@ import SocketIO from "socket.io"
 import { GameNsManager } from "./GameNsManager"
 
 import moment from "moment"
-import { IPhase, IResult } from "./constants"
+import { IPhase, IResult, ITalkType } from "./constants"
 
 export type IChangePhaseInfo = {
   phase: IPhase
@@ -73,7 +73,9 @@ export class Game {
 
   npcTalk() {
     for (const player of this.players.NPC()) {
-      const talkType = this.date.is("day") ? "discuss" : player.nightTalkType()
+      const talkType: ITalkType = this.date.is("day")
+        ? "discuss"
+        : player.nightTalkType()
       const data = {
         no: player.no,
         cn: player.cn,
@@ -82,7 +84,7 @@ export class Game {
         type: talkType,
       }
 
-      this.log.add("talk", talkType, data)
+      this.log.addTalk(talkType, data)
     }
   }
 

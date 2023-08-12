@@ -2,11 +2,12 @@ import SocketIO from "socket.io"
 import {
   messageTemplate,
   MessageFormat,
-  messageOption,
+  MessageOption,
 } from "./messageTemplate"
 import { Visitor } from "./player"
 import { VillageDate } from "./villageDate"
 import { GameNsManager } from "./GameNsManager"
+import { ITalkType } from "./constants"
 
 export interface eachLog {
   target: string
@@ -18,10 +19,10 @@ export interface eachLog {
   anchor?: string
   quote: string
   message: string
-  class?: string
-  cn?: string
-  color?: string
-  size?: string
+  class: string
+  cn: string
+  color: string
+  size: string
 }
 
 export class Log {
@@ -87,11 +88,18 @@ export class Log {
   add(
     type: keyof typeof messageTemplate,
     detail: string,
-    option: messageOption = {}
+    option: Partial<MessageOption> = {}
   ) {
     const log: eachLog = this.formatter.makeLog(type, detail, option)
 
-    if (log.type == "talk" && log.class == "discuss") {
+    this.list.push(log)
+    this.emit(log)
+  }
+
+  addTalk(talkType: ITalkType, option: Partial<MessageOption>) {
+    const log: eachLog = this.formatter.makeTalkLog(talkType, option)
+
+    if (log.class == "discuss") {
       log.resno = this.count
       log.anchor = `&gt;&gt;${log.day}-${log.resno}`
       log.quote = `<blockquote><div class="resno">${log.anchor}</div>${log.message}</blockquote>`
@@ -101,7 +109,10 @@ export class Log {
     }
 
     this.list.push(log)
+    this.emit(log)
+  }
 
+  private emit(log: eachLog) {
     switch (log.target) {
       case "all":
         this.io.emit("talk", log)

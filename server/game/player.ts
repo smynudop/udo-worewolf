@@ -5,7 +5,7 @@ import { VillageDate } from "./villageDate"
 import { IStatusForClient, StatusManager } from "./statusManager"
 
 import { User } from "../schema"
-import { messageOption } from "./messageTemplate"
+import { MessageOption as MessageOption } from "./messageTemplate"
 import { ITalkType } from "./constants"
 import SocketIO from "socket.io"
 import { IAbility, IPassiveAbilities } from "./status"
@@ -73,7 +73,7 @@ interface ITalkData {
   cn: string
   color: string
   size: string
-  type: string
+  type: ITalkType
   message: string
 }
 
@@ -272,7 +272,7 @@ export class Player extends Visitor {
     data.cn = this.cn
     data.color = this.color
 
-    const option: messageOption = {
+    const option: Partial<MessageOption> = {
       cn: this.cn,
       color: this.color,
       size: data.size,
@@ -280,7 +280,7 @@ export class Player extends Visitor {
       no: this.no,
     }
 
-    this.log.add("talk", data.type, option)
+    this.log.addTalk(data.type, option)
   }
 
   vote(data: voteData) {

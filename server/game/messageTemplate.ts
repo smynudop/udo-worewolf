@@ -1,7 +1,8 @@
 import { VillageDate } from "./villageDate"
 import { Log, eachLog } from "./log"
+import { ITalkType } from "./constants"
 
-export const messageTemplate: Record<string, Record<string, string>> = {
+export const messageTemplate = {
   vote: {
     success: "{player}さんが{target}さんに投票しました。",
     summary: "[icon:voteResult]{day}日目 投票結果。<br>{message}",
@@ -58,37 +59,26 @@ export const messageTemplate: Record<string, Record<string, string>> = {
     loggedDate: "{message}にhtml化されます。",
     vinfo: "{message}",
   },
-  talk: {
-    talk: "{input}",
-    discuss: "{input}",
-    wolf: "{input}",
-    tweet: "{input}",
-    share: "{input}",
-    fox: "{input}",
-    grave: "{input}",
-    gmMessage: "{input}",
-    wolfNeigh: "アオォーン・・・",
-  },
-}
+} as const
 
-export interface messageOption {
-  cn?: string
-  color?: string
-  talkType?: string
-  size?: string
-  no?: number
-  player?: string
-  target?: string
-  side?: string
-  message?: string
-  day?: number
-  left?: number
-  result?: string
-  input?: string
-  isAuto?: boolean
-  autoMark?: string
-  fortuneResult?: string
-  necroResult?: string
+export interface MessageOption {
+  cn: string
+  color: string
+  talkType: string
+  size: string
+  no: number
+  player: string
+  target: string
+  side: string
+  message: string
+  day: number
+  left: number
+  result: string
+  input: string
+  isAuto: boolean
+  autoMark: string
+  fortuneResult: string
+  necroResult: string
 }
 
 type messageType = keyof typeof messageTemplate
@@ -111,9 +101,10 @@ export class MessageFormat {
     return text
   }
 
-  format(type: messageType, detail: string, option: messageOption) {
+  format(type: messageType, detail: string, option: Partial<MessageOption>) {
     let message: string
     if (detail in messageTemplate[type]) {
+      // @ts-ignore
       message = messageTemplate[type][detail]
     } else {
       message = messageTemplate.system.damy
@@ -184,9 +175,8 @@ export class MessageFormat {
     return "system"
   }
 
-  makeLog(type: messageType, detail: string, option: messageOption) {
+  makeLog(type: messageType, detail: string, option: Partial<MessageOption>) {
     const target = this.findTarget(type, detail)
-    const messageType = this.findType(type)
     const cl = this.findClass(type, detail)
     const message = this.format(type, detail, option)
 
@@ -194,7 +184,31 @@ export class MessageFormat {
 
     const log: eachLog = {
       target: target,
-      type: messageType,
+      type: "system",
+      class: cl,
+      message: message,
+      day: this.date.day,
+      phase: this.date.phase,
+      no: no,
+      cn: option.cn || "",
+      color: option.color || "",
+      size: option.size || "normal",
+      quote: "",
+    }
+
+    return log
+  }
+
+  makeTalkLog(talkType: ITalkType, option: Partial<MessageOption>) {
+    const target = this.findTarget("talk", talkType)
+    const cl = this.findClass("talk", talkType)
+    const message = option.input!
+
+    const no = option.no === undefined ? 999 : option.no
+
+    const log: eachLog = {
+      target: target,
+      type: "talk",
       class: cl,
       message: message,
       day: this.date.day,
