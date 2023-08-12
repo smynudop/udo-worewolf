@@ -1,3 +1,3 @@
 declare module "tripcode" {
-    function tripcode(key: string): string
+  function tripcode(key: string): string
 }

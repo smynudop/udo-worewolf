@@ -8,111 +8,109 @@ import MomokuriB from "./cast/MomokuriB"
 import MomokuriC from "./cast/MomokuriC"
 import MomokuriF from "./cast/MomokuriF"
 
-
 export type EachCast = { [job: string]: number }
 export type Cast = { [num: number]: EachCast }
 
 class CastType {
-    name: string
-    abbr: string
-    cast: Cast
-    constructor(name: string, abbr: string, cast: Cast) {
-        this.name = name
-        this.abbr = abbr
-        this.cast = cast
-    }
+  name: string
+  abbr: string
+  cast: Cast
+  constructor(name: string, abbr: string, cast: Cast) {
+    this.name = name
+    this.abbr = abbr
+    this.cast = cast
+  }
 
-    toJobList(num: number): Job[] | undefined {
-        if (!this.cast[num]) return undefined
+  toJobList(num: number): Job[] | undefined {
+    if (!this.cast[num]) return undefined
 
-        let cast = this.cast[num]
+    let cast = this.cast[num]
 
-        let jobList: Job[] = []
-        for (let job in cast) {
-            for (let cnt = 0; cnt < cast[job]; cnt++) {
-                if (/or/.test(job)) {
-                    job = job.split("or").lot()
-                }
-                // TODO: 暫定的な処置…
-                jobList.push(new JobEnum[job as keyof typeof JobEnum]())
-            }
+    let jobList: Job[] = []
+    for (let job in cast) {
+      for (let cnt = 0; cnt < cast[job]; cnt++) {
+        if (/or/.test(job)) {
+          job = job.split("or").lot()
         }
-
-        do {
-            jobList.shuffle()
-        } while (jobList[0].onlyNotDamy)
-
-        return jobList
+        // TODO: 暫定的な処置…
+        jobList.push(new JobEnum[job as keyof typeof JobEnum]())
+      }
     }
 
-    castTxt(num: number) {
-        if (!this.cast[num]) return ""
-        const cast = this.cast[num]
+    do {
+      jobList.shuffle()
+    } while (jobList[0].onlyNotDamy)
 
-        let txts: string[] = []
-        for (let job in cast) {
-            txts.push(`${job}${cast[job]}`)
-        }
+    return jobList
+  }
 
-        return `【${this.name}】` + txts.join("、")
+  castTxt(num: number) {
+    if (!this.cast[num]) return ""
+    const cast = this.cast[num]
+
+    let txts: string[] = []
+    for (let job in cast) {
+      txts.push(`${job}${cast[job]}`)
     }
+
+    return `【${this.name}】` + txts.join("、")
+  }
 }
 
 class CastManager {
-    list: CastType[]
-    abbr2cast: { [abbr: string]: CastType }
+  list: CastType[]
+  abbr2cast: { [abbr: string]: CastType }
 
-    constructor(list: CastType[]) {
-        this.list = list
-        this.abbr2cast = {}
-        this.makeObj()
+  constructor(list: CastType[]) {
+    this.list = list
+    this.abbr2cast = {}
+    this.makeObj()
+  }
+
+  job(name: JobName) {
+    // TODO: 暫定的な処置…
+    return new JobEnum[name as keyof typeof JobEnum]()
+  }
+
+  makeObj() {
+    for (let casttype of this.list) {
+      this.abbr2cast[casttype.abbr] = casttype
     }
+  }
 
-    job(name: JobName) {
+  getCast(abbr: string): CastType | null {
+    return this.abbr2cast[abbr]
+  }
 
-        // TODO: 暫定的な処置…
-        return new JobEnum[name as keyof typeof JobEnum]()
+  jobList(abbr: string, num: number): Job[] | undefined {
+    return this.getCast(abbr)?.toJobList(num) ?? undefined
+  }
+
+  makeCastTxt(abbr: string, num: number): string {
+    return this.getCast(abbr)?.castTxt(num) ?? ""
+  }
+
+  makeCastTxtAll(num: number) {
+    let txts: string[] = []
+    for (let casttype of this.list) {
+      let txt = casttype.castTxt(num)
+      if (txt) txts.push(txt)
     }
+    return txts.join("<br/>")
+  }
 
-    makeObj() {
-        for (let casttype of this.list) {
-            this.abbr2cast[casttype.abbr] = casttype
-        }
-    }
-
-    getCast(abbr: string): CastType | null {
-        return this.abbr2cast[abbr]
-    }
-
-    jobList(abbr: string, num: number): Job[] | undefined {
-        return this.getCast(abbr)?.toJobList(num) ?? undefined
-    }
-
-    makeCastTxt(abbr: string, num: number): string {
-        return this.getCast(abbr)?.castTxt(num) ?? ""
-    }
-
-    makeCastTxtAll(num: number) {
-        let txts: string[] = []
-        for (let casttype of this.list) {
-            let txt = casttype.castTxt(num)
-            if (txt) txts.push(txt)
-        }
-        return txts.join("<br/>")
-    }
-
-    abbr2name(abbr: string) {
-        return this.getCast(abbr)?.name ?? "？"
-    }
+  abbr2name(abbr: string) {
+    return this.getCast(abbr)?.name ?? "？"
+  }
 }
 
 export const castManager = new CastManager([
-    new CastType("焼肉", "Y", Yakiniku),
-    new CastType("わかめて", "W", WakameteCast),
-    new CastType("桃栗なし", "M0", MomokuriNasi),
-    new CastType("桃栗あり", "M1", MomokuriAri),
-    new CastType("桃栗A", "MA", MomokuriA),
-    new CastType("桃栗B", "MB", MomokuriB),
-    new CastType("桃栗C", "MC", MomokuriC),
-    new CastType("桃栗F", "MF", MomokuriF),
+  new CastType("焼肉", "Y", Yakiniku),
+  new CastType("わかめて", "W", WakameteCast),
+  new CastType("桃栗なし", "M0", MomokuriNasi),
+  new CastType("桃栗あり", "M1", MomokuriAri),
+  new CastType("桃栗A", "MA", MomokuriA),
+  new CastType("桃栗B", "MB", MomokuriB),
+  new CastType("桃栗C", "MC", MomokuriC),
+  new CastType("桃栗F", "MF", MomokuriF),
 ])
