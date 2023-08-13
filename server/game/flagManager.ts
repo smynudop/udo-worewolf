@@ -70,7 +70,7 @@ export class FlagManager {
         if (!exec) return false
 
         for (const player of this.players.select((p) => p.status.can(PassiveAbilities.necro))) {
-            player.useAbility({ type: PassiveAbilities.necro, target: exec })
+            player.useAbility({ type: PassiveAbilities.necro, target: exec.no })
         }
     }
 
@@ -109,7 +109,7 @@ export class FlagManager {
             const autobiter = this.players.select((p) => p.status.can("bite")).lot()
             const target = this.players.select((p) => !p.status.can("bite")).lot()
 
-            autobiter.useAbility({ type: "bite", target: target }, true)
+            autobiter.useAbility({ type: "bite", target: target.no }, true)
         }
 
         /*自動占い*/

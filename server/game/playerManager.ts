@@ -1,4 +1,4 @@
-import { IPlayerData, IVisitorData, Player, Visitor } from "./player"
+import { IPlayerData, Player } from "./player"
 import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { castManager } from "./cast"
@@ -25,11 +25,6 @@ export class PlayerManager {
 
         this.log = game.log
         this.date = game.date
-    }
-
-    newVisitor(data: IVisitorData) {
-        const visitor = new Visitor(data, this)
-        return visitor
     }
 
     add(data: IPlayerData) {
@@ -63,10 +58,10 @@ export class PlayerManager {
         return p
     }
 
-    kick(target: string): Player | null {
+    kick(target: number): Player | null {
+        //todo
         const iTarget = +target
 
-        if (!(target in this.players)) return null
         const p = this.pick(target)
 
         if (p.isGM || p.isKariGM || p.isDamy) return null
@@ -138,6 +133,10 @@ export class PlayerManager {
         } else {
             return id
         }
+    }
+
+    getByUserId(userid: string): Player | undefined {
+        return this.list.find((x) => x.userid == userid)
     }
 
     damy() {

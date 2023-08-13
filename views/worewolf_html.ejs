@@ -16,17 +16,17 @@
 <div id="container">
 <div id="left">
 <table id="discuss">
-<% for(var log of logs.reverse()){ -%>
-<% if(log.type == "wolfNeigh") continue -%>
-<% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(log.type)) { -%>
-<% var cl = log.class || log.type -%>
+<% for(var _log of logs.reverse()){ -%>
+<% if(_log.type == "wolfNeigh") continue -%>
+<% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(_log.type)) { -%>
+<% var cl = _log.class || _log.type -%>
 <tr class="<%= cl %>">
-    <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
+    <td colspan="2"><%- _log.message.replace(/\n/g, "<br />") %></td>
 </tr>
 <% } else { -%>
-<tr class="<%= log.type %>">
-    <td class="name"><span class="<%= log.color %>">◆</span><%= log.cn %></td>
-    <td class="talk <%= log.size %>"><%- log.message.replace(/\n/g, "<br />") %></td>
+<tr class="<%= _log.type %>">
+    <td class="name"><span class="<%= _log.color %>">◆</span><%= _log.cn %></td>
+    <td class="talk <%= _log.size %>"><%- _log.message.replace(/\n/g, "<br />") %></td>
 </tr>
 <% } -%>
 <% } -%>
@@ -66,16 +66,16 @@
 </div>
 
 <table id="memoDiscussTable">
-<% for(var log of logs){ -%>
-    <% if(!["progress","discuss"].includes(log.type)) continue -%>
-    <% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(log.type)) { -%>
-<tr class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>">
-    <td colspan="2"><%- log.message.replace(/\n/g, "<br />") %></td>
+<% for(var _log of logs){ -%>
+    <% if(!["progress","discuss"].includes(_log.type)) continue -%>
+    <% if(["system","wolf-system", "progress", "vote", "personal","info"].includes(_log.type)) { -%>
+<tr class="<%= _log.type %> day<%= _log.day %> <% if(_log.no) {%>player-<%= _log.no %><% } %>">
+    <td colspan="2"><%- _log.message.replace(/\n/g, "<br />") %></td>
 </tr>
 <% } else { -%>
-<tr class="<%= log.type %> day<%= log.day %> <% if(log.no) {%>player-<%= log.no %><% } %>">
-    <td class="name"><span class="<%= log.color %>">◆</span><%= log.cn %></td>
-    <td class="talk <%= log.size %>"><%- log.message.replace(/\n/g, "<br />") %></td>
+<tr class="<%= _log.type %> day<%= _log.day %> <% if(_log.no) {%>player-<%= _log.no %><% } %>">
+    <td class="name"><span class="<%= _log.color %>">◆</span><%= _log.cn %></td>
+    <td class="talk <%= _log.size %>"><%- _log.message.replace(/\n/g, "<br />") %></td>
 </tr>
 <% } -%>
 <% } -%>

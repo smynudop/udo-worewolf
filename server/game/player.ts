@@ -8,62 +8,24 @@ import { MessageOption as MessageOption, TalkOption } from "./messageTemplate"
 import { ITalkType } from "./constants"
 import { IAbility, IPassiveAbilities } from "./status"
 
-export interface IVisitorData {
-    userid: string
+export type IVoteData = {
+    target: number
 }
 
-export class Visitor {
-    manager: PlayerManager
-    userid: string
-    isPlayer: boolean
-    rooms: Set<string> = new Set<string>()
-    isGM: boolean
-    isKariGM: boolean
-    log: Log
-
-    constructor(data: IVisitorData, manager: PlayerManager) {
-        this.manager = manager
-        this.userid = data.userid
-        this.isPlayer = false
-        this.log = manager.log
-        this.isGM = false
-        this.isKariGM = false
-    }
-
-    get hasPermittionOfGMCommand() {
-        return false
-    }
-
-    forClientDetail() {
-        return {}
-    }
-
-    talk(data: any): "success" | "nsec" {
-        return "success"
-    }
-
-    vote(target: any) {}
-
-    update(data: any) {}
-
-    useAbility(data: any, isAuto?: false) {}
-}
-
-interface voteData {
-    target: Player | number | string
-}
-
-interface abilityData {
-    target: Player | number | string
+export type IAbilityData = {
+    target: number
     type: IAbility | IPassiveAbilities
 }
 
-interface ITalkData {
-    cn: string
-    color: string
+export type ITalkData = {
     size: string
     type: ITalkType
     message: string
+}
+
+export type IUpdatePlayerData = {
+    cn: string
+    color: string
 }
 
 export interface IPlayerData {
@@ -108,7 +70,7 @@ export type IPlayerforPlayer = {
 
 export type IPlayerForClient = IPlayerForVisitor | IPlayerforPlayer
 
-export class Player extends Visitor {
+export class Player {
     no: number
     userid: string
     cn: string
@@ -126,13 +88,13 @@ export class Player extends Visitor {
     status: StatusManager
     rooms: Set<string> = new Set<string>()
     constructor(data: IPlayerData, manager: PlayerManager) {
-        super(data, manager)
+        this.userid = data.userid
+        this.isPlayer = true
         this.no = data.no === undefined ? 997 : data.no
         this.userid = data.userid || "null"
 
         this.cn = data.cn || "kari"
         this.color = data.color || "red"
-        this.isPlayer = true
         this.isGM = data.isGM || false
         this.isKariGM = data.isKariGM || false
         this.isDamy = data.isDamy || false
@@ -203,7 +165,7 @@ export class Player extends Visitor {
         return this.status.can(ability)
     }
 
-    update(data: IPlayerData) {
+    update(data: IUpdatePlayerData) {
         let cn = data.cn || ""
         cn = cn.trim()
         if (cn.length == 0 || cn.length > 8) cn = ""
@@ -251,9 +213,6 @@ export class Player extends Visitor {
             this.call()
         }
 
-        data.cn = this.cn
-        data.color = this.color
-
         const option: TalkOption = {
             cn: this.cn,
             color: this.color,
@@ -266,7 +225,7 @@ export class Player extends Visitor {
         return "success"
     }
 
-    vote(data: voteData) {
+    vote(data: IVoteData) {
         const target = this.pick(data.target)
 
         if (this.status.vote == target.no) return
@@ -309,9 +268,7 @@ export class Player extends Visitor {
         this.status.target = null
     }
 
-    useAbility(data: abilityData, isAuto?: boolean) {
-        isAuto = isAuto || false
-
+    useAbility(data: IAbilityData, isAuto: boolean = false) {
         const target = this.pick(data.target)
 
         this.setTarget(target)
@@ -349,14 +306,14 @@ export class Player extends Visitor {
     }
 
     randomVote() {
-        this.vote({ target: this.randomSelectTarget() })
+        this.vote({ target: this.randomSelectTarget().no })
     }
 
     randomUseAbility(type: IAbility) {
         this.useAbility(
             {
                 type: type,
-                target: this.randomSelectTarget(),
+                target: this.randomSelectTarget().no,
             },
             true
         )
@@ -390,7 +347,7 @@ export class Player extends Visitor {
         return false
     }
 
-    canVote(data: voteData) {
+    canVote(data: IVoteData) {
         if (this.isNull) return false
 
         if (!this.date.canVote()) return false
@@ -402,7 +359,7 @@ export class Player extends Visitor {
         return true
     }
 
-    canUseAbility(data: abilityData) {
+    canUseAbility(data: IAbilityData) {
         if (this.isNull) return false
 
         if (!this.date.canUseAbility()) return false

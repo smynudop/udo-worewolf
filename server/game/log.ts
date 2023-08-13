@@ -1,8 +1,8 @@
 import { messageTemplate, MessageFormat, MessageOption, TalkOption } from "./messageTemplate"
-import { Visitor } from "./player"
 import { VillageDate } from "./villageDate"
 import { GameNsManager } from "./GameNsManager"
 import { ITalkType } from "./constants"
+import { Player } from "./player"
 
 export interface eachLog {
     target: string
@@ -41,12 +41,12 @@ export class Log {
         return this.list
     }
 
-    initial(visitor: Visitor) {
+    initial(player?: Player) {
         const logs: eachLog[] = []
-        const rooms = visitor.rooms
+        const rooms = player?.rooms ?? new Set<string>()
+        const canWatchAllLog = rooms.has("gm") || rooms.has("all")
 
         for (const log of this.list) {
-            const canWatchAllLog = rooms.has("gm") || rooms.has("all")
             const isTarget = rooms.has(log.target)
             const isPersonal = log.target == "personal" && rooms.has("player-" + log.no)
             const isGlobal = log.target == "all"

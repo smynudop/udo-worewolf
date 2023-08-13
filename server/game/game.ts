@@ -1,4 +1,4 @@
-import { Player, Visitor } from "./player"
+import { IPlayerForClient, Player } from "./player"
 import { PlayerManager } from "./playerManager"
 import { FlagManager } from "./flagManager"
 import { Log } from "./log"
@@ -21,6 +21,7 @@ export type IChangePhaseInfo = {
     targets: Record<number, string>
     deathTargets: Record<number, string>
     day: number
+    villageInfo?: IGame
 }
 
 export class Game {
@@ -97,13 +98,11 @@ export class Game {
         }
     }
 
-    emitPlayer(socket: SocketIO.Socket) {
-        if (!socket) return false
-
+    getPlayerForVisitor(): IPlayerForClient[] {
         if (this.date.is("epilogue")) {
-            socket.emit("player", this.players.forClientDetail())
+            return this.players.forClientDetail()
         } else {
-            socket.emit("player", this.players.forClientSummary())
+            return this.players.forClientSummary()
         }
     }
 
@@ -349,15 +348,17 @@ export class Game {
         })
     }
 
-    emitInitialPhase(socket: SocketIO.Socket) {
+    getInitialPhaseForVisitor(): IChangePhaseInfo {
         const time = this.date.leftSeconds()
-        socket.emit("changePhase", {
+        return {
             phase: this.date.phase,
             left: time,
+            nsec: null,
             targets: this.players.makeTargets(),
+            deathTargets: {},
             day: this.date.day,
             villageInfo: this.villageSetting.villageInfo(),
-        })
+        }
     }
 
     emitPersonalData() {
@@ -394,125 +395,136 @@ export class Game {
     }
 
     listen() {
-        this.io.listen((socket: SocketIO.Socket) => {
-            // @ts-ignore
-            const userid = socket.request.session.userid
+        this.io.on("connect", (userid, data) => {
+            let player: Player | undefined = undefined
 
-            let visitor: Visitor
-
-            this.emitPlayer(socket)
+            this.io.emitByUserId("player", this.getPlayerForVisitor(), userid)
 
             if (this.players.in(userid)) {
-                visitor = this.players.pick(userid)
-                const player = visitor as Player
+                player = this.players.pick(userid)
 
-                //player.socket.updateSocket(socket)
-                //player.emitPersonalInfo()
-                this.io.emitPersonal("enterSuccess", player.forClientDetail(), player.no)
-                this.assignRoom()
+                this.io.emitByUserId("enterSuccess", player.forClientDetail(), userid)
+                this.io.assignRoom()
 
                 this.emitPlayerAll()
             } else {
-                const data = { userid: userid, socket: socket }
-                visitor = this.players.newVisitor(data)
+                const data = { userid: userid }
             }
 
-            this.emitInitialPhase(socket)
-            this.io.emitPersonal("initialLog", this.log.initial(visitor), 0) // TODO
-
-            socket.on("enter", (data) => {
-                if (this.players.in(userid)) return false
-                if (this.players.num >= this.villageSetting.capacity) return false
-
-                data.userid = userid
-                data.socket = socket
-                visitor = this.players.add(data)
-                const player = visitor as Player
-
-                this.io.emitPersonal("enterSuccess", player.forClientDetail(), player.no)
-                this.emitPlayerAll()
-            })
-
-            socket.on("leave", (data) => {
-                if (!visitor || visitor.isGM || visitor.isKariGM) return false
-
-                const p = this.players.leave(userid)
-                if (p != null) {
-                    this.io.emitPersonal("leaveSuccess", true, p.no)
-                }
-                this.emitPlayerAll()
-            })
-
-            socket.on("fix-player", (data) => {
-                visitor.update(data)
-                this.emitPlayerAll()
-            })
-
-            socket.on("talk", (data) => {
-                const result = visitor.talk(data)
-                if (result == "nsec") {
-                    this.io.emitPersonal("banTalk", true, 0) // 要改善
-                }
-                this.emitPlayerAll() // 要改善
-            })
-
-            socket.on("vote", (data) => {
-                visitor.vote(data)
-                this.io.emitPersonal("voteSuccess", true, 0) // TODO
-                this.checkAllVote()
-            })
-
-            socket.on("ability", (data) => {
-                switch (data.type) {
-                    case "bite":
-                        for (const biter of this.players.has("biter")) {
-                            biter.except("biter")
-                        }
-
-                        this.io.emitRoom("useAbilitySuccess", true, "wolf")
-                        break
-                }
-                visitor.useAbility(data)
-                this.io.emitPersonal("useAbilitySuccess", true, 0) // TODO
-            })
-
-            socket.on("rollcall", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-                this.startRollcall()
-            })
-
-            socket.on("start", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-                this.start()
-            })
-
-            socket.on("summonNPC", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-                this.players.summonNPC()
-                this.emitPlayerAll()
-            })
-
-            socket.on("checkCast", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-                this.checkCast()
-            })
-
-            socket.on("kick", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-
-                const p = this.players.kick(data.target)
-                if (p != null) {
-                    this.io.emitPersonal("leaveSuccess", true, p.no)
-                }
-                this.emitPlayerAll()
-            })
-
-            socket.on("fix-gm", (data) => {
-                if (!visitor.hasPermittionOfGMCommand) return false
-
-                this.fixInfo(data)
-            })
+            this.io.emitByUserId("changePhase", this.getInitialPhaseForVisitor(), userid)
+            this.io.emitByUserId("initialLog", this.log.initial(player), userid) // TODO
         })
+        this.io.on("enter", (userid, data) => {
+            if (this.players.in(userid)) return false
+            if (this.players.num >= this.villageSetting.capacity) return false
+
+            data.userid = userid
+            const player = this.players.add(data)
+
+            this.io.emitByUserId("enterSuccess", player.forClientDetail(), userid)
+            this.emitPlayerAll()
+        })
+        this.io.on("leave", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+
+            if (player.isGM || player.isKariGM) return
+
+            this.players.leave(userid)
+            this.io.emitByUserId("leaveSuccess", true, userid)
+            this.emitPlayerAll()
+        })
+        this.io.on("fixPlayer", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+
+            player.update(data)
+            this.emitPlayerAll()
+        })
+        this.io.on("talk", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+
+            const result = player.talk(data)
+            if (result == "nsec") {
+                this.io.emitByUserId("banTalk", true, userid)
+            }
+            this.emitPlayerAll() // 点呼の状況を知らせるため。あまり良くない
+        })
+        this.io.on("vote", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+
+            player.vote(data)
+            this.io.emitPersonal("voteSuccess", true, 0) // TODO
+            this.checkAllVote()
+        })
+        this.io.on("ability", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+
+            switch (data.type) {
+                case "bite":
+                    for (const biter of this.players.has("biter")) {
+                        biter.except("biter")
+                    }
+
+                    this.io.emitRoom("useAbilitySuccess", true, "wolf")
+                    break
+            }
+            player.useAbility(data)
+            this.io.emitByUserId("useAbilitySuccess", true, userid) // TODO
+        })
+        this.io.on("rollcall", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            this.startRollcall()
+        })
+        this.io.on("start", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            this.start()
+        })
+        this.io.on("summonNPC", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            this.players.summonNPC()
+            this.emitPlayerAll()
+        })
+        this.io.on("checkCast", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            this.checkCast()
+        })
+        this.io.on("kick", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            const p = this.players.kick(data.target)
+            if (p != null) {
+                this.io.emitByUserId("leaveSuccess", true, p.userid)
+            }
+            this.emitPlayerAll()
+        })
+        this.io.on("fixVillage", (userid, data) => {
+            const player = this.players.getByUserId(userid)
+            if (!player) return
+            if (!player.hasPermittionOfGMCommand) return false
+
+            this.fixInfo(data)
+        })
+
+        this.io.listen2()
+
         this.io.emit("refresh", true)
     }
 
