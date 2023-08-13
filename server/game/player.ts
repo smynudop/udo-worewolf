@@ -226,7 +226,8 @@ export class Player {
     }
 
     vote(data: IVoteData) {
-        const target = this.pick(data.target)
+        const target = this.manager.getPlayerByNo(data.target)
+        if (!target) return
 
         if (this.status.vote == target.no) return
         this.status.vote = target.no
@@ -235,13 +236,6 @@ export class Player {
             player: this.cn,
             target: target.cn,
         })
-    }
-
-    pick(target: number | string | Player) {
-        if (typeof target == "number" || typeof target == "string") {
-            return this.manager.pick(target)
-        }
-        return target
     }
 
     setTarget(target: Player) {
@@ -269,7 +263,8 @@ export class Player {
     }
 
     useAbility(data: IAbilityData, isAuto: boolean = false) {
-        const target = this.pick(data.target)
+        const target = this.manager.getPlayerByNo(data.target)
+        if (!target) return
 
         this.setTarget(target)
         this.log.add("ability", data.type, {
@@ -352,7 +347,7 @@ export class Player {
 
         if (!this.date.canVote()) return false
 
-        if (!this.manager.pick(data.target)) return false
+        if (!this.manager.getPlayerByNo(data.target)) return false
         if (this.no == data.target) return false
         if (this.isDead) return false
 
@@ -364,7 +359,7 @@ export class Player {
 
         if (!this.date.canUseAbility()) return false
 
-        const target = this.manager.pick(data.target)
+        const target = this.manager.getPlayerByNo(data.target)
         if (!target) return false
 
         if (!this.status.can(data.type)) return false

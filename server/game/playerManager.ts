@@ -4,6 +4,7 @@ import { VillageDate } from "./villageDate"
 import { castManager } from "./cast"
 import { Game } from "./game"
 import { IAbility } from "./status"
+import { keyof } from "../common/utilities"
 
 const npcNames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
 
@@ -46,12 +47,12 @@ export class PlayerManager {
         return p
     }
 
-    leave(userid: string): Player {
-        const id = this.pick(userid).no
-        const p = this.players[id]
+    leave(userid: string): Player | null {
+        const p = this.getByUserId(userid)
+        if (!p) return null
 
         this.log.add("player", "leave", { player: p.cn })
-        delete this.players[id]
+        delete this.players[p.no]
         delete this.userid2no[userid]
         this.refreshList()
 
@@ -62,7 +63,8 @@ export class PlayerManager {
         //todo
         const iTarget = +target
 
-        const p = this.pick(target)
+        const p = this.getPlayerByNo(target)
+        if (!p) return null
 
         if (p.isGM || p.isKariGM || p.isDamy) return null
 
@@ -119,24 +121,12 @@ export class PlayerManager {
         return this.list.filter((p) => !p.isAlive)
     }
 
-    pick(id: number | string | Player): Player {
-        if (typeof id == "number") {
-            return this.players[id]
-        } else if (typeof id == "string") {
-            if (isNaN(parseInt(id))) {
-                id = this.userid2no[id]
-            } else {
-                id = parseInt(id)
-            }
-
-            return this.players[id]
-        } else {
-            return id
-        }
+    getPlayerByNo(no: number): Player | undefined {
+        return this.listAll.find((x) => x.no == no)
     }
 
     getByUserId(userid: string): Player | undefined {
-        return this.list.find((x) => x.userid == userid)
+        return this.listAll.find((x) => x.userid == userid)
     }
 
     damy() {
@@ -170,7 +160,7 @@ export class PlayerManager {
         let table = `<table class="votesummary"><tbody>`
 
         for (const player of this.alive()) {
-            const target = this.pick(player.status.vote!)
+            const target = this.getPlayerByNo(player.status.vote!)!
             const get = this.alive().filter((p) => p.status.vote == player.no).length
             votes[player.no] = get
 
@@ -180,9 +170,9 @@ export class PlayerManager {
         table += "</tbody></table>"
 
         const max = Math.max(...Object.values(votes))
-        const maxers = Object.keys(votes).filter((v) => votes[+v] == max)
+        const maxers = keyof(votes).filter((v) => votes[+v] == max)
 
-        const exec = maxers.length == 1 ? this.pick(maxers[0]) : null
+        const exec = maxers.length == 1 ? this.getPlayerByNo(maxers[0]) : null
 
         return {
             table: table,

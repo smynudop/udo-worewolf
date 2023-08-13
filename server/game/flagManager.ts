@@ -128,8 +128,8 @@ export class FlagManager {
     guard() {
         if (this.date.day >= 2) {
             for (const player of this.players.select((p) => p.status.can("guard"))) {
-                const target = this.players.pick(player.status.target!)
-                target.status.add("guarded")
+                const target = this.players.getPlayerByNo(player.status.target!)
+                target?.status.add("guarded")
             }
         }
     }
@@ -138,7 +138,10 @@ export class FlagManager {
         for (const player of this.players.select((p) => p.status.can("revive"))) {
             if (!player.isUsedAbility) continue
 
-            const target = this.players.pick(player.status.target!)
+            const target = this.players.getPlayerByNo(player.status.target!)
+            if (!target) {
+                continue
+            }
             const threshold = target.isDamy ? 50 : 30
             if (Math.floor(Math.random() * 100) < threshold) {
                 target.status.add("revive")
@@ -152,7 +155,8 @@ export class FlagManager {
 
     attack() {
         for (const player of this.players.has("biter")) {
-            const target = this.players.pick(player.status.target!)
+            const target = this.players.getPlayerByNo(player.status.target!)
+            if (!target) continue
             target.status.add("bitten", player)
         }
 
@@ -170,7 +174,8 @@ export class FlagManager {
         }
 
         for (const fortune of this.players.select((p) => p.can("fortune"))) {
-            const target = this.players.pick(fortune.status.target!)
+            const target = this.players.getPlayerByNo(fortune.status.target!)
+            if (!target) continue
             target.status.add("fortuned")
         }
 

@@ -363,7 +363,7 @@ export class Game {
 
     emitPersonalData() {
         for (const player of this.players.listAll) {
-            this.io.emitPersonal("you", player.forClientDetail(), player.no)
+            this.io.emitByUserId("you", player.forClientDetail(), player.userid)
         }
     }
 
@@ -401,14 +401,12 @@ export class Game {
             this.io.emitByUserId("player", this.getPlayerForVisitor(), userid)
 
             if (this.players.in(userid)) {
-                player = this.players.pick(userid)
+                player = this.players.getByUserId(userid)!
 
                 this.io.emitByUserId("enterSuccess", player.forClientDetail(), userid)
                 this.io.assignRoom()
 
                 this.emitPlayerAll()
-            } else {
-                const data = { userid: userid }
             }
 
             this.io.emitByUserId("changePhase", this.getInitialPhaseForVisitor(), userid)
@@ -456,7 +454,7 @@ export class Game {
             if (!player) return
 
             player.vote(data)
-            this.io.emitPersonal("voteSuccess", true, 0) // TODO
+            this.io.emitByUserId("voteSuccess", true, userid)
             this.checkAllVote()
         })
         this.io.on("ability", (userid, data) => {

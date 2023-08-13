@@ -9,7 +9,6 @@ import IO, { Socket } from "socket.io-client"
 declare const io: typeof IO
 declare const vno: number
 declare const me: any
-//declare const me: Pick<IPlayerForClient, "userid" | "isWatch">
 
 interface IChangePhaseData {
     phase: string
