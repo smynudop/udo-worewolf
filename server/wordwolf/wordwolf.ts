@@ -61,7 +61,7 @@ class Player {
   }
 
   async getTrip() {
-    const user = await User.findOne({ userid: this.userid }).exec()
+    const user = await User.findOne({ userid: this.userid })
     this.trip = user?.trip ?? ""
   }
 
@@ -772,8 +772,8 @@ export class GameIO {
     })
   }
 
-  static find(vno: number) {
-    return GameSchema.findOne({ vno: vno }).exec()
+  static async find(vno: number) {
+    return await GameSchema.findOne({ vno: vno })
   }
 }
 

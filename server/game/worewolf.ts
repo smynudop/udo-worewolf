@@ -1,6 +1,7 @@
 import SocketIO from "socket.io"
 import { Game } from "./game"
 import { GameIO } from "./gameIO"
+import { sessionMiddleWare } from "../session"
 
 export class GameManager {
   io: SocketIO.Server
@@ -26,6 +27,10 @@ export class GameManager {
         const result = await GameIO.find(vno)
 
         if (result) {
+          nsp.use((socket: SocketIO.Socket, next) =>
+            //@ts-ignore
+            sessionMiddleWare(socket.request, socket.request.res, next)
+          )
           const village = new Game(nsp, result)
           console.log("listen room-" + vno)
         }

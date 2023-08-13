@@ -164,7 +164,7 @@ export class Player extends Visitor {
 
   async getTrip() {
     if (this.isBot) return false
-    const user = await User.findOne({ userid: this.userid }).exec()
+    const user = await User.findOne({ userid: this.userid })
     this.trip = user?.trip ?? ""
   }
 

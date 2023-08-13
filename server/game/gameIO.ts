@@ -37,7 +37,7 @@ export class GameIO {
     })
   }
 
-  static find(vno: number) {
-    return Game.findOne({ vno: vno }).exec()
+  static async find(vno: number) {
+    return await Game.findOne({ vno: vno })
   }
 }

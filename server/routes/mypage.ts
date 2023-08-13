@@ -10,7 +10,7 @@ router.use("/", async function (req, res, next) {
     req.session.rd = "mypage"
     res.redirect("./login")
   } else {
-    const user = await User.findOne({ userid: req.session.userid }).exec()
+    const user = await User.findOne({ userid: req.session.userid })
     req.user = user
     next()
   }

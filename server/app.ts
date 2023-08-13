@@ -1,11 +1,7 @@
-import dotenv from "dotenv"
 import createError from "http-errors"
 import express from "express"
 import path from "path"
 import cookieParser from "cookie-parser"
-import session from "express-session"
-import { Mongoose } from "mongoose"
-import MongoStore from "connect-mongo"
 import { Server, Socket } from "socket.io"
 
 // Router
@@ -27,19 +23,13 @@ import setArrayExtension from "./array_proto"
 import WoreWolf from "./game/worewolf"
 import { GameManager as Wordwolf } from "./wordwolf/wordwolf"
 
+import { mongoURL } from "./url"
+import { sessionMiddleWare } from "./session"
+
 import MongooseInstance from "./db/instance"
 setArrayExtension()
 
-dotenv.config()
-
 const app = express()
-let mongoURL: string
-if (process.env.NODE_ENV == "development") {
-  mongoURL = "mongodb://127.0.0.1:27017/worewolf"
-} else {
-  mongoURL = process.env.MONGO_URL as string
-}
-console.log(mongoURL)
 
 MongooseInstance.connect(mongoURL)
   .then((dt) => console.log("connect mongo!"))
@@ -54,15 +44,6 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, "./public")))
 
-const sessionMiddleWare = session({
-  secret: "udo",
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: mongoURL }),
-  cookie: {
-    maxAge: 24 * 60 * 60 * 1000,
-  },
-})
 app.use(sessionMiddleWare)
 // @ts-ignore
 app.mw = sessionMiddleWare

@@ -3,21 +3,25 @@ const router = Express.Router()
 
 import { User } from "../db/instance"
 import { IUser } from "../db/schema/user"
+import { routerAsyncWrap } from "./async-wrapper"
 
 router.get("/", function (req, res, next) {
   res.render("login", {})
 })
 
-router.post("/", function (req, res, next) {
-  const userid = req.body.userid
-  const password = req.body.password
+router.post(
+  "/",
+  routerAsyncWrap(
+    async (req, res, next) => {
+      const userid = req.body.userid
+      const password = req.body.password
 
-  User.find(
-    { userid: userid },
-    function (err: any, result: IUser[] | undefined) {
-      if (err) console.log(err)
+      const result = await User.find({ userid: userid })
+
+      console.log(result)
 
       if (result == undefined || result.length == 0) {
+        console.log(`newUser!`)
         const newUser: IUser = {
           userid,
           password,
@@ -25,11 +29,12 @@ router.post("/", function (req, res, next) {
         }
         const user = new User(newUser)
 
-        user.save().catch((e) => console.log(e)) // todo: await
+        await user.save()
 
         req.session.userid = userid
         res.redirect("./")
       } else {
+        console.log(`login!`)
         if (password == result[0].password) {
           req.session.userid = userid
           const rd = req.session.rd
@@ -44,9 +49,9 @@ router.post("/", function (req, res, next) {
         }
       }
     }
-  )
 
-  /*処理を書く*/
-})
+    /*処理を書く*/
+  )
+)
 
 export default router
