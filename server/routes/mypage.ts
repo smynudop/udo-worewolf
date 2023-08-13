@@ -3,7 +3,7 @@ const router = Express.Router()
 
 import tripcode from "tripcode"
 
-import { User } from "../schema"
+import { User } from "../db/instance"
 
 router.use("/", async function (req, res, next) {
   if (!req.session.userid) {
@@ -26,7 +26,6 @@ router.post("/set_trip", function (req, res, next) {
   User.updateOne(
     { userid: req.session.userid },
     { $set: { trip: trip } },
-    undefined,
     function (err: any) {
       if (err) console.log(err)
       res.redirect("/?mes=success_set_trip")
@@ -49,7 +48,6 @@ router.post("/change_password", function (req, res, next) {
   User.updateOne(
     { userid: req.session.userid },
     { $set: { password: new1 } },
-    undefined,
     function (err: any) {
       if (err) console.log(err)
       res.redirect("/?mes=success_change_password")

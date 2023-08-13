@@ -1,7 +1,8 @@
 import * as Express from "express"
 const router = Express.Router()
 
-import { Game } from "../schema"
+import { Game } from "../db/instance"
+import { IGame, ITime } from "../db/schema/game"
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -19,13 +20,12 @@ router.post("/", function (req, res, next) {
     res.redirect("./login")
   } else {
     const userid = req.session.userid
-    let vno = 1
     let name = req.body.name
     let pr = req.body.pr
     let casttype = req.body.casttype
     let capacity = req.body.capacity
     const kariGM = req.body.kariGM == "1"
-    const time: Record<string, number> = {}
+    const time = {} as ITime
 
     if (!name || name.length >= 24 || name.length == 0) {
       res.render("makeroom", {
@@ -51,7 +51,7 @@ router.post("/", function (req, res, next) {
       capacity = 20
     }
 
-    for (const t of ["day", "vote", "night", "ability", "nsec"]) {
+    for (const t of ["day", "vote", "night", "ability", "nsec"] as const) {
       if (!req.body[t] || req.body[t] - 0 > 600) {
         res.render("makeroom", { userid: userid, error: "時間が不正です" })
         return false
@@ -60,19 +60,8 @@ router.post("/", function (req, res, next) {
       }
     }
 
-    Game.find(
-      {},
-      {},
-      { sort: { vno: -1 }, limit: 1 },
-      function (err: any, data: any) {
-        if (err) console.log(err)
-        if (data.length == 0) {
-          vno = 1
-        } else {
-          vno = data[0].vno + 1
-        }
-      }
-    ).then(() => {
+    Game.find({}, {}, { sort: { vno: -1 }, limit: 1 }).then((data) => {
+      const vno = data.length > 0 ? data[0].vno + 1 : 1
       const game = new Game()
       game.vno = vno
       game.name = name
@@ -84,10 +73,8 @@ router.post("/", function (req, res, next) {
       game.state = "recruit"
       game.kariGM = kariGM
 
-      game.save(function (err: any) {
-        if (err) console.log(err)
-        res.redirect("./worewolf")
-      })
+      game.save()
+      res.redirect("./worewolf")
     })
   }
 })

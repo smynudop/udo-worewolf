@@ -5,7 +5,7 @@ import { Player } from "./player"
 import fs from "fs"
 import ejs from "ejs"
 
-import { Game, User } from "../schema"
+import { Game, User } from "../db/instance"
 
 export class GameIO {
   static writeHTML(log: eachLog[], player: Player[], vinfo: IVillageSetting) {
@@ -32,7 +32,7 @@ export class GameIO {
   }
 
   static update(vno: number, data: Partial<IVillageSetting>) {
-    Game.updateOne({ vno: vno }, { $set: data }, undefined, (err: any) => {
+    Game.updateOne({ vno: vno }, { $set: data }, (err: any) => {
       if (err) console.log(err)
     })
   }

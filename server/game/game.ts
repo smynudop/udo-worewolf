@@ -9,6 +9,7 @@ import { castManager } from "./cast"
 import { IVillageSetting, VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
 import { GameNsManager } from "./GameNsManager"
+import { IGame } from "../db/schema/game"
 
 import moment from "moment"
 import { IPhase, IResult, ITalkType } from "./constants"
@@ -33,7 +34,7 @@ export class Game {
   leftVoteNum: number
   win: IResult | null = null
 
-  constructor(io: SocketIO.Namespace, data: IVillageSetting) {
+  constructor(io: SocketIO.Namespace, data: IGame) {
     this.io = new GameNsManager(io)
 
     this.villageSetting = new VillageSetting(data)

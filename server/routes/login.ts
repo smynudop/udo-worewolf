@@ -1,7 +1,8 @@
 import * as Express from "express"
 const router = Express.Router()
 
-import { User, IUser } from "../schema"
+import { User } from "../db/instance"
+import { IUser } from "../db/schema/user"
 
 router.get("/", function (req, res, next) {
   res.render("login", {})
@@ -17,16 +18,17 @@ router.post("/", function (req, res, next) {
       if (err) console.log(err)
 
       if (result == undefined || result.length == 0) {
-        const user = new User()
+        const newUser: IUser = {
+          userid,
+          password,
+          trip: "",
+        }
+        const user = new User(newUser)
 
-        user.userid = userid
-        user.password = password
+        user.save().catch((e) => console.log(e)) // todo: await
 
-        user.save(function (err: any) {
-          if (err) console.log(err)
-          req.session.userid = userid
-          res.redirect("./")
-        })
+        req.session.userid = userid
+        res.redirect("./")
       } else {
         if (password == result[0].password) {
           req.session.userid = userid

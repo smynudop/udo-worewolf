@@ -26,6 +26,8 @@ import setArrayExtension from "./array_proto"
 
 import WoreWolf from "./game/worewolf"
 import { GameManager as Wordwolf } from "./wordwolf/wordwolf"
+
+import MongooseInstance from "./db/instance"
 setArrayExtension()
 
 dotenv.config()
@@ -38,10 +40,8 @@ if (process.env.NODE_ENV == "development") {
   mongoURL = process.env.MONGO_URL as string
 }
 console.log(mongoURL)
-const mongoose = new Mongoose()
-mongoose.set("useCreateIndex", true)
-mongoose
-  .connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
+
+MongooseInstance.connect(mongoURL)
   .then((dt) => console.log("connect mongo!"))
   .catch((e) => console.log(e))
 

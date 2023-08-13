@@ -1,6 +1,6 @@
 import * as Express from "express"
 const router = Express.Router()
-import { Wordwolf as Game } from "../schema"
+import { Wordwolf as Game } from "../db/instance"
 
 /* GET home page. */
 

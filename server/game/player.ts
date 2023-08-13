@@ -4,7 +4,7 @@ import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { IStatusForClient, StatusManager } from "./statusManager"
 
-import { User } from "../schema"
+import { User } from "../db/instance"
 import { MessageOption as MessageOption, TalkOption } from "./messageTemplate"
 import { ITalkType } from "./constants"
 import SocketIO from "socket.io"
@@ -165,7 +165,7 @@ export class Player extends Visitor {
   async getTrip() {
     if (this.isBot) return false
     const user = await User.findOne({ userid: this.userid }).exec()
-    this.trip = user.trip
+    this.trip = user?.trip ?? ""
   }
 
   get isAlive() {

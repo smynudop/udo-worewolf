@@ -1,7 +1,8 @@
 import * as Express from "express"
 const router = Express.Router()
 
-import { User, IUser } from "../schema"
+import { User } from "../db/instance"
+import { IUser } from "../db/schema/user"
 /* GET home page. */
 
 router.get("/", function (req, res, next) {
@@ -32,16 +33,21 @@ router.post("/", function (req, res, next) {
       }
 
       if (result.length == 0) {
-        const user = new User()
+        const newUser: IUser = {
+          userid,
+          password,
+          trip: "",
+        }
+        const user = new User(newUser)
 
-        user.userid = userid
-        user.password = password
-
-        user.save(function (err: any) {
-          if (err) console.log(err)
-          req.session.userid = userid
-          res.redirect("../")
-        })
+        // const user = new User()
+        // user.userid = userid
+        // user.password = password
+        // user.save(function (err: any) {
+        //   if (err) console.log(err)
+        //   req.session.userid = userid
+        //   res.redirect("../")
+        // })
       } else {
         res.render("register", { error: "このIDは既に使われています" })
       }

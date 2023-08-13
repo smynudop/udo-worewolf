@@ -1,6 +1,6 @@
 import * as Express from "express"
 const router = Express.Router()
-import { Game } from "../schema"
+import { Game } from "../db/instance"
 
 /* GET home page. */
 
