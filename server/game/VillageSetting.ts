@@ -1,27 +1,19 @@
-export interface IVillageSetting {
+import { IGame, ITime } from "../db/schema/game"
+import { IPhase } from "./constants"
+
+export class VillageSetting implements IGame {
     vno: number
     name: string
     pr: string
     casttype: string
-    time: { [k: string]: number }
+    time: ITime
     GMid: string
     capacity: number
     isShowJobDead: boolean
-    kariGM?: boolean
-    state?: string
-}
+    state: string = ""
+    kariGM: boolean = false
 
-export class VillageSetting implements IVillageSetting {
-    vno: number
-    name: string
-    pr: string
-    casttype: string
-    time: { [k: string]: number }
-    GMid: string
-    capacity: number
-    isShowJobDead: boolean
-
-    constructor(data: Partial<IVillageSetting>) {
+    constructor(data: Partial<IGame>) {
         this.vno = data.vno || 1
         this.name = data.name || "とある村"
         this.pr = data.pr || "宣伝文が設定されていません"
@@ -38,7 +30,14 @@ export class VillageSetting implements IVillageSetting {
         this.isShowJobDead = data.isShowJobDead || true
     }
 
-    update(data: Partial<IVillageSetting>) {
+    getTime(phase: IPhase): number | null {
+        if (phase == "prologue" || phase == "epilogue") {
+            return null
+        }
+        return this.time[phase]
+    }
+
+    update(data: Partial<IGame>) {
         this.name = data.name || this.name
         this.pr = data.pr || this.pr
         this.casttype = data.casttype || this.casttype
@@ -47,7 +46,7 @@ export class VillageSetting implements IVillageSetting {
         this.isShowJobDead = data.isShowJobDead || this.isShowJobDead
     }
 
-    villageInfo(): IVillageSetting {
+    villageInfo(): IGame {
         return {
             vno: this.vno,
             name: this.name,
@@ -57,6 +56,8 @@ export class VillageSetting implements IVillageSetting {
             GMid: this.GMid,
             capacity: this.capacity,
             isShowJobDead: this.isShowJobDead,
+            state: this.state,
+            kariGM: this.kariGM,
         }
     }
 

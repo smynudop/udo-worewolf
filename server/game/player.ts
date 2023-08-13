@@ -1,5 +1,4 @@
 import { PlayerManager } from "./playerManager"
-import { PlayerSocket } from "./socket"
 import { Log } from "./log"
 import { VillageDate } from "./villageDate"
 import { IStatusForClient, StatusManager } from "./statusManager"
@@ -17,7 +16,7 @@ export class Visitor {
     manager: PlayerManager
     userid: string
     isPlayer: boolean
-    socket: PlayerSocket
+    rooms: Set<string> = new Set<string>()
     isGM: boolean
     isKariGM: boolean
     log: Log
@@ -26,7 +25,6 @@ export class Visitor {
         this.manager = manager
         this.userid = data.userid
         this.isPlayer = false
-        this.socket = new PlayerSocket()
         this.log = manager.log
         this.isGM = false
         this.isKariGM = false
@@ -126,7 +124,7 @@ export class Player extends Visitor {
     log: Log
     date: VillageDate
     status: StatusManager
-    socket: PlayerSocket
+    rooms: Set<string> = new Set<string>()
     constructor(data: IPlayerData, manager: PlayerManager) {
         super(data, manager)
         this.no = data.no === undefined ? 997 : data.no
@@ -147,7 +145,6 @@ export class Player extends Visitor {
         this.date = manager.date
 
         this.status = new StatusManager(this)
-        this.socket = new PlayerSocket()
 
         this.getTrip()
     }

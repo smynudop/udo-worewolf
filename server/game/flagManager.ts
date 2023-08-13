@@ -193,33 +193,33 @@ export class FlagManager {
 
     assignRoom(isShowJobDead: boolean) {
         for (const player of this.players.listAll) {
-            const socket = player.socket
+            const rooms = player.rooms
 
-            socket.join("player-" + player.no)
+            rooms.add("player-" + player.no)
 
             if (player.isGM) {
-                socket.join("gm")
+                rooms.add("gm")
             }
 
             if (player.isDead) {
-                socket.join("grave")
+                rooms.add("grave")
                 if (isShowJobDead) {
-                    socket.join("all")
+                    rooms.add("all")
                 }
             } else {
-                socket.leave("grave")
+                rooms.add("grave")
             }
 
             if (player.status.canWatch("share")) {
-                socket.join("share")
+                rooms.add("share")
             }
 
             if (player.status.canWatch("wolf")) {
-                socket.join("wolf")
+                rooms.add("wolf")
             }
 
             if (player.status.canWatch("fox")) {
-                socket.join("fox")
+                rooms.add("fox")
             }
         }
     }

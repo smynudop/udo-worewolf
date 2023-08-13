@@ -17,6 +17,7 @@ export type IGame = {
     GMid: string
     state: string
     kariGM: boolean
+    isShowJobDead: boolean
 }
 
 export const GameSchema = new Schema<IGame>({

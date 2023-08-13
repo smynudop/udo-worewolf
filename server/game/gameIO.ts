@@ -1,40 +1,34 @@
-import { IVillageSetting } from "./VillageSetting"
+import { IGame } from "../db/schema/game"
 import { eachLog } from "./log"
 import { Player } from "./player"
 
-import fs from "fs"
+import { promises as fs } from "fs"
 import ejs from "ejs"
 
 import { Game, User } from "../db/instance"
 
+export type ILogData = {
+    log: eachLog[]
+    player: Player[]
+    vinfo: IGame
+}
+
 export class GameIO {
-    static writeHTML(log: eachLog[], player: Player[], vinfo: IVillageSetting) {
-        ejs.renderFile(
-            "./views/worewolf_html.ejs",
-            {
-                logs: log,
-                players: player,
-                vinfo: vinfo,
-            },
-            function (err: Error | null, html: string) {
-                if (err) console.log(err)
-                html = html.replace(/\n{3,}/, "\n")
-                fs.writeFile(
-                    "./public/log/" + vinfo.vno + ".html",
-                    html,
-                    "utf8",
-                    function (err: any) {
-                        console.log(err)
-                    }
-                )
-            }
-        )
+    static async renderEjsAsnyc(data: ILogData): Promise<string> {
+        return await new Promise<string>((resolve, reject) => {
+            ejs.renderFile("./views/worewolf_html.ejs", data, (err: Error | null, html: string) => {
+                if (err) reject(err)
+                resolve(html.replace(/\n{3,}/, "\n"))
+            })
+        })
+    }
+    static async writeHTML(data: ILogData) {
+        const html = await GameIO.renderEjsAsnyc(data)
+        await fs.writeFile("./public/log/" + data.vinfo.vno + ".html", html)
     }
 
-    static update(vno: number, data: Partial<IVillageSetting>) {
-        Game.updateOne({ vno: vno }, { $set: data }, (err: any) => {
-            if (err) console.log(err)
-        })
+    static async update(vno: number, data: Partial<IGame>) {
+        await Game.updateOne({ vno: vno }, { $set: data })
     }
 
     static async find(vno: number) {

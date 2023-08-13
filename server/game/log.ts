@@ -43,7 +43,7 @@ export class Log {
 
     initial(visitor: Visitor) {
         const logs: eachLog[] = []
-        const rooms = visitor.socket.rooms
+        const rooms = visitor.rooms
 
         for (const log of this.list) {
             const canWatchAllLog = rooms.has("gm") || rooms.has("all")

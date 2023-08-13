@@ -6,7 +6,7 @@ import { VillageDate } from "./villageDate"
 import { GameIO } from "./gameIO"
 import { talkTemplate } from "./command"
 import { castManager } from "./cast"
-import { IVillageSetting, VillageSetting } from "./VillageSetting"
+import { VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
 import { GameNsManager } from "./GameNsManager"
 import { IGame } from "../db/schema/game"
@@ -16,7 +16,7 @@ import { IPhase, IResult, ITalkType } from "./constants"
 
 export type IChangePhaseInfo = {
     phase: IPhase
-    left: number
+    left: number | null
     nsec: number | null
     targets: Record<number, string>
     deathTargets: Record<number, string>
@@ -56,7 +56,7 @@ export class Game {
         this.listen()
     }
 
-    fixInfo(data: IVillageSetting) {
+    fixInfo(data: IGame) {
         this.villageSetting.update(data)
         GameIO.update(this.villageSetting.vno, data)
         this.log.add("system", "vinfo", { message: this.villageSetting.text() })
@@ -341,7 +341,7 @@ export class Game {
             phase == "day" && this.villageSetting.time.nsec ? this.villageSetting.time.nsec : null
         this.io.emit("changePhase", {
             phase: phase,
-            left: this.villageSetting.time[phase],
+            left: this.villageSetting.getTime(phase),
             nsec: nsec,
             targets: this.players.makeTargets(),
             deathTargets: this.players.makeTargets("death"),
@@ -386,7 +386,7 @@ export class Game {
         this.emitPlayerAll()
         this.emitChangePhase(phase)
 
-        this.date.setTimer(next[phase as keyof typeof next], this.villageSetting.time[phase])
+        this.date.setTimer(next[phase as keyof typeof next], this.villageSetting.getTime(phase)!)
     }
 
     emitAllLog() {
@@ -517,7 +517,11 @@ export class Game {
     }
 
     close() {
-        GameIO.writeHTML(this.log.all(), this.players.list, this.villageSetting.villageInfo())
+        GameIO.writeHTML({
+            log: this.log.all(),
+            player: this.players.list,
+            vinfo: this.villageSetting.villageInfo(),
+        })
         GameIO.update(this.villageSetting.vno, { state: "logged" })
     }
 }
