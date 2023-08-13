@@ -33,13 +33,17 @@ dotenv.config()
 const app = express()
 let mongoURL: string
 if (process.env.NODE_ENV == "development") {
-  mongoURL = "mongodb://localhost:27017/worewolf"
+  mongoURL = "mongodb://127.0.0.1:27017/worewolf"
 } else {
   mongoURL = process.env.MONGO_URL as string
 }
+console.log(mongoURL)
 const mongoose = new Mongoose()
 mongoose.set("useCreateIndex", true)
-mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose
+  .connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then((dt) => console.log("connect mongo!"))
+  .catch((e) => console.log(e))
 
 // view engine setup
 app.set("views", path.join(__dirname, "./views"))

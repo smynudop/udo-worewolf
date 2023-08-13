@@ -1,7 +1,7 @@
 import * as Express from "express"
 const router = Express.Router()
 
-import { User } from "../schema"
+import { User, IUser } from "../schema"
 /* GET home page. */
 
 router.get("/", function (req, res, next) {
@@ -22,24 +22,31 @@ router.post("/", function (req, res, next) {
     return false
   }
 
-  User.find({ userid: userid }, function (err: any, result: any) {
-    if (err) console.log(err)
+  User.find(
+    { userid: userid },
+    function (err: any, result: IUser[] | undefined) {
+      if (err) console.log(err)
 
-    if (result.length == 0) {
-      const user = new User()
+      if (result === undefined) {
+        return
+      }
 
-      user.userid = userid
-      user.password = password
+      if (result.length == 0) {
+        const user = new User()
 
-      user.save(function (err: any) {
-        if (err) console.log(err)
-        req.session.userid = userid
-        res.redirect("../")
-      })
-    } else {
-      res.render("register", { error: "このIDは既に使われています" })
+        user.userid = userid
+        user.password = password
+
+        user.save(function (err: any) {
+          if (err) console.log(err)
+          req.session.userid = userid
+          res.redirect("../")
+        })
+      } else {
+        res.render("register", { error: "このIDは既に使われています" })
+      }
     }
-  })
+  )
 
   /*処理を書く*/
 })

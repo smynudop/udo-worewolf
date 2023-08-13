@@ -1,6 +1,6 @@
 import * as Mongoose from "mongoose"
 
-type IUser = {
+export type IUser = {
   userid: string
   password: string
   trip: string

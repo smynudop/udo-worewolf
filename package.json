@@ -2,9 +2,8 @@
   "name": "worewolf",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "start": "node-dev ./build/bin/www",
+    "start": "node-dev ./build/bin/www.js",
     "build": "webpack",
     "build-server": "tsc",
     "check": "npx tsc --noEmit",
