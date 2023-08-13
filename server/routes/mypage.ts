@@ -1,7 +1,7 @@
 import * as Express from "express"
 const router = Express.Router()
 
-import { tripcode } from "tripcode"
+import tripcode from "tripcode"
 
 import { User } from "../schema"
 

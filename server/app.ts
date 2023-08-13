@@ -105,4 +105,4 @@ app.use(function (err: any, req: any, res: any, next: any) {
 const worewolfServer = new WoreWolf(io)
 const wordwolfServer = new Wordwolf(io)
 
-module.exports = app
+export default app

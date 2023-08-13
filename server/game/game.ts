@@ -81,7 +81,7 @@ export class Game {
         cn: player.cn,
         color: player.color,
         input: talkTemplate[talkType].lot(),
-        type: talkType,
+        size: "",
       }
 
       this.log.addTalk(talkType, data)

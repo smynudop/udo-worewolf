@@ -81,6 +81,14 @@ export interface MessageOption {
   necroResult: string
 }
 
+export interface TalkOption {
+  cn: string
+  color: string
+  size: string
+  no: number
+  input: string
+}
+
 type messageType = keyof typeof messageTemplate
 
 export class MessageFormat {
@@ -199,7 +207,7 @@ export class MessageFormat {
     return log
   }
 
-  makeTalkLog(talkType: ITalkType, option: Partial<MessageOption>) {
+  makeTalkLog(talkType: ITalkType, option: TalkOption) {
     const target = this.findTarget("talk", talkType)
     const cl = this.findClass("talk", talkType)
     const message = option.input!

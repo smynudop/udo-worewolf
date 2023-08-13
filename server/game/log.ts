@@ -3,6 +3,7 @@ import {
   messageTemplate,
   MessageFormat,
   MessageOption,
+  TalkOption,
 } from "./messageTemplate"
 import { Visitor } from "./player"
 import { VillageDate } from "./villageDate"
@@ -96,7 +97,7 @@ export class Log {
     this.emit(log)
   }
 
-  addTalk(talkType: ITalkType, option: Partial<MessageOption>) {
+  addTalk(talkType: ITalkType, option: TalkOption) {
     const log: eachLog = this.formatter.makeTalkLog(talkType, option)
 
     if (log.class == "discuss") {

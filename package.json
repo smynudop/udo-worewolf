@@ -2,9 +2,11 @@
   "name": "worewolf",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "node-dev ./build/bin/www",
     "build": "webpack",
+    "build-server": "tsc",
     "check": "npx tsc --noEmit",
     "format": "prettier --write .",
     "lint": "eslint --cache --fix server/ ",
@@ -31,6 +33,7 @@
     "utf-8-validate": "^5.0.4"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.8",
     "@types/express": "^4.17.11",
     "@types/express-session": "^1.17.3",
     "@types/jquery": "^3.5.16",
@@ -42,6 +45,7 @@
     "core-js": "^3.10.0",
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
+    "node-dev": "^8.0.0",
     "prettier": "^3.0.1",
     "ts-loader": "^8.1.0",
     "ts-node": "^9.1.1",
