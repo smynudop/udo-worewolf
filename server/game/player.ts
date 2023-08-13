@@ -7,12 +7,10 @@ import { IStatusForClient, StatusManager } from "./statusManager"
 import { User } from "../db/instance"
 import { MessageOption as MessageOption, TalkOption } from "./messageTemplate"
 import { ITalkType } from "./constants"
-import SocketIO from "socket.io"
 import { IAbility, IPassiveAbilities } from "./status"
 
 export interface IVisitorData {
     userid: string
-    socket: SocketIO.Socket | null
 }
 
 export class Visitor {
@@ -28,7 +26,7 @@ export class Visitor {
         this.manager = manager
         this.userid = data.userid
         this.isPlayer = false
-        this.socket = new PlayerSocket(data.socket)
+        this.socket = new PlayerSocket()
         this.log = manager.log
         this.isGM = false
         this.isKariGM = false
@@ -42,22 +40,15 @@ export class Visitor {
         return {}
     }
 
-    emitPersonalInfo() {
-        this.socket.emit("enterSuccess", this.forClientDetail())
+    talk(data: any): "success" | "nsec" {
+        return "success"
     }
-
-    talk(data: any) {}
 
     vote(target: any) {}
 
     update(data: any) {}
 
     useAbility(data: any, isAuto?: false) {}
-
-    emitInitialLog() {
-        const logs = this.log.initial(this)
-        this.socket.emit("initialLog", logs)
-    }
 }
 
 interface voteData {
@@ -79,7 +70,6 @@ interface ITalkData {
 
 export interface IPlayerData {
     userid: string
-    socket: SocketIO.Socket | null
 
     no?: number
     cn?: string
@@ -157,7 +147,7 @@ export class Player extends Visitor {
         this.date = manager.date
 
         this.status = new StatusManager(this)
-        this.socket = new PlayerSocket(data.socket)
+        this.socket = new PlayerSocket()
 
         this.getTrip()
     }
@@ -254,15 +244,10 @@ export class Player extends Visitor {
         }
     }
 
-    emitPersonalInfo() {
-        this.socket.emit("enterSuccess", this.forClientDetail())
-    }
-
-    talk(data: ITalkData) {
+    talk(data: ITalkData): "success" | "nsec" {
         if (data.type == "discuss" && this.date.isBanTalk) {
             this.log.add("system", "banTalk")
-            this.socket.emit("banTalk")
-            return false
+            return "nsec"
         }
 
         if (this.waitCall) {
@@ -281,6 +266,7 @@ export class Player extends Visitor {
         }
 
         this.log.addTalk(data.type, option)
+        return "success"
     }
 
     vote(data: voteData) {
@@ -293,7 +279,6 @@ export class Player extends Visitor {
             player: this.cn,
             target: target.cn,
         })
-        this.socket.emit("voteSuccess")
     }
 
     pick(target: number | string | Player) {
@@ -341,7 +326,6 @@ export class Player extends Visitor {
             isAuto: isAuto,
             no: this.no,
         })
-        this.socket.emit("useAbilitySuccess")
 
         if (data.type == "bite") {
             this.status.add("biter")

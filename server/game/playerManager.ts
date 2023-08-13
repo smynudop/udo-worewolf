@@ -51,27 +51,27 @@ export class PlayerManager {
         return p
     }
 
-    leave(userid: string) {
+    leave(userid: string): Player {
         const id = this.pick(userid).no
         const p = this.players[id]
-        p.socket.emit("leaveSuccess")
 
         this.log.add("player", "leave", { player: p.cn })
         delete this.players[id]
         delete this.userid2no[userid]
         this.refreshList()
+
+        return p
     }
 
-    kick(target: string) {
+    kick(target: string): Player | null {
         const iTarget = +target
 
-        if (!(target in this.players)) return false
+        if (!(target in this.players)) return null
         const p = this.pick(target)
 
-        if (p.isGM || p.isKariGM || p.isDamy) return false
+        if (p.isGM || p.isKariGM || p.isDamy) return null
 
         const userid = p.userid
-        p.socket.emit("leaveSuccess")
 
         this.log.add("player", "kick", {
             player: p.cn,
@@ -79,6 +79,8 @@ export class PlayerManager {
         delete this.players[iTarget]
         delete this.userid2no[userid]
         this.refreshList()
+
+        return p
     }
 
     in(userid: string) {
@@ -230,7 +232,6 @@ export class PlayerManager {
     summonDamy() {
         this.add({
             userid: "shonichi",
-            socket: null,
             cn: "初日犠牲者",
             color: "orange",
             isDamy: true,
@@ -242,7 +243,6 @@ export class PlayerManager {
         const cn = npcNames.shift()
         this.add({
             userid: "damy-" + cn,
-            socket: null,
             cn: cn,
             color: "orange",
             isNPC: true,
@@ -253,7 +253,6 @@ export class PlayerManager {
         if (isKari) {
             this.add({
                 userid: gmid,
-                socket: null,
                 cn: "仮GM",
                 color: "orange",
                 isKariGM: true,
@@ -263,7 +262,6 @@ export class PlayerManager {
         const gm = new Player(
             {
                 userid: gmid,
-                socket: null,
                 no: 999,
                 isGM: true,
                 cn: "ゲームマスター",

@@ -36,11 +36,11 @@
 <div id="right">
 <div id="player">
 <ul id="playerlist">
-<% for (var player of players) { -%>
-<% var cl = player.isAlive ? "alive" : "dead" -%>
-<% var job = player.status ? "["+player.status.nameja+"]" : "" -%>
+<% for (var _p of players) { -%>
+<% var cl = _p.isAlive ? "alive" : "dead" -%>
+<% var job = _p.status ? "["+_p.status.nameja+"]" : "" -%>
 <li class="<%= cl %>">
-    <%= player.cn %><%= job %><br /><%= player.userid %><%= player.trip %>
+    <%= _p.cn %><%= _p.job %><br /><%= _p.userid %><%= _p.trip %>
 </li>
 <% } -%>
 </ul>

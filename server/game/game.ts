@@ -70,6 +70,7 @@ export class Game {
 
     assignRoom() {
         this.flagManager.assignRoom(this.villageSetting.isShowJobDead)
+        this.io.assignRoom()
     }
 
     npcTalk() {
@@ -361,7 +362,7 @@ export class Game {
 
     emitPersonalData() {
         for (const player of this.players.listAll) {
-            player.socket.emit("you", player.forClientDetail())
+            this.io.emitPersonal("you", player.forClientDetail(), player.no)
         }
     }
 
@@ -396,26 +397,28 @@ export class Game {
         this.io.listen((socket: SocketIO.Socket) => {
             // @ts-ignore
             const userid = socket.request.session.userid
-            let player: Visitor
+
+            let visitor: Visitor
 
             this.emitPlayer(socket)
 
             if (this.players.in(userid)) {
-                player = this.players.pick(userid)
+                visitor = this.players.pick(userid)
+                const player = visitor as Player
 
-                player.socket.updateSocket(socket)
-                player.emitPersonalInfo()
-
+                //player.socket.updateSocket(socket)
+                //player.emitPersonalInfo()
+                this.io.emitPersonal("enterSuccess", player.forClientDetail(), player.no)
                 this.assignRoom()
 
                 this.emitPlayerAll()
             } else {
                 const data = { userid: userid, socket: socket }
-                player = this.players.newVisitor(data)
+                visitor = this.players.newVisitor(data)
             }
 
             this.emitInitialPhase(socket)
-            player.emitInitialLog()
+            this.io.emitPersonal("initialLog", this.log.initial(visitor), 0) // TODO
 
             socket.on("enter", (data) => {
                 if (this.players.in(userid)) return false
@@ -423,30 +426,39 @@ export class Game {
 
                 data.userid = userid
                 data.socket = socket
-                player = this.players.add(data)
+                visitor = this.players.add(data)
+                const player = visitor as Player
 
-                player.emitPersonalInfo()
+                this.io.emitPersonal("enterSuccess", player.forClientDetail(), player.no)
                 this.emitPlayerAll()
             })
 
             socket.on("leave", (data) => {
-                if (!player || player.isGM || player.isKariGM) return false
-                this.players.leave(userid)
+                if (!visitor || visitor.isGM || visitor.isKariGM) return false
+
+                const p = this.players.leave(userid)
+                if (p != null) {
+                    this.io.emitPersonal("leaveSuccess", true, p.no)
+                }
                 this.emitPlayerAll()
             })
 
             socket.on("fix-player", (data) => {
-                player.update(data)
+                visitor.update(data)
                 this.emitPlayerAll()
             })
 
             socket.on("talk", (data) => {
-                player.talk(data)
+                const result = visitor.talk(data)
+                if (result == "nsec") {
+                    this.io.emitPersonal("banTalk", true, 0) // 要改善
+                }
                 this.emitPlayerAll() // 要改善
             })
 
             socket.on("vote", (data) => {
-                player.vote(data)
+                visitor.vote(data)
+                this.io.emitPersonal("voteSuccess", true, 0) // TODO
                 this.checkAllVote()
             })
 
@@ -460,39 +472,43 @@ export class Game {
                         this.io.emitRoom("useAbilitySuccess", true, "wolf")
                         break
                 }
-                player.useAbility(data)
+                visitor.useAbility(data)
+                this.io.emitPersonal("useAbilitySuccess", true, 0) // TODO
             })
 
             socket.on("rollcall", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
                 this.startRollcall()
             })
 
             socket.on("start", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
                 this.start()
             })
 
             socket.on("summonNPC", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
                 this.players.summonNPC()
                 this.emitPlayerAll()
             })
 
             socket.on("checkCast", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
                 this.checkCast()
             })
 
             socket.on("kick", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
 
-                this.players.kick(data.target)
+                const p = this.players.kick(data.target)
+                if (p != null) {
+                    this.io.emitPersonal("leaveSuccess", true, p.no)
+                }
                 this.emitPlayerAll()
             })
 
             socket.on("fix-gm", (data) => {
-                if (!player.hasPermittionOfGMCommand) return false
+                if (!visitor.hasPermittionOfGMCommand) return false
 
                 this.fixInfo(data)
             })

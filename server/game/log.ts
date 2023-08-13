@@ -1,4 +1,3 @@
-import SocketIO from "socket.io"
 import { messageTemplate, MessageFormat, MessageOption, TalkOption } from "./messageTemplate"
 import { Visitor } from "./player"
 import { VillageDate } from "./villageDate"

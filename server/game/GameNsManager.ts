@@ -1,5 +1,5 @@
 import { Socket, Namespace } from "socket.io"
-import { IPlayerForClient } from "./player"
+import { IPlayerForClient, IPlayerforPlayer } from "./player"
 import { eachLog } from "./log"
 import { IChangePhaseInfo } from "./game"
 
@@ -10,6 +10,11 @@ type EmitAllType = {
     talk: eachLog
     useAbilitySuccess: boolean
     refresh: boolean
+    you: IPlayerForClient
+    enterSuccess: IPlayerforPlayer
+    voteSuccess: boolean
+    banTalk: boolean
+    leaveSuccess: boolean
 }
 type EmitEvent = keyof EmitAllType
 
@@ -40,4 +45,6 @@ export class GameNsManager {
     listen(func: (Socket: Socket) => void) {
         this.io.on("connection", func)
     }
+
+    assignRoom() {}
 }
