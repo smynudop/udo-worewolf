@@ -32,8 +32,8 @@ setArrayExtension()
 const app = express()
 
 MongooseInstance.connect(mongoURL)
-  .then((dt) => console.log("connect mongo!"))
-  .catch((e) => console.log(e))
+    .then((dt) => console.log("connect mongo!"))
+    .catch((e) => console.log(e))
 
 // view engine setup
 app.set("views", path.join(__dirname, "./views"))
@@ -53,8 +53,8 @@ const io = new Server()
 app.io = io
 
 io.use(function (socket: Socket, next: any) {
-  // @ts-ignore
-  sessionMiddleWare(socket.request, socket.request.res, next)
+    // @ts-ignore
+    sessionMiddleWare(socket.request, socket.request.res, next)
 })
 
 app.use("/", indexRouter)
@@ -73,18 +73,18 @@ app.use("/wordwolf", wordwolfRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req: Express.Request, res: Express.Response, next: any) {
-  next(createError(404))
+    next(createError(404))
 })
 
 // error handler
 app.use(function (err: any, req: any, res: any, next: any) {
-  // set locals, only providing error in development
-  res.locals.message = err.message
-  res.locals.error = req.app.get("env") === "development" ? err : {}
+    // set locals, only providing error in development
+    res.locals.message = err.message
+    res.locals.error = req.app.get("env") === "development" ? err : {}
 
-  // render the error page
-  res.status(err.status || 500)
-  res.render("error")
+    // render the error page
+    res.status(err.status || 500)
+    res.render("error")
 })
 
 const worewolfServer = new WoreWolf(io)
