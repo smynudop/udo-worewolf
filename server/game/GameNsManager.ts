@@ -11,7 +11,7 @@ import { IChangePhaseInfo } from "./game"
 import { ITalkData } from "./player"
 import { IGame } from "../db/schema/game"
 
-type EmitAllType = {
+export type EmitAllType = {
     player: IPlayerForClient[]
     changePhase: IChangePhaseInfo
     initialLog: eachLog[]
@@ -24,11 +24,11 @@ type EmitAllType = {
     banTalk: boolean
     leaveSuccess: boolean
 }
-type EmitEvent = keyof EmitAllType
+export type EmitEvent = keyof EmitAllType
 
-type RecieveAllType = {
+export type RecieveAllType = {
     connect: null
-    enter: any
+    enter: IUpdatePlayerData
     leave: null
     fixPlayer: IUpdatePlayerData
     talk: ITalkData
@@ -41,7 +41,7 @@ type RecieveAllType = {
     kick: { target: number }
     fixVillage: IGame
 }
-type RecieveEvent = keyof RecieveAllType
+export type RecieveEvent = keyof RecieveAllType
 
 type EventCallback<T = any> = (userid: string, data: T, manager: GameNsManager) => void
 
@@ -54,13 +54,13 @@ export class GameNsManager {
     }
 
     emit<T extends EmitEvent>(event: T, arg: EmitAllType[T]) {
-        console.log(`send all ${event} `)
+        console.log(`[→]send all ${event} `)
 
         this.io.emit(event, arg)
     }
 
     emitPlayer<T extends EmitEvent>(event: T, arg: EmitAllType[T]) {
-        console.log(`send emitplayer ${event} `)
+        console.log(`[→]send emitplayer ${event} `)
         this.io.to(["gm", "all"]).emit(event, arg)
     }
 
@@ -70,7 +70,7 @@ export class GameNsManager {
     }
 
     emitPersonal<T extends EmitEvent>(event: T, arg: EmitAllType[T], id: number) {
-        console.log(`send ${event} id: ${id}`)
+        console.log(`[→]send ${event} id: ${id}`)
         const rooms = ["gm", "all", "player-" + id]
         this.io.to(rooms).emit(event, arg)
     }
@@ -82,11 +82,12 @@ export class GameNsManager {
      * @param id
      */
     emitByUserId<T extends EmitEvent>(event: T, arg: EmitAllType[T], userid: string) {
-        console.log(`send ${event} user: ${userid}`)
+        console.log(`[→]send ${event} user: ${userid}`)
 
         const socket = this.sockets.get(userid)
+        console.log(socket)
         if (socket != null) {
-            socket.send(event, arg)
+            socket.emit(event, arg)
         } else {
             console.warn("socket is undefined.")
         }
@@ -97,7 +98,7 @@ export class GameNsManager {
     }
 
     dispatch<T extends RecieveEvent>(event: T, userid: string, data: RecieveAllType[T]) {
-        console.log(`dispatch ${event} user: ${userid}`)
+        console.log(`[←]dispatch ${event} user: ${userid}`)
 
         const callback = this.events.get(event)
         if (callback != null) {

@@ -2,7 +2,7 @@ import $ from "jquery"
 
 import { eachLog } from "../server/game/log"
 import { IPlayerForClient, IPlayerforPlayer } from "../server/game/player"
-import { IVillageSetting } from "../server/game/VillageSetting"
+import { IGame } from "../server/db/schema/game"
 import { ITalkDetail } from "../server/game/command"
 import IO, { Socket } from "socket.io-client"
 
@@ -17,12 +17,12 @@ interface IChangePhaseData {
     targets: Record<number, string>
     deathTargets?: Record<number, string>
     day: number
-    villageInfo?: IVillageSetting
+    villageInfo?: IGame
 }
 
 export class Client2 {
     socket: Socket
-    villageData: IVillageSetting | null
+    villageData: IGame | null
     me: IPlayerforPlayer & { isWatch?: true }
     msgtmp: string
     phase: string
@@ -94,7 +94,7 @@ export class Client2 {
                 } else if (key == "isShowJobDead") {
                     $("fix-isShowJobDead").val(vinfo[key] ? 1 : 0)
                 } else {
-                    $(`#fix-${key}`).val(vinfo[key as keyof IVillageSetting] as string)
+                    $(`#fix-${key}`).val(vinfo[key as keyof IGame] as string)
                 }
             }
         }

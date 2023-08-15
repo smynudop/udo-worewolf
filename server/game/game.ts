@@ -416,8 +416,7 @@ export class Game {
             if (this.players.in(userid)) return false
             if (this.players.num >= this.villageSetting.capacity) return false
 
-            data.userid = userid
-            const player = this.players.add(data)
+            const player = this.players.add({ ...data, userid })
 
             this.io.emitByUserId("enterSuccess", player.forClientDetail(), userid)
             this.emitPlayerAll()

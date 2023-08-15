@@ -7,6 +7,7 @@ const config = {
         es2021: true,
     },
     extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+    ignorePatterns: ["webpack.config.js", "build/public/javascripts/*.js"],
     overrides: [
         {
             env: {

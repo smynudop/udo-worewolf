@@ -16,7 +16,7 @@ export interface IStatusForClient {
     name: string
     nameja: string
     desc: string
-    ability: string[]
+    ability: IAbilityType[]
     target: number | null
     vote: number | null
     command: ICommand[]

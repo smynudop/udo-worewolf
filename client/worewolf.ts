@@ -1,5 +1,8 @@
-import { Client2 } from "./worewolf-client"
+import App from "./worewolf.vue"
+import { createApp, h } from "vue"
 
-$(function () {
-    const client = new Client2()
-})
+console.log(App)
+
+createApp({
+    render: () => h(App),
+}).mount("#app")
