@@ -6,7 +6,7 @@ import {
     IUpdatePlayerData,
     IVoteData,
 } from "./player"
-import { eachLog } from "./log"
+import { EachLog } from "./log"
 import { IChangePhaseInfo } from "./game"
 import { ITalkData } from "./player"
 import { IGame } from "../db/schema/game"
@@ -14,11 +14,11 @@ import { IGame } from "../db/schema/game"
 export type EmitAllType = {
     player: IPlayerForClient[]
     changePhase: IChangePhaseInfo
-    initialLog: eachLog[]
-    talk: eachLog
+    initialLog: EachLog[]
+    talk: EachLog
     useAbilitySuccess: boolean
     refresh: boolean
-    you: IPlayerForClient
+    you: IPlayerforPlayer
     enterSuccess: IPlayerforPlayer
     voteSuccess: boolean
     banTalk: boolean

@@ -1,5 +1,5 @@
 import { IGame } from "../db/schema/game"
-import { eachLog } from "./log"
+import { EachLog } from "./log"
 import { Player } from "./player"
 
 import { promises as fs } from "fs"
@@ -8,7 +8,7 @@ import ejs from "ejs"
 import { Game, User } from "../db/instance"
 
 export type ILogData = {
-    log: eachLog[]
+    log: EachLog[]
     player: Player[]
     vinfo: IGame
 }

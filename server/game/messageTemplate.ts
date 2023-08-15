@@ -1,5 +1,5 @@
 import { VillageDate } from "./villageDate"
-import { Log, eachLog } from "./log"
+import { Log, LogTarget, EachLog, SystemLog, TalkLog } from "./log"
 import { ITalkType } from "./constants"
 
 export const messageTemplate = {
@@ -60,10 +60,6 @@ export const messageTemplate = {
 } as const
 
 export interface MessageOption {
-    cn: string
-    color: string
-    talkType: string
-    size: string
     no: number
     player: string
     target: string
@@ -135,7 +131,7 @@ export class MessageFormat {
         return message
     }
 
-    findTarget(type: string, detail: string): string {
+    findTarget(type: string, detail: string): LogTarget {
         switch (type) {
             case "vote":
                 if (detail == "success") return "personal"
@@ -181,14 +177,14 @@ export class MessageFormat {
         return "system"
     }
 
-    makeLog(type: messageType, detail: string, option: Partial<MessageOption>) {
+    makeLog(type: messageType, detail: string, option: Partial<MessageOption>): SystemLog {
         const target = this.findTarget(type, detail)
         const cl = this.findClass(type, detail)
         const message = this.format(type, detail, option)
 
         const no = option.no === undefined ? 999 : option.no
 
-        const log: eachLog = {
+        const log: SystemLog = {
             target: target,
             type: "system",
             class: cl,
@@ -196,23 +192,19 @@ export class MessageFormat {
             day: this.date.day,
             phase: this.date.phase,
             no: no,
-            cn: option.cn || "",
-            color: option.color || "",
-            size: option.size || "normal",
-            quote: "",
         }
 
         return log
     }
 
-    makeTalkLog(talkType: ITalkType, option: TalkOption) {
+    makeTalkLog(talkType: ITalkType, option: TalkOption): TalkLog {
         const target = this.findTarget("talk", talkType)
         const cl = this.findClass("talk", talkType)
         const message = option.input!
 
         const no = option.no === undefined ? 999 : option.no
 
-        const log: eachLog = {
+        const log: TalkLog = {
             target: target,
             type: "talk",
             class: cl,
@@ -220,10 +212,9 @@ export class MessageFormat {
             day: this.date.day,
             phase: this.date.phase,
             no: no,
-            cn: option.cn || "",
-            color: option.color || "",
-            size: option.size || "normal",
-            quote: "",
+            cn: option.cn,
+            color: option.color,
+            size: option.size,
         }
 
         return log

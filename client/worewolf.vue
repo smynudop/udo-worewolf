@@ -12,8 +12,13 @@ import discuss from "./component/discuss.vue"
 import Talk from "./component/talk.vue"
 
 import SocketService from "./socketService"
-import type { eachLog } from "../server/game/log"
-import type { IPlayerForClient, ITalkData, IVoteData } from "../server/game/player"
+import type { EachLog } from "../server/game/log"
+import type {
+    IPlayerforPlayer,
+    IPlayerForClient,
+    ITalkData,
+    IVoteData,
+} from "../server/game/player"
 import { IGame } from "../server/db/schema/game"
 import { IPhase } from "../server/game/constants"
 import { IUpdatePlayerData } from "../server/game/player"
@@ -26,8 +31,8 @@ type IPlayerWatch = {
     type: "watch"
 }
 
-const logs = ref<Array<eachLog>>([])
-const me = ref<IPlayerForClient | IPlayerWatch>({
+const logs = ref<Array<EachLog>>([])
+const me = ref<IPlayerforPlayer | IPlayerWatch>({
     type: "watch",
 })
 const players = ref<IPlayerForClient[]>([])

@@ -1,27 +1,49 @@
 import { messageTemplate, MessageFormat, MessageOption, TalkOption } from "./messageTemplate"
 import { VillageDate } from "./villageDate"
 import { GameNsManager } from "./GameNsManager"
-import { ITalkType } from "./constants"
+import { IPhase, ITalkType } from "./constants"
 import { Player } from "./player"
 
-export interface eachLog {
-    target: string
-    type: string
+export type LogTarget = "all" | "personal" | "wolf" | "share" | "fox" | "grave"
+
+export interface SystemLog {
+    target: LogTarget
+    type: "system"
     no?: number
     day: number
-    phase: string
-    resno?: number
-    anchor?: string
-    quote: string
+    phase: IPhase
     message: string
     class: string
+
+    res?: {
+        no: number
+        quote: string
+        anchor: string
+    }
+}
+export interface TalkLog {
     cn: string
     color: string
     size: string
+    target: LogTarget
+    type: "talk"
+    no?: number
+    day: number
+    phase: IPhase
+    message: string
+    class: string
+
+    res?: {
+        no: number
+        quote: string
+        anchor: string
+    }
 }
 
+export type EachLog = SystemLog | TalkLog
+
 export class Log {
-    list: eachLog[]
+    list: EachLog[]
     io: GameNsManager
     date: VillageDate
     count: number
@@ -42,7 +64,7 @@ export class Log {
     }
 
     initial(player?: Player) {
-        const logs: eachLog[] = []
+        const logs: EachLog[] = []
         const rooms = player?.rooms ?? new Set<string>()
         const canWatchAllLog = rooms.has("gm") || rooms.has("all")
 
@@ -64,8 +86,7 @@ export class Log {
     }
 
     quoteDiscuss(anchor: string) {
-        const logs = this.list.filter((log) => log.anchor == anchor)
-        return logs.length ? logs[0] : null
+        return this.list.find((log) => log.res?.anchor == anchor)
     }
 
     replaceQuote(txt: string, num: number) {
@@ -74,25 +95,29 @@ export class Log {
             if (cnt >= num) return match
             cnt++
             const q = this.quoteDiscuss(match)
-            return q ? q.quote : match
+            return q?.res?.quote ?? match
         })
         return txt
     }
 
     add(type: keyof typeof messageTemplate, detail: string, option: Partial<MessageOption> = {}) {
-        const log: eachLog = this.formatter.makeLog(type, detail, option)
+        const log: EachLog = this.formatter.makeLog(type, detail, option)
 
         this.list.push(log)
         this.emit(log)
     }
 
     addTalk(talkType: ITalkType, option: TalkOption) {
-        const log: eachLog = this.formatter.makeTalkLog(talkType, option)
+        const log: EachLog = this.formatter.makeTalkLog(talkType, option)
 
         if (log.class == "discuss") {
-            log.resno = this.count
-            log.anchor = `&gt;&gt;${log.day}-${log.resno}`
-            log.quote = `<blockquote><div class="resno">${log.anchor}</div>${log.message}</blockquote>`
+            const resno = this.count
+            const anchor = `&gt;&gt;${log.day}-${resno}`
+            log.res = {
+                anchor,
+                quote: `<blockquote><div class="resno">${anchor}</div>${log.message}</blockquote>`,
+                no: resno,
+            }
 
             log.message = this.replaceQuote(log.message, 3)
             this.count++
@@ -102,7 +127,7 @@ export class Log {
         this.emit(log)
     }
 
-    private emit(log: eachLog) {
+    private emit(log: EachLog) {
         switch (log.target) {
             case "all":
                 this.io.emit("talk", log)
