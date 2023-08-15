@@ -2,6 +2,7 @@ import SocketIO from "socket.io"
 import { Game } from "./game"
 import { GameIO } from "./gameIO"
 import { sessionMiddleWare } from "../session"
+import { SocketController } from "./SocketController"
 
 export class GameManager {
     io: SocketIO.Server
@@ -29,7 +30,8 @@ export class GameManager {
                     //@ts-ignore
                     sessionMiddleWare(socket.request, socket.request.res, next)
                 )
-                const village = new Game(nsp, result)
+                const controller = new SocketController(nsp)
+                const village = new Game(controller, result)
                 console.log("listen room-" + vno)
             }
         })

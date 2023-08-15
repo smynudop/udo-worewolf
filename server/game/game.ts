@@ -8,11 +8,12 @@ import { talkTemplate } from "./command"
 import { castManager } from "./cast"
 import { VillageSetting } from "./VillageSetting"
 import SocketIO from "socket.io"
-import { GameNsManager } from "./GameNsManager"
+import { SocketController } from "./SocketController"
 import { IGame } from "../db/schema/game"
 
 import moment from "moment"
 import { IPhase, IResult, ITalkType } from "./constants"
+import { IController } from "./IController"
 
 export type IChangePhaseInfo = {
     phase: IPhase
@@ -25,7 +26,7 @@ export type IChangePhaseInfo = {
 }
 
 export class Game {
-    io: GameNsManager
+    io: IController
     villageSetting: VillageSetting
     isKariGM: boolean
     date: VillageDate
@@ -35,8 +36,8 @@ export class Game {
     leftVoteNum: number
     win: IResult | null = null
 
-    constructor(io: SocketIO.Namespace, data: IGame) {
-        this.io = new GameNsManager(io)
+    constructor(controller: IController, data: IGame) {
+        this.io = controller
 
         this.villageSetting = new VillageSetting(data)
         this.isKariGM = data.kariGM || false
@@ -520,7 +521,7 @@ export class Game {
             this.fixInfo(data)
         })
 
-        this.io.listen2()
+        this.io.listen()
 
         this.io.emit("refresh", true)
     }

@@ -1,8 +1,8 @@
 import { messageTemplate, MessageFormat, MessageOption, TalkOption } from "./messageTemplate"
 import { VillageDate } from "./villageDate"
-import { GameNsManager } from "./GameNsManager"
 import { IPhase, ITalkType } from "./constants"
 import { Player } from "./player"
+import { IController } from "./IController"
 
 export type LogTarget = "all" | "personal" | "wolf" | "share" | "fox" | "grave"
 
@@ -44,15 +44,15 @@ export type EachLog = SystemLog | TalkLog
 
 export class Log {
     list: EachLog[]
-    io: GameNsManager
+    io: IController
     date: VillageDate
     count: number
 
     formatter: MessageFormat
 
-    constructor(nsp: GameNsManager, date: VillageDate) {
+    constructor(controller: IController, date: VillageDate) {
         this.list = []
-        this.io = nsp
+        this.io = controller
         this.date = date
         this.count = 1
 

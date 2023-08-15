@@ -1,51 +1,14 @@
 import { Socket, Namespace } from "socket.io"
 import {
-    IAbilityData,
-    IPlayerForClient,
-    IPlayerforPlayer,
-    IUpdatePlayerData,
-    IVoteData,
-} from "./player"
-import { EachLog } from "./log"
-import { IChangePhaseInfo } from "./game"
-import { ITalkData } from "./player"
-import { IGame } from "../db/schema/game"
+    EmitAllType,
+    EmitEvent,
+    RecieveAllType,
+    RecieveEvent,
+    EventCallback,
+    IController,
+} from "./IController"
 
-export type EmitAllType = {
-    player: IPlayerForClient[]
-    changePhase: IChangePhaseInfo
-    initialLog: EachLog[]
-    talk: EachLog
-    useAbilitySuccess: boolean
-    refresh: boolean
-    you: IPlayerforPlayer
-    enterSuccess: IPlayerforPlayer
-    voteSuccess: boolean
-    banTalk: boolean
-    leaveSuccess: boolean
-}
-export type EmitEvent = keyof EmitAllType
-
-export type RecieveAllType = {
-    connect: null
-    enter: IUpdatePlayerData
-    leave: null
-    fixPlayer: IUpdatePlayerData
-    talk: ITalkData
-    vote: IVoteData
-    ability: IAbilityData
-    rollcall: null
-    start: null
-    summonNPC: null
-    checkCast: null
-    kick: { target: number }
-    fixVillage: IGame
-}
-export type RecieveEvent = keyof RecieveAllType
-
-type EventCallback<T = any> = (userid: string, data: T, manager: GameNsManager) => void
-
-export class GameNsManager {
+export class SocketController implements IController {
     io: Namespace
     events: Map<RecieveEvent, EventCallback> = new Map()
     sockets: Map<string, Socket> = new Map()
@@ -108,11 +71,7 @@ export class GameNsManager {
         }
     }
 
-    listen(func: (Socket: Socket) => void) {
-        this.io.on("connection", func)
-    }
-
-    listen2() {
+    listen() {
         this.io.on("connection", (socket) => {
             console.log("new Connection")
 
