@@ -30,17 +30,13 @@ export type IUpdatePlayerData = {
 
 export interface IPlayerData {
     userid: string
-
-    no?: number
-    cn?: string
-    color?: string
-    isPlayer?: boolean
+    no: number
+    cn: string
+    color: string
     isGM?: boolean
     isKariGM?: boolean
     isDamy?: boolean
     isNPC?: boolean
-    waitCall?: boolean
-    trip?: string
 }
 
 export type IPlayerForVisitor = {
@@ -90,8 +86,7 @@ export class Player {
     constructor(data: IPlayerData, manager: PlayerManager) {
         this.userid = data.userid
         this.isPlayer = true
-        this.no = data.no === undefined ? 997 : data.no
-        this.userid = data.userid || "null"
+        this.no = data.no
 
         this.cn = data.cn || "kari"
         this.color = data.color || "red"

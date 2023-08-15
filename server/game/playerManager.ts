@@ -28,10 +28,9 @@ export class PlayerManager {
         this.date = game.date
     }
 
-    add(data: IPlayerData) {
+    add(data: Omit<IPlayerData, "no">) {
         const no = this.count
-        data.no = no
-        const p = new Player(data, this)
+        const p = new Player({ ...data, no: this.count }, this)
 
         const userid = data.userid
 
@@ -229,7 +228,7 @@ export class PlayerManager {
     }
 
     summonNPC() {
-        const cn = npcNames.shift()
+        const cn = npcNames.shift() ?? "damy-xxx"
         this.add({
             userid: "damy-" + cn,
             cn: cn,
