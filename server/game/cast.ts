@@ -8,62 +8,19 @@ import MomokuriB from "./cast/MomokuriB"
 import MomokuriC from "./cast/MomokuriC"
 import MomokuriF from "./cast/MomokuriF"
 
-export type EachCast = { [job: string]: number }
-export type Cast = { [num: number]: EachCast }
-
-class CastType {
+type EachCast = (JobName | JobName[])[]
+export type Cast = {
     name: string
-    abbr: string
-    cast: Cast
-    constructor(name: string, abbr: string, cast: Cast) {
-        this.name = name
-        this.abbr = abbr
-        this.cast = cast
-    }
-
-    toJobList(num: number): Job[] | undefined {
-        if (!this.cast[num]) return undefined
-
-        const cast = this.cast[num]
-
-        const jobList: Job[] = []
-        for (let job in cast) {
-            for (let cnt = 0; cnt < cast[job]; cnt++) {
-                if (/or/.test(job)) {
-                    job = job.split("or").lot()
-                }
-                // TODO: 暫定的な処置…
-                jobList.push(new JobEnum[job as keyof typeof JobEnum]())
-            }
-        }
-
-        do {
-            jobList.shuffle()
-        } while (jobList[0].onlyNotDamy)
-
-        return jobList
-    }
-
-    castTxt(num: number) {
-        if (!this.cast[num]) return ""
-        const cast = this.cast[num]
-
-        const txts: string[] = []
-        for (const job in cast) {
-            txts.push(`${job}${cast[job]}`)
-        }
-
-        return `【${this.name}】` + txts.join("、")
-    }
+    mark: string
+    [num: number]: EachCast
 }
 
 class CastManager {
-    list: CastType[]
-    abbr2cast: { [abbr: string]: CastType }
+    list: Cast[]
+    abbr2cast: Map<string, Cast> = new Map()
 
-    constructor(list: CastType[]) {
+    constructor(list: Cast[]) {
         this.list = list
-        this.abbr2cast = {}
         this.makeObj()
     }
 
@@ -73,44 +30,60 @@ class CastManager {
     }
 
     makeObj() {
-        for (const casttype of this.list) {
-            this.abbr2cast[casttype.abbr] = casttype
+        for (const cast of this.list) {
+            this.abbr2cast.set(cast.mark, cast)
         }
     }
 
-    getCast(abbr: string): CastType | null {
-        return this.abbr2cast[abbr]
+    getCast(abbr: string, num: number): EachCast | undefined {
+        return this.abbr2cast.get(abbr)?.[num]
     }
 
     jobList(abbr: string, num: number): Job[] | undefined {
-        return this.getCast(abbr)?.toJobList(num) ?? undefined
+        const eachCast = this.getCast(abbr, num)
+        if (!eachCast) return undefined
+
+        const names = eachCast.map((name) => (Array.isArray(name) ? name.lot() : name))
+        return names.map((name) => new JobEnum[name]())
     }
 
-    makeCastTxt(abbr: string, num: number): string {
-        return this.getCast(abbr)?.castTxt(num) ?? ""
+    makeCastTxt(abbr: string, num: number): string | undefined {
+        const cast = this.abbr2cast.get(abbr)
+        if (!cast) return undefined
+
+        const eachCast = cast[num]
+        if (!eachCast) return undefined
+
+        const cnts: Record<string, number> = {}
+
+        for (const job of eachCast) {
+            const name = Array.isArray(job) ? job.join("or") : job
+            cnts[name] ??= 0
+            cnts[name]++
+        }
+
+        const txts = Object.entries(cnts).map(([name, cnt]) => `${name}${cnt}`)
+
+        return `【${cast.name}】` + txts.join("、")
     }
 
     makeCastTxtAll(num: number) {
         const txts: string[] = []
         for (const casttype of this.list) {
-            const txt = casttype.castTxt(num)
+            const txt = this.makeCastTxt(casttype.mark, num)
             if (txt) txts.push(txt)
         }
         return txts.join("<br/>")
     }
-
-    abbr2name(abbr: string) {
-        return this.getCast(abbr)?.name ?? "？"
-    }
 }
 
 export const castManager = new CastManager([
-    new CastType("焼肉", "Y", Yakiniku),
-    new CastType("わかめて", "W", WakameteCast),
-    new CastType("桃栗なし", "M0", MomokuriNasi),
-    new CastType("桃栗あり", "M1", MomokuriAri),
-    new CastType("桃栗A", "MA", MomokuriA),
-    new CastType("桃栗B", "MB", MomokuriB),
-    new CastType("桃栗C", "MC", MomokuriC),
-    new CastType("桃栗F", "MF", MomokuriF),
+    Yakiniku,
+    WakameteCast,
+    MomokuriA,
+    MomokuriB,
+    MomokuriC,
+    MomokuriF,
+    MomokuriAri,
+    MomokuriNasi,
 ])
