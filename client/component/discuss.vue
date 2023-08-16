@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { eachLog } from "../../server/game/log"
+import { EachLog } from "../../server/game/log"
 import Log from "./log.vue"
 
 const props = defineProps<{
-    logs: eachLog[]
+    logs: EachLog[]
 }>()
 </script>
 

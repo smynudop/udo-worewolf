@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { eachLog } from "../../server/game/log"
+import { EachLog } from "../../server/game/log"
 const props = defineProps<{
-    log: eachLog
+    log: EachLog
 }>()
 </script>
 

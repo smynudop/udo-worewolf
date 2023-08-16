@@ -1,11 +1,11 @@
-import type * as SocketIO from "socket.io-client"
-import { EmitEvent, EmitAllType, RecieveEvent, RecieveAllType } from "../server/game/GameNsManager"
+import { io, Socket } from "socket.io-client"
+import { EmitEvent, EmitAllType, RecieveEvent, RecieveAllType } from "../server/game/IController"
 
-declare const io: typeof SocketIO.io
+//declare const io: typeof SocketIO.io
 
 type EventCallBack<T = any> = (data: T) => void
 export default class SocketService {
-    socket: SocketIO.Socket
+    socket: Socket
     events: Map<EmitEvent | "disconnect", EventCallBack> = new Map()
     constructor(namespace: string, isLocalhost = false) {
         this.socket = io(namespace, {
