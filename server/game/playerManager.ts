@@ -171,7 +171,7 @@ export class PlayerManager {
         const max = Math.max(...Object.values(votes))
         const maxers = keyof(votes).filter((v) => votes[+v] == max)
 
-        const exec = maxers.length == 1 ? this.getPlayerByNo(maxers[0]) : null
+        const exec = maxers.length == 1 ? this.getPlayerByNo(maxers[0]) : undefined
 
         return {
             table: table,

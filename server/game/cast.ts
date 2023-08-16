@@ -25,7 +25,6 @@ class CastManager {
     }
 
     job(name: JobName) {
-        // TODO: 暫定的な処置…
         return new JobEnum[name]()
     }
 

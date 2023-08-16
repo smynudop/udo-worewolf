@@ -7,13 +7,12 @@ import { GameIO } from "./gameIO"
 import { talkTemplate } from "./command"
 import { castManager } from "./cast"
 import { VillageSetting } from "./VillageSetting"
-import SocketIO from "socket.io"
-import { SocketController } from "./SocketController"
 import { IGame } from "../db/schema/game"
-
+import { GameTimer } from "./gameTimer"
 import moment from "moment"
 import { IPhase, IResult, ITalkType } from "./constants"
 import { IController } from "./IController"
+import { ITimer } from "./ITimer"
 
 export type IChangePhaseInfo = {
     phase: IPhase
@@ -30,19 +29,21 @@ export class Game {
     villageSetting: VillageSetting
     isKariGM: boolean
     date: VillageDate
+    timer: ITimer
     log: Log
     players: PlayerManager
     flagManager: FlagManager
     leftVoteNum: number
     win: IResult | null = null
 
-    constructor(controller: IController, data: IGame) {
+    constructor(controller: IController, timer: ITimer, data: IGame) {
         this.io = controller
+        this.timer = timer
 
         this.villageSetting = new VillageSetting(data)
         this.isKariGM = data.kariGM || false
 
-        this.date = new VillageDate(this)
+        this.date = new VillageDate()
         this.log = new Log(this.io, this.date)
         this.players = new PlayerManager(this)
         this.flagManager = new FlagManager(this.players)
@@ -155,12 +156,10 @@ export class Game {
 
         if (wolf == 0) {
             this.win = fox ? "fox" : "human"
-            this.finish()
             return true
         }
         if (wolf >= human) {
             this.win = fox ? "fox" : "wolf"
-            this.finish()
             return true
         }
         return false
@@ -205,8 +204,8 @@ export class Game {
     }
 
     setnsec() {
-        if (!this.villageSetting.time.nsec) return false
-        this.date.setNsec(this.villageSetting.time.nsec)
+        if (!this.villageSetting.time.nsec) return
+        this.timer.setNsec(this.villageSetting.time.nsec)
     }
 
     checkAllVote() {
@@ -222,12 +221,15 @@ export class Game {
 
                 if (!this.compileVote()) {
                     this.changePhase("revote")
-                    return false
+                    return
                 }
 
                 this.flagManager.nightProgress()
 
-                if (this.endCheck()) return false
+                if (this.endCheck()) {
+                    this.finish()
+                    return
+                }
 
                 this.nightReset()
                 this.pass("night")
@@ -244,7 +246,10 @@ export class Game {
             case "day":
                 this.flagManager.morningProgress()
 
-                if (this.endCheck()) return false
+                if (this.endCheck()) {
+                    this.finish()
+                    return
+                }
 
                 this.pass("day")
                 this.morningReset()
@@ -258,9 +263,10 @@ export class Game {
                 this.pass("vote")
                 this.flagManager.npcVote()
 
+                //voteに入った瞬間に投票チェックを行う(デバッグ用のはず)
                 if (this.players.isCompleteVote()) {
                     this.changePhase("night")
-                    return false
+                    return
                 }
 
                 break
@@ -269,7 +275,7 @@ export class Game {
                 this.leftVoteNum--
                 if (!this.leftVoteNum) {
                     this.draw()
-                    return false
+                    return
                 }
 
                 this.log.add("phase", "revote", {
@@ -302,7 +308,7 @@ export class Game {
 
         this.date.pass("epilogue")
 
-        this.date.clearTimer()
+        this.timer.clearTimer()
 
         this.emitPersonalData()
         this.emitChangePhase("epilogue")
@@ -350,7 +356,7 @@ export class Game {
     }
 
     getInitialPhaseForVisitor(): IChangePhaseInfo {
-        const time = this.date.leftSeconds()
+        const time = this.timer.leftSeconds()
         return {
             phase: this.date.phase,
             left: time,
@@ -388,7 +394,11 @@ export class Game {
         this.emitPlayerAll()
         this.emitChangePhase(phase)
 
-        this.date.setTimer(next[phase as keyof typeof next], this.villageSetting.getTime(phase)!)
+        const nextPhase = next[phase as keyof typeof next]
+
+        this.timer.setTimer(() => {
+            this.changePhase(nextPhase)
+        }, this.villageSetting.getTime(phase)!)
     }
 
     emitAllLog() {
@@ -443,10 +453,13 @@ export class Game {
             const player = this.players.getByUserId(userid)
             if (!player) return
 
-            const result = player.talk(data)
-            if (result == "nsec") {
+            if (data.type == "discuss" && this.timer.isBanTalk) {
+                this.log.add("system", "banTalk")
                 this.io.emitByUserId("banTalk", true, userid)
+                return
             }
+
+            player.talk(data)
             this.emitPlayerAll() // 点呼の状況を知らせるため。あまり良くない
         })
         this.io.on("vote", (userid, data) => {

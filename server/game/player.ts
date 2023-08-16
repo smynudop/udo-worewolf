@@ -199,10 +199,7 @@ export class Player {
     }
 
     talk(data: ITalkData): "success" | "nsec" {
-        if (data.type == "discuss" && this.date.isBanTalk) {
-            this.log.add("system", "banTalk")
-            return "nsec"
-        }
+
 
         if (this.waitCall) {
             this.call()

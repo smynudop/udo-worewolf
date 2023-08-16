@@ -1,35 +1,12 @@
-import moment from "moment"
-
-import { Game } from "./game"
 import { IPhase, ITalkType } from "./constants"
 
 export class VillageDate {
     day: number
     phase: IPhase
-    phaseLimit: string | null
-    timerFlg: any
-    game: Game
-    isBanTalk: boolean
 
-    constructor(game: Game) {
+    constructor() {
         this.day = 1
         this.phase = "prologue"
-        this.phaseLimit = null
-        this.timerFlg = null
-        this.isBanTalk = false
-        this.game = game
-    }
-
-    setLimit(sec: number) {
-        this.phaseLimit = moment().add(sec, "seconds").format()
-    }
-
-    clearLimit() {
-        this.phaseLimit = null
-    }
-
-    leftSeconds() {
-        return this.phaseLimit ? moment().diff(this.phaseLimit, "seconds") * -1 : null
     }
 
     sunrise() {
@@ -41,10 +18,6 @@ export class VillageDate {
         if (phase == "day") {
             this.sunrise()
         }
-    }
-
-    forLog() {
-        return { day: this.day, phase: this.phase }
     }
 
     is(phase: IPhase) {
@@ -73,25 +46,5 @@ export class VillageDate {
 
     canUseAbility() {
         return this.is("night") || this.is("ability")
-    }
-
-    setNsec(sec: number) {
-        this.isBanTalk = true
-        setTimeout(() => {
-            this.isBanTalk = false
-        }, sec * 1000)
-    }
-
-    setTimer(nextPhase: string, sec: number) {
-        this.clearTimer()
-        this.timerFlg = setTimeout(() => {
-            this.game.changePhase(nextPhase)
-        }, sec * 1000)
-        this.setLimit(sec)
-    }
-
-    clearTimer() {
-        clearTimeout(this.timerFlg)
-        this.clearLimit()
     }
 }
